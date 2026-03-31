@@ -1,0 +1,40 @@
+{
+  "name": "Samuel's GoalFlow",
+  "short_name": "GoalFlow",
+  "description": "A personal goal tracking dashboard for daily life planning and accountability.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/goalflow/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/goalflow/512/512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://picsum.photos/seed/goalflow-ss1/1280/720",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "GoalFlow Dashboard"
+    },
+    {
+      "src": "https://picsum.photos/seed/goalflow-ss2/720/1280",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "GoalFlow Mobile"
+    }
+  ]
+}
