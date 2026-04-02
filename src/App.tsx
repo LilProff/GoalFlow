@@ -53,6 +53,7 @@ import {
 import { cn } from './lib/utils';
 import { useRyna } from './hooks/useRyna';
 import { RynaPA } from './components/RynaPA';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // --- Constants ---
 const CATEGORIES: Record<TaskCategory, { color: string; label: string }> = {
@@ -98,6 +99,14 @@ const WEEKDAY_SCHEDULE: ScheduleItem[] = [
 ];
 
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <GoalFlowApp />
+    </ErrorBoundary>
+  );
+}
+
+function GoalFlowApp() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [dailyData, setDailyData] = useState<DailyData>({
     tasks: DEFAULT_TASKS,
@@ -121,6 +130,7 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        if (!parsed || typeof parsed !== 'object') return defaultData;
         return {
           ...defaultData,
           ...parsed,
@@ -189,9 +199,16 @@ export default function App() {
     }
   };
 
+  const handleResetAllData = () => {
+    if (window.confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
+
   // Load daily data when date changes
   useEffect(() => {
-    const saved = globalData.history?.[dateKey];
+    const saved = (globalData?.history || {})[dateKey];
     if (saved) {
       setDailyData(saved);
     } else {
@@ -272,7 +289,7 @@ export default function App() {
     setDailyData(newData);
     setGlobalData(prev => ({
       ...prev,
-      history: { ...(prev.history || {}), [dateKey]: newData }
+      history: { ...(prev?.history || {}), [dateKey]: newData }
     }));
   };
 
@@ -284,7 +301,7 @@ export default function App() {
     setDailyData(newData);
     setGlobalData(prev => ({
       ...prev,
-      history: { ...(prev.history || {}), [dateKey]: newData }
+      history: { ...(prev?.history || {}), [dateKey]: newData }
     }));
   };
 
@@ -293,8 +310,8 @@ export default function App() {
     let checkDate = subDays(new Date(), 1);
     while (true) {
       const key = format(checkDate, 'yyyy-MM-dd');
-      const data = globalData.history?.[key];
-      if (!data) break;
+      const data = (globalData?.history || {})[key];
+      if (!data || !data.tasks) break;
       const rate = (data.tasks.filter(t => t.completed).length / data.tasks.length) * 100;
       if (rate >= 80) {
         count++;
@@ -322,9 +339,11 @@ export default function App() {
 
   const exportCSV = () => {
     const headers = ['Date', 'Task', 'Category', 'Completed'];
-    const rows = Object.entries(globalData.history || {}).flatMap(([date, data]) => 
-      (data as DailyData).tasks.map(t => [date, t.label, t.category, t.completed])
-    );
+    const rows = Object.entries(globalData?.history || {}).flatMap(([date, data]) => {
+      const daily = data as DailyData;
+      if (!daily || !daily.tasks) return [];
+      return daily.tasks.map(t => [date, t.label, t.category, t.completed]);
+    });
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -626,6 +645,22 @@ export default function App() {
                           )}
                         >
                           {deferredPrompt ? "Install Now" : "Installed"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-zinc-900/30 p-6 rounded-2xl border border-zinc-800/50 space-y-6">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Danger Zone</h3>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-bold text-red-500">Reset All Data</div>
+                          <div className="text-[10px] text-zinc-500">Permanently delete all progress and history</div>
+                        </div>
+                        <button 
+                          onClick={handleResetAllData}
+                          className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all"
+                        >
+                          Reset Now
                         </button>
                       </div>
                     </div>

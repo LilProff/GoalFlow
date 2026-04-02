@@ -67,7 +67,7 @@ export function useRyna(
             const newData = { ...prev, customSchedule: result.schedule };
             setGlobalData(g => ({
               ...g,
-              history: { ...(g.history || {}), [dateKey]: newData }
+              history: { ...(g?.history || {}), [dateKey]: newData }
             }));
             return newData;
           });
