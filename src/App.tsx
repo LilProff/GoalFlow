@@ -29,6 +29,7 @@ import {
   ScheduleItem,
   DailyData,
   GlobalData,
+  ImpromptuTask,
 } from './types';
 import { useRyna, RynaCallbacks } from './hooks/useRyna';
 import { useToast } from './hooks/useToast';
@@ -248,6 +249,57 @@ export default function App() {
 
     onAddNote: (field, content) => updateReflection(field, content),
 
+    onAddTasks: (newTasks: ImpromptuTask[]) => {
+      // Generate unique IDs for each task
+      const tasksToAdd: Task[] = newTasks.map((t, i) => ({
+        id: `ryna_${Date.now()}_${i}`,
+        label: t.label,
+        category: t.category,
+        completed: false,
+      }));
+
+      // Build schedule entries for tasks that have a time
+      const scheduleEntries: ScheduleItem[] = newTasks
+        .filter(t => t.scheduleTime)
+        .map(t => ({
+          time: t.scheduleTime!,
+          activity: t.label,
+          category: t.category,
+          notes: t.notes ?? 'Added by Ryna',
+        }));
+
+      setDailyData(prev => {
+        const updatedTasks = [...prev.tasks, ...tasksToAdd];
+
+        // Merge new schedule entries into existing schedule, sorted by time
+        const baseSchedule = prev.customSchedule ?? WEEKDAY_SCHEDULE;
+        const mergedSchedule = scheduleEntries.length
+          ? [...baseSchedule, ...scheduleEntries].sort((a, b) =>
+              a.time.localeCompare(b.time)
+            )
+          : prev.customSchedule; // keep undefined if no schedule changes
+
+        const newData: DailyData = {
+          ...prev,
+          tasks: updatedTasks,
+          ...(mergedSchedule ? { customSchedule: mergedSchedule } : {}),
+        };
+
+        setGlobalData(g => ({
+          ...g,
+          history: { ...(g.history ?? {}), [dateKey]: newData },
+        }));
+        return newData;
+      });
+
+      const withTimes = newTasks.filter(t => t.scheduleTime);
+      const summary = tasksToAdd.map(t => `"${t.label}"`).join(', ');
+      const timeSuffix = withTimes.length
+        ? ` Scheduled ${withTimes.map(t => `${t.label} at ${t.scheduleTime}`).join(', ')}.`
+        : '';
+      return `Added ${tasksToAdd.length} task${tasksToAdd.length > 1 ? 's' : ''} to your day: ${summary}.${timeSuffix} I'll remind you when the time comes.`;
+    },
+
     onGetStatus: () => {
       const done = dailyData.tasks.filter(t => t.completed).length;
       const total = dailyData.tasks.length;
@@ -255,7 +307,7 @@ export default function App() {
     },
 
     notify,
-  }), [dailyData.tasks, dateKey, taskCompletionRate, streak, globalData.goals, notify, updateReflection]);
+  }), [dailyData.tasks, dailyData.customSchedule, dateKey, taskCompletionRate, streak, globalData.goals, notify, updateReflection, setDailyData, setGlobalData]);
 
   // ── Ryna hook ─────────────────────────────────────────────────────────────
 

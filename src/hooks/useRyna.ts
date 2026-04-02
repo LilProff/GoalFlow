@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import {
   RynaMode,
   RynaAction,
+  ImpromptuTask,
   ScheduleItem,
   GlobalData,
   DailyData,
@@ -92,6 +93,7 @@ export interface RynaCallbacks {
   onTimerAction: (action: 'start' | 'stop' | 'reset') => void;
   onNavigate: (tab: 'tasks' | 'schedule' | 'analytics' | 'settings') => void;
   onAddNote: (field: 'accomplished' | 'blocked' | 'grateful', content: string) => void;
+  onAddTasks: (tasks: ImpromptuTask[]) => string;
   onGetStatus: () => string;
   notify: (title: string, body: string, type?: ToastType) => void;
 }
@@ -238,6 +240,20 @@ Return ONLY a JSON object (no markdown) with exactly these fields:
         break;
       }
 
+      case 'add_tasks': {
+        if (!action.tasks?.length) {
+          const msg = "I couldn't parse any tasks from that. Try: \"Add a client call at 3pm and deploy review at 5pm.\"";
+          setRynaResponse(msg);
+          speak(msg);
+          break;
+        }
+        const result = callbacks.onAddTasks(action.tasks);
+        setRynaResponse(result);
+        speak(result);
+        callbacks.notify('Tasks Added to Your Day', result, 'success');
+        break;
+      }
+
       case 'get_status': {
         const status = callbacks.onGetStatus();
         setRynaResponse(status);
@@ -295,8 +311,15 @@ Determine the best action and return ONLY a JSON object (no markdown). Choose ON
 - {"type": "navigate", "tab": "tasks|schedule|analytics|settings"}
 - {"type": "add_note", "noteField": "accomplished|blocked|grateful", "noteContent": "the note text"}
 - {"type": "reshuffle", "reason": "short reason", "impromptu": ["any new tasks"]}
+- {"type": "add_tasks", "tasks": [{"label": "task name", "category": "CAREER|PROJECT|SPIRITUAL|PHYSICAL|LEARNING|CONTENT", "scheduleTime": "HH:mm", "notes": "optional context"}]}
 
-Match the intent precisely. For "note that..." → add_note. For "mark X done" → mark_task. For "start timer/pomodoro" → start_timer.`;
+Intent rules:
+- "note that..." / "log that..." → add_note
+- "mark X done" / "tick off X" → mark_task
+- "start timer/pomodoro" → start_timer
+- "I have X to do / I was asked to / add X to my day / remind me to" → add_tasks (parse each task, assign best category, estimate scheduleTime if mentioned)
+- "reshuffle / my day changed" → reshuffle
+- Category guide: meetings/work/client/revenue → CAREER, coding/building/deploy → PROJECT, reading/course/skill → LEARNING, post/content/video → CONTENT, prayer/bible/journal → SPIRITUAL, gym/water/health → PHYSICAL`;
 
     try {
       const text = await callAI(prompt);

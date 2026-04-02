@@ -49,7 +49,15 @@ export type RynaActionType =
   | 'navigate'
   | 'add_note'
   | 'advice'
-  | 'get_status';
+  | 'get_status'
+  | 'add_tasks';
+
+export interface ImpromptuTask {
+  label: string;
+  category: TaskCategory;
+  scheduleTime?: string;   // "HH:mm" — when to do it today
+  notes?: string;
+}
 
 export interface RynaAction {
   type: RynaActionType;
@@ -66,6 +74,8 @@ export interface RynaAction {
   // reshuffle
   reason?: string;
   impromptu?: string[];
+  // add_tasks
+  tasks?: ImpromptuTask[];
 }
 
 export type ToastType = 'info' | 'success' | 'warning';
