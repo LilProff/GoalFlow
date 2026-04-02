@@ -1,18 +1,25 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { GlobalData } from '../types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-const USER_ID = 'samuel';
+// ─── API helpers ──────────────────────────────────────────────────────────────
 
-function getClient(): SupabaseClient | null {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
-  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function pullData(): Promise<{ data: GlobalData | null; updated_at: string; found: boolean }> {
+  const res = await fetch('/api/v1/sync/pull');
+  if (!res.ok) throw new Error(`Sync pull failed: ${res.status}`);
+  return res.json();
 }
 
-// Singleton client — created once
-const supabase = getClient();
+async function pushData(data: GlobalData): Promise<{ updated_at: string }> {
+  const res = await fetch('/api/v1/sync/push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data }),
+  });
+  if (!res.ok) throw new Error(`Sync push failed: ${res.status}`);
+  return res.json();
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useSupabase(
   globalData: GlobalData,
@@ -23,57 +30,48 @@ export function useSupabase(
   const isInitialized = useRef(false);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // On mount: pull from Supabase, merge with localStorage (newest wins)
+  // On mount — pull from backend, merge if remote is newer
   useEffect(() => {
-    if (!supabase || isInitialized.current) return;
+    if (isInitialized.current) return;
     isInitialized.current = true;
 
-    supabase
-      .from('goalflow_data')
-      .select('data, updated_at')
-      .eq('user_id', USER_ID)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) {
-          setSyncError(error.message);
-          return;
-        }
-        if (!data) return; // No remote data yet, localStorage is source of truth
+    pullData()
+      .then(({ data, updated_at, found }) => {
+        if (!found || !data) return;
 
         const localTs = localStorage.getItem('goalflow_synced_at');
-        const remoteTs = new Date(data.updated_at).getTime();
+        const remoteTime = new Date(updated_at).getTime();
         const localTime = localTs ? new Date(localTs).getTime() : 0;
 
-        if (remoteTs > localTime) {
-          setGlobalData(data.data as GlobalData);
-          localStorage.setItem('goalflow_synced_at', data.updated_at);
+        if (remoteTime > localTime) {
+          setGlobalData(data);
+          localStorage.setItem('goalflow_synced_at', updated_at);
         }
         setIsSynced(true);
+      })
+      .catch(err => {
+        // Backend not running yet — silent, app works offline
+        console.warn('GoalFlow sync pull skipped:', err.message);
       });
   }, [setGlobalData]);
 
-  // Debounced push to Supabase whenever globalData changes (after init)
+  // Debounced push whenever globalData changes
   useEffect(() => {
-    if (!supabase || !isInitialized.current) return;
+    if (!isInitialized.current) return;
 
     if (syncTimer.current) clearTimeout(syncTimer.current);
 
-    syncTimer.current = setTimeout(async () => {
-      const now = new Date().toISOString();
-      const { error } = await supabase!
-        .from('goalflow_data')
-        .upsert(
-          { user_id: USER_ID, data: globalData, updated_at: now },
-          { onConflict: 'user_id' }
-        );
-
-      if (error) {
-        setSyncError(error.message);
-      } else {
-        localStorage.setItem('goalflow_synced_at', now);
-        setIsSynced(true);
-        setSyncError(null);
-      }
+    syncTimer.current = setTimeout(() => {
+      pushData(globalData)
+        .then(({ updated_at }) => {
+          localStorage.setItem('goalflow_synced_at', updated_at);
+          setIsSynced(true);
+          setSyncError(null);
+        })
+        .catch(err => {
+          // Silent — don't disrupt UX if backend is down
+          setSyncError(err.message);
+        });
     }, 2000);
 
     return () => {
@@ -81,5 +79,5 @@ export function useSupabase(
     };
   }, [globalData]);
 
-  return { isSynced, syncError, isEnabled: !!supabase };
+  return { isSynced, syncError, isEnabled: true };
 }
