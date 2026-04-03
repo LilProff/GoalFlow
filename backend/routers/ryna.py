@@ -102,7 +102,7 @@ def get_7day_summary(history: dict[str, Any]) -> str:
 @router.post("/chat", response_model=RynaResponse)
 async def chat(req: RynaChatRequest) -> RynaResponse:
     """Process a user query and return a structured action."""
-    now = datetime.now().strftime("%A, %B %-d %Y %H:%M")
+    now = datetime.now().strftime("%A, %B %d %Y %H:%M").replace(" 0", " ")
     tasks_list = "\n".join(
         f"- [{'X' if t.get('completed') else ' '}] {t.get('label')} ({t.get('category')})"
         for t in req.tasks
