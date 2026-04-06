@@ -17,11 +17,13 @@ class Settings(BaseSettings):
     supabase_anon_key: str
 
     # Primary model — fallback list tried in order if 429/404
-    openrouter_model: str = "arcee-ai/trinity-large-preview:free"
+    # Ordered fastest → most capable
+    openrouter_model: str = "meta-llama/llama-3.1-8b-instruct:free"
     openrouter_fallback_models: list[str] = [
-        "google/gemma-3-12b-it:free",
+        "google/gemma-3-4b-it:free",
         "meta-llama/llama-3.3-70b-instruct:free",
-        "google/gemma-3-27b-it:free",
+        "arcee-ai/trinity-large-preview:free",
+        "google/gemma-3-12b-it:free",
     ]
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     app_name: str = "GoalFlow"

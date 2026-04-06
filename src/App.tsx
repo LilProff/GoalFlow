@@ -133,6 +133,9 @@ export default function App() {
   const [timer, setTimer] = useState({ active: false, seconds: 1500, mode: 'work' });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [reshuffleModal, setReshuffleModal] = useState(false);
+  const [reshuffleReason, setReshuffleReason] = useState('');
+  const [reshuffleNewTasks, setReshuffleNewTasks] = useState('');
 
   const lastNotifiedTask = useRef<string | null>(null);
   const lastNotifiedStamp = useRef<string | null>(null);
@@ -320,6 +323,7 @@ export default function App() {
     stopListening,
     askRyna,
     handleReshuffle,
+    chatHistory,
   } = useRyna(
     currentSchedule,
     globalData.goals,
@@ -358,6 +362,14 @@ export default function App() {
       });
     }
   }, [dateKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Always keep current day's dailyData in history (fixes history not saving)
+  useEffect(() => {
+    setGlobalData(g => ({
+      ...g,
+      history: { ...(g.history ?? {}), [dateKey]: dailyData },
+    }));
+  }, [dailyData, dateKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist globalData to localStorage
   useEffect(() => {
@@ -697,7 +709,7 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold tracking-tight">Live Schedule</h2>
                     <button
-                      onClick={() => handleReshuffle('Manual request')}
+                      onClick={() => { setReshuffleReason(''); setReshuffleNewTasks(''); setReshuffleModal(true); }}
                       className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-zinc-950 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-amber-400 transition-all"
                     >
                       <Sparkles className="w-4 h-4" />
@@ -1014,6 +1026,90 @@ export default function App() {
         </footer>
       </div>
 
+      {/* ── Reshuffle Modal ── */}
+      <AnimatePresence>
+        {reshuffleModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            onClick={() => setReshuffleModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 w-full max-w-md space-y-6 shadow-2xl"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-xl">
+                  <Sparkles className="w-5 h-5 text-amber-500" />
+                </div>
+                <div>
+                  <h2 className="font-black text-lg tracking-tight uppercase italic">Reshuffle My Day</h2>
+                  <p className="text-xs text-zinc-500">Ryna will adjust your schedule based on what changed</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    What changed or caused this?
+                  </label>
+                  <textarea
+                    value={reshuffleReason}
+                    onChange={e => setReshuffleReason(e.target.value)}
+                    placeholder="e.g. Got a last-minute client meeting at 2pm, running 1 hour late, feeling tired..."
+                    rows={3}
+                    autoFocus
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500 resize-none transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    Any new tasks to add? <span className="text-zinc-600 normal-case font-normal">(optional, comma-separated)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={reshuffleNewTasks}
+                    onChange={e => setReshuffleNewTasks(e.target.value)}
+                    placeholder="e.g. Review proposal, call John, prepare slides"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setReshuffleModal(false)}
+                  className="flex-1 py-3 rounded-xl border border-zinc-700 text-zinc-400 text-sm font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setReshuffleModal(false);
+                    const tasks = reshuffleNewTasks
+                      .split(',')
+                      .map(s => s.trim())
+                      .filter(Boolean);
+                    handleReshuffle(reshuffleReason || 'Manual reshuffle', tasks);
+                  }}
+                  disabled={!reshuffleReason.trim()}
+                  className="flex-1 py-3 rounded-xl bg-amber-500 text-zinc-950 text-sm font-bold uppercase tracking-widest hover:bg-amber-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Let Ryna Fix It
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Ryna AI PA */}
       <RynaPA
         rynaMode={rynaMode}
@@ -1023,6 +1119,7 @@ export default function App() {
         startListening={startListening}
         stopListening={stopListening}
         askRyna={askRyna}
+        chatHistory={chatHistory}
       />
     </div>
   );

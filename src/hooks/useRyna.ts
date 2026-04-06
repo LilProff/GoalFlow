@@ -9,6 +9,7 @@ import {
   DailyData,
   Task,
   ToastType,
+  ChatMessage,
 } from '../types';
 
 // ─── API helpers ─────────────────────────────────────────────────────────────
@@ -70,6 +71,7 @@ export function useRyna(
   const [rynaTranscript, setRynaTranscript] = useState('');
   const [rynaResponse, setRynaResponse] = useState<string | null>(null);
   const [isCoachLoading, setIsCoachLoading] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const recognitionRef = useRef<any>(null);
 
   // ── TTS ────────────────────────────────────────────────────────────────────
@@ -87,64 +89,72 @@ export function useRyna(
 
   // ── Execute action ─────────────────────────────────────────────────────────
 
+  const addRynaMessage = useCallback((text: string, actionType: RynaAction['type']) => {
+    setChatHistory(prev => [...prev, {
+      id: `r_${Date.now()}`,
+      role: 'ryna',
+      text,
+      timestamp: new Date(),
+      actionType,
+    }]);
+  }, []);
+
   const executeAction = useCallback(async (action: RynaAction) => {
+    const reply = (msg: string) => {
+      setRynaResponse(msg);
+      speak(msg);
+      addRynaMessage(msg, action.type);
+    };
+
     switch (action.type) {
       case 'mark_task': {
         const result = callbacks.onMarkTask(action.taskKeyword ?? '', action.completed ?? true);
-        setRynaResponse(result);
-        speak(result);
+        reply(result);
         callbacks.notify('Task Updated', result, 'success');
         break;
       }
       case 'start_timer': {
         callbacks.onTimerAction('start');
-        const msg = "Pomodoro started. 25 minutes of deep focus — let's go!";
-        setRynaResponse(msg); speak(msg);
+        reply("Pomodoro started. 25 minutes of deep focus — let's go!");
         callbacks.notify('Timer Started', '25-minute focus session active', 'success');
         break;
       }
       case 'stop_timer': {
         callbacks.onTimerAction('stop');
-        const msg = 'Timer paused. Pick it back up when ready.';
-        setRynaResponse(msg); speak(msg);
+        reply('Timer paused. Pick it back up when ready.');
         break;
       }
       case 'reset_timer': {
         callbacks.onTimerAction('reset');
-        const msg = 'Timer reset to 25 minutes. Fresh start!';
-        setRynaResponse(msg); speak(msg);
+        reply('Timer reset to 25 minutes. Fresh start!');
         break;
       }
       case 'navigate': {
         const tab = action.tab ?? 'tasks';
         callbacks.onNavigate(tab);
-        const msg = `Switched to ${tab} view.`;
-        setRynaResponse(msg); speak(msg);
+        reply(`Switched to ${tab} view.`);
         break;
       }
       case 'add_note': {
         if (action.noteField && action.noteContent) {
           callbacks.onAddNote(action.noteField, action.noteContent);
-          const msg = `Got it — added to your ${action.noteField} reflection.`;
-          setRynaResponse(msg); speak(msg);
+          reply(`Got it — added to your ${action.noteField} reflection.`);
           callbacks.notify('Note Saved', `${action.noteField}: ${action.noteContent.slice(0, 60)}`, 'success');
         }
         break;
       }
       case 'add_tasks': {
         if (!action.tasks?.length) {
-          const msg = "I couldn't parse any tasks. Try: \"Add a client call at 3pm.\"";
-          setRynaResponse(msg); speak(msg);
+          reply("I couldn't parse any tasks. Try: \"Add a client call at 3pm.\"");
           break;
         }
         const result = callbacks.onAddTasks(action.tasks);
-        setRynaResponse(result); speak(result);
+        reply(result);
         callbacks.notify('Tasks Added', result, 'success');
         break;
       }
       case 'get_status': {
-        const status = callbacks.onGetStatus();
-        setRynaResponse(status); speak(status);
+        reply(callbacks.onGetStatus());
         break;
       }
       case 'reshuffle':
@@ -152,12 +162,11 @@ export function useRyna(
         break;
       case 'advice':
       default: {
-        const msg = action.message ?? "You're doing great, Samuel. Keep pushing!";
-        setRynaResponse(msg); speak(msg);
+        reply(action.message ?? "You're doing great, Samuel. Keep pushing!");
         break;
       }
     }
-  }, [callbacks, speak]); // handleReshuffle added below via ref trick
+  }, [callbacks, speak, addRynaMessage]); // handleReshuffle added below via ref trick
 
   // ── Schedule reshuffle ─────────────────────────────────────────────────────
 
@@ -203,6 +212,15 @@ export function useRyna(
   // ── Main AI query ───────────────────────────────────────────────────────────
 
   const askRyna = useCallback(async (query: string) => {
+    // Add user message to chat history immediately
+    const userMsg: ChatMessage = {
+      id: `u_${Date.now()}`,
+      role: 'user',
+      text: query,
+      timestamp: new Date(),
+    };
+    setChatHistory(prev => [...prev, userMsg]);
+
     setIsCoachLoading(true);
     setRynaMode('thinking');
     try {
@@ -216,10 +234,18 @@ export function useRyna(
         history_last7: historyLast7Days,
       });
       await executeAction(action);
+      // executeAction sets rynaResponse — mirror it into chat history
+      // We read it via a callback to avoid stale closure
+      setChatHistory(prev => {
+        const lastRyna = prev[prev.length - 1];
+        if (lastRyna?.role === 'ryna') return prev; // already added
+        return prev; // will be set by executeAction side-effect below
+      });
     } catch (err) {
       const msg = "Can't connect to the GoalFlow backend. Make sure it's running on port 8000.";
       console.error('Ryna askRyna failed:', err);
       setRynaResponse(msg); speak(msg);
+      setChatHistory(prev => [...prev, { id: `r_${Date.now()}`, role: 'ryna', text: msg, timestamp: new Date(), actionType: 'advice' }]);
       callbacks.notify('Ryna Error', 'Backend unreachable — run: uvicorn backend.main:app --reload', 'warning');
     } finally {
       setIsCoachLoading(false);
@@ -294,5 +320,6 @@ export function useRyna(
     stopListening,
     askRyna,
     handleReshuffle,
+    chatHistory,
   };
 }

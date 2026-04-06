@@ -86,3 +86,11 @@ export interface ToastItem {
   body: string;
   type: ToastType;
 }
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'ryna';
+  text: string;
+  timestamp: Date;
+  actionType?: RynaActionType;
+}

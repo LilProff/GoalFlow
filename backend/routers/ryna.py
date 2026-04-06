@@ -34,7 +34,8 @@ async def call_ai(prompt: str) -> str:
                         "model": model,
                         "messages": [{"role": "user", "content": prompt}],
                         "response_format": {"type": "json_object"},
-                        "temperature": 0.7,
+                        "temperature": 0.4,
+                        "max_tokens": 350,
                     },
                 )
 

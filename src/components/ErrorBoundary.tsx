@@ -10,7 +10,8 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends React.Component<Props, State> {
+export class ErrorBoundary extends Component<Props, State> {
+  declare props: Readonly<Props>;
   public state: State = {
     hasError: false,
     error: null
