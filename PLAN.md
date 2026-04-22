@@ -7,6 +7,25 @@
 
 ---
 
+## Production Sprint (2 Weeks)
+- Objective: Prepare GoalFlow for production release with web (Vercel) + backend (Railway), email-only auth, and a robust 2-week sprint plan.
+- Sprint window: 14 days from plan start.
+- Scope: polish UI, finish auth flow (email-only), wire up envs, migrate DB, fix loading, enable production-ready CI hints, and set up deployment pipelines.
+- Deliverables:
+  - PLAN.md updated with 2-week sprint plan (this doc)
+  - PLAN_v2.md aligned with sprint milestones
+  - .env.template (secure onboarding for envs) and an .env.local placeholder for local dev
+  - Production-grade UI polish to ensure clean loading and consistent layout on desktop, tablet, and mobile breakpoints
+  - Email-only auth wired via Supabase (no Google OAuth yet)
+  - Basic push notification scaffold (browser) and note-taking hooks
+  - Voice capture scaffold (Web Speech API) as a feature flag
+  - Docker/CI scaffolding for Vercel + Railway deployment (or GitHub Actions example)
+  - Branding assets (logo) and design tokens for consistency
+
+Notes:
+- You requested Vercel frontend + Railway backend as default; I’ll push updates to GitHub first and trigger deployments later.
+- I’ll keep PLAN.md and PLAN_v2.md synchronized and reflect all progress in them.
+
 ## Positioning
 
 **Product:** GoalFlow
@@ -502,5 +521,42 @@ File storage: Supabase Storage (report PDFs, user avatars)
 
 ---
 
-*Last updated: 2026-04-06*
+*Last updated: 2026-04-20*
 *Built by Samuel Ayomide — Lagos, Nigeria*
+
+## Production Plan (Phase 2+ and Beyond)
+
+- Objective: Turn GoalFlow into a robust AI-driven execution OS with a unified web+mobile front-end, shared backend infra, and production-ready auth/notifications.
+- This section tracks what to build, what to deploy, and what to license/purchase to reach production-readiness.
+
+### Immediate Production Tasks (Phase 2 goals)
+- [ ] Finish CSS/ui polish so the web UI loads consistently on desktop and mobile.
+- [ ] Implement production-grade auth flow:
+  - Google OAuth (via Supabase Auth)
+  - Email/password authentication with email verification
+  - Secure API access with authenticated sessions
+- [ ] Harden UI theme: proper dark/light theming, accessible contrast, and responsive layout fixes.
+- [ ] Push notifications: integrate browser push using Push API / VAPID; ensure user opt-in flow.
+- [ ] Voice features: add browser voice activation (Web Speech API) and voice-to-text transcription; hook into note taking and task creation.
+- [ ] Notes: persistent notes linked to goals/daily logs with rich-text support.
+- [ ] Multi-platform plan: define web app (Next.js) and mobile app (Flutter) sharing the same backend infra (Postgres + Supabase) and AI layer (OpenRouter / LangChain).
+- [ ] Plan for a shared API layer and model routing (AI Layer) to support future mobile clients.
+- [ ] Design a robust onboarding flow for cross-platform sign-in and device pairing.
+- [ ] Create production-ready CI/CD: Vercel (frontend), Railway (backend), Supabase migrations, and monitoring/logging.
+- [ ] Introduce a lightweight analytics guardrail: usage metrics, error rates, and performance dashboards.
+- [ ] Create branding/artwork: logo, icons, and style tokens to support a consistent design system.
+
+### Production Costs & Licensing
+- Supabase: Free tier up to 2k–5kRPS depending on features; upgrade if needed.
+- Vercel: Free/on-demand plans; consider Pro for higher concurrency and edge caching.
+- Railway: Free tier for dev; scale plan if traffic grows.
+- OpenRouter / AI models: consider usage limits and potential pay-as-you-go fees.
+- Push notifications services: browser push is free; consider paid options if high volume.
+- Voice recognition: Web Speech API is built-in in browsers; for server-side transcription, plan for Whisper API or similar.
+- Domain & TLS: acquire domain, set up TLS (usually included with Vercel/Railway).
+- Monitoring: consider a logging/metrics solution (e.g., Sentry, Grafana) in production.
+
+### Milestones & Deliverables
+- Phase 2: Auth, UI polish, and AI-driven tasks ready for production testing.
+- Phase 3: Multi-platform (web+mobile) pilots, push notifications enabled, voice features rolled out.
+- Phase 4: GA-ready analytics, performance budgets, and customer onboarding flows.

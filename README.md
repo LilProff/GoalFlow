@@ -1,20 +1,109 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# GoalFlow 🚀
 
-# Run and deploy your AI Studio app
+> AI-powered execution OS for high-performers. BUILD. SHOW. EARN. SYSTEMIZE.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/bdc7b306-d56f-4487-8de2-80ae2412fdd3
+- **4-Pillar Daily Execution** - BUILD, SHOW, EARN, SYSTEMIZE
+- **AI Coach (Ryna)** - Chat with AI for goal guidance and task management
+- **AI Goals Planner** - Tell AI your goals, it creates a structured plan
+- **Analytics Dashboard** - Track progress with charts and insights
+- **XP & Level System** - Gamified growth tracking
+- **Streak Tracking** - Build consistency with daily streaks
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- **Frontend**: Next.js 14, React 19, TypeScript, TailwindCSS
+- **Backend**: FastAPI (Python)
+- **Database**: Supabase (PostgreSQL)
+- **AI**: OpenRouter (LLM routing)
 
+## Getting Started
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Prerequisites
+
+- Node.js 18+
+- Python 3.10+
+- Supabase account
+
+### Installation
+
+```bash
+# Install frontend dependencies
+npm install
+
+# Create environment file
+cp .env.example .env.local
+# Fill in your Supabase and OpenRouter keys
+```
+
+### Development
+
+```bash
+# Frontend (localhost:3010)
+npm run dev
+
+# Backend (localhost:8000)
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```
+goalflow/
+├── app/                    # Next.js App Router
+│   ├── page.tsx           # Daily execution (home)
+│   ├── login/             # Sign in
+│   ├── signup/            # Sign up
+│   ├── goals/             # AI goals planner
+│   ├── tasks/             # Tasks management
+│   ├── analytics/         # Analytics dashboard
+│   ├── settings/           # Settings
+│   └── onboarding/        # Onboarding flow
+├── components/            # React components
+├── contexts/              # Auth contexts
+├── hooks/                 # Custom hooks
+├── lib/                   # Utilities & config
+├── store/                 # Zustand state
+└── backend/               # FastAPI backend
+    └── routers/           # API endpoints
+```
+
+## Routes
+
+- `/` - Today's execution panel
+- `/login` - Sign in
+- `/signup` - Create account
+- `/goals` - AI goals planner
+- `/tasks` - Tasks management
+- `/analytics` - Progress analytics
+- `/settings` - App settings
+- `/onboarding` - New user setup
+
+## Deployment
+
+### Frontend (Vercel)
+
+```bash
+# Push to GitHub, connect to Vercel
+vercel deploy --prod
+```
+
+### Backend (Railway)
+
+```bash
+# Deploy backend folder to Railway
+railway deploy
+```
+
+## License
+
+MIT

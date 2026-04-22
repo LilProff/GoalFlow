@@ -4,21 +4,21 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, HTTPException
-from datetime import datetime
 
 from backend.config import settings
-from backend.models import RynaChatRequest, RynaReshuffleRequest, RynaResponse
+from backend.models import RynaChatRequest, RynaInsightRequest, RynaResponse
 
 router = APIRouter(prefix="/ryna", tags=["ryna"])
 
 
-# ── AI call helper ───────────────────────────────────────────────────────────
+# In-memory conversation store
+conversations: dict[str, list[dict]] = {}
+
 
 async def call_ai(prompt: str) -> str:
-    """Call OpenRouter with automatic model fallback on 429/404."""
+    """Call OpenRouter with fallback."""
     models = [settings.openrouter_model] + settings.openrouter_fallback_models
-    last_error = ""
-
+    
     for model in models:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -33,153 +33,158 @@ async def call_ai(prompt: str) -> str:
                     json={
                         "model": model,
                         "messages": [{"role": "user", "content": prompt}],
-                        "response_format": {"type": "json_object"},
-                        "temperature": 0.4,
-                        "max_tokens": 350,
+                        "max_tokens": 300,
+                        "temperature": 0.6,
                     },
                 )
-
+            
             if resp.status_code == 200:
                 data = resp.json()
-                content = data["choices"][0]["message"]["content"]
-                print(f"[Ryna] Used model: {model}")
-                return content
-
-            # Rate limited or unavailable — try next model
+                return data["choices"][0]["message"]["content"]
+            
             if resp.status_code in (429, 404):
-                last_error = f"{model}: {resp.status_code}"
                 continue
-
-            # Other error — raise immediately
-            raise HTTPException(
-                status_code=502,
-                detail=f"OpenRouter error {resp.status_code} ({model}): {resp.text[:300]}",
-            )
-
+            
+            raise HTTPException(status_code=502, detail=f"AI error: {resp.status_code}")
+            
         except httpx.TimeoutException:
-            last_error = f"{model}: timeout"
             continue
+    
+    return "I'm having trouble connecting. Let me try again."
 
-    raise HTTPException(
-        status_code=502,
-        detail=f"All AI models unavailable. Last error: {last_error}",
-    )
-
-
-def extract_json(text: str) -> dict[str, Any]:
-    """Robust JSON extraction — handles markdown fences and embedded JSON."""
-    # Strip ```json ... ``` fences
-    cleaned = re.sub(r"^```(?:json)?\s*", "", text.strip(), flags=re.IGNORECASE)
-    cleaned = re.sub(r"\s*```\s*$", "", cleaned)
-
-    # Try whole string
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        pass
-
-    # Find first { } block
-    match = re.search(r"\{[\s\S]*\}", cleaned)
-    if match:
-        return json.loads(match.group(0))
-
-    raise ValueError(f"No valid JSON in AI response: {text[:200]}")
-
-
-def get_7day_summary(history: dict[str, Any]) -> str:
-    lines = []
-    for key, data in sorted(history.items(), reverse=True)[:7]:
-        tasks = data.get("tasks", [])
-        if not tasks:
-            continue
-        done = sum(1 for t in tasks if t.get("completed"))
-        rate = round((done / len(tasks)) * 100)
-        lines.append(f"{key}: {rate}% ({done}/{len(tasks)} tasks)")
-    return "\n".join(lines) if lines else "No history yet."
-
-
-# ── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.post("/chat", response_model=RynaResponse)
 async def chat(req: RynaChatRequest) -> RynaResponse:
-    """Process a user query and return a structured action."""
-    now = datetime.now().strftime("%A, %B %d %Y %H:%M").replace(" 0", " ")
-    tasks_list = "\n".join(
-        f"- [{'X' if t.get('completed') else ' '}] {t.get('label')} ({t.get('category')})"
-        for t in req.tasks
-    )
-    level_index = req.goals.get("currentLevelIndex", 0)
-    levels = req.goals.get("levels", [])
-    current_level = levels[level_index] if levels else "unknown"
+    """Chat with Ryna AI Coach."""
+    user_id = req.user_id
+    goals = req.pillar_goals
+    log = req.current_log
+    stats = req.stats
+    style = req.coaching_style
+    
+    # Build context
+    build_goal = goals.get("BUILD", "")
+    show_goal = goals.get("SHOW", "")
+    earn_goal = goals.get("EARN", "")
+    systemize_goal = goals.get("SYSTEMIZE", "")
+    
+    score = 0
+    if log.get("build_done"):
+        score += 3
+    if log.get("show_done"):
+        score += 2
+    if log.get("earn_done"):
+        score += 2
+    if log.get("systemize_done"):
+        score += 2
+    
+    # Style-specific prompts
+    style_prompts = {
+        "drill_sergeant": "Be strict, direct, high accountability. No excuses.",
+        "balanced": "Be direct but encouraging. Balance truth with motivation.",
+        "gentle": "Be supportive and patient. Focus on progress, not perfection.",
+    }
+    
+    style_guide = style_prompts.get(style, style_prompts["balanced"])
+    
+    prompt = f"""You are Ryna, GoalFlow's AI Coach. {style_guide}
 
-    prompt = f"""You are Ryna, Samuel's GoalFlow AI Personal Assistant. Be direct, energetic, no fluff.
+Current Status:
+- Today's score: {score}/10
+- Current streak: {stats.get('streak_current', 0)} days
+- XP: {stats.get('xp', 0)}
+- Level: {stats.get('level', 'beginner')}
 
-Current Date/Time: {now}
-Samuel's Monthly Goal: {req.goals.get('monthly')} (target level: {current_level})
-Today's Progress: {req.task_completion_rate:.0f}% tasks done
+Your Goals:
+- BUILD: {build_goal}
+- SHOW: {show_goal}
+- EARN: {earn_goal}
+- SYSTEMIZE: {systemize_goal}
 
-Today's Tasks:
-{tasks_list}
+Today:
+- BUILD: {'✓' if log.get('build_done') else '○'}
+- SHOW: {'✓' if log.get('show_done') else '○'}
+- EARN: {'✓' if log.get('earn_done') else '○'}
+- SYSTEMIZE: {'✓' if log.get('systemize_done') else '○'}
+- Build hours: {log.get('build_hours', 0)}h
 
-Last 7 Days:
-{get_7day_summary(req.history_last7)}
+User says: "{req.query}"
 
-Current Schedule (first 6): {json.dumps([s.model_dump() for s in req.current_schedule[:6]])}
-
-Samuel says: "{req.query}"
-
-Determine the best action and return ONLY a JSON object (no markdown). Choose ONE type:
-- {{"type": "advice", "message": "1-2 sentence response"}}
-- {{"type": "get_status"}}
-- {{"type": "mark_task", "taskKeyword": "keyword from task name", "completed": true}}
-- {{"type": "start_timer"}}
-- {{"type": "stop_timer"}}
-- {{"type": "reset_timer"}}
-- {{"type": "navigate", "tab": "tasks|schedule|analytics|settings"}}
-- {{"type": "add_note", "noteField": "accomplished|blocked|grateful", "noteContent": "the note text"}}
-- {{"type": "reshuffle", "reason": "short reason", "impromptu": ["any new tasks"]}}
-- {{"type": "add_tasks", "tasks": [{{"label": "task name", "category": "CAREER|PROJECT|SPIRITUAL|PHYSICAL|LEARNING|CONTENT", "scheduleTime": "HH:mm", "notes": "optional"}}]}}
-
-Intent rules:
-- "note that..." / "log that..." → add_note
-- "mark X done" / "tick off X" → mark_task
-- "start timer/pomodoro" → start_timer
-- "I have X to do / I was asked to / add X to my day / remind me to" → add_tasks
-- "reshuffle / my day changed" → reshuffle
-- Category guide: meetings/work/client/revenue → CAREER, coding/building/deploy → PROJECT,
-  reading/course/skill → LEARNING, post/content/video → CONTENT,
-  prayer/bible/journal → SPIRITUAL, gym/water/health → PHYSICAL"""
-
-    raw = await call_ai(prompt)
-    action = extract_json(raw)
-    return RynaResponse(action=action, raw_text=raw)
+Respond as Ryna. Keep it brief (2-3 sentences). Be helpful and actionable."""
+    
+    response = await call_ai(prompt)
+    
+    # Store conversation
+    if user_id not in conversations:
+        conversations[user_id] = []
+    conversations[user_id].append({
+        "role": "user",
+        "content": req.query,
+    })
+    conversations[user_id].append({
+        "role": "ryna",
+        "content": response,
+    })
+    
+    return RynaResponse(response=response, action=None)
 
 
-@router.post("/reshuffle", response_model=RynaResponse)
-async def reshuffle(req: RynaReshuffleRequest) -> RynaResponse:
-    """Reshuffle today's schedule using AI."""
-    now = datetime.now().strftime("%H:%M")
-    level_index = req.goals.get("currentLevelIndex", 0)
-    levels = req.goals.get("levels", [])
-    current_level = levels[level_index] if levels else "unknown"
+@router.post("/insight", response_model=RynaResponse)
+async def daily_insight(req: RynaInsightRequest) -> RynaResponse:
+    """Get daily morning insight."""
+    user_id = req.user_id
+    goals = req.pillar_goals
+    log = req.current_log
+    last_7 = req.last_7_days
+    
+    build_goal = goals.get("BUILD", "")
+    show_goal = goals.get("SHOW", "")
+    earn_goal = goals.get("EARN", "")
+    systemize_goal = goals.get("SYSTEMIZE", "")
+    
+    score = 0
+    if log.get("build_done"):
+        score += 3
+    if log.get("show_done"):
+        score += 2
+    if log.get("earn_done"):
+        score += 2
+    if log.get("systemize_done"):
+        score += 2
+    
+    # Calculate trends
+    scores = [s.get("score", 0) for s in last_7]
+    avg = sum(scores) / len(scores) if scores else 0
+    trend = "improving" if avg > 5 else "needs work"
+    
+    prompt = f"""You are Ryna, GoalFlow's AI Coach. Give a daily morning insight.
 
-    prompt = f"""You are Ryna, Samuel's GoalFlow AI Personal Assistant.
+Current Goals:
+- BUILD: {build_goal}
+- SHOW: {show_goal}
+- EARN: {earn_goal}
+- SYSTEMIZE: {systemize_goal}
 
-Current Time: {now}
-Today's Date: {req.date_key}
-Reason for reshuffle: {req.reason}
-Impromptu tasks to add: {", ".join(req.impromptu_tasks) if req.impromptu_tasks else "none"}
-Samuel's Monthly Goal: {req.goals.get('monthly')} (level: {current_level})
-Current Schedule: {json.dumps([s.model_dump() for s in req.current_schedule])}
-Today's completion so far: {req.task_completion_rate:.0f}%
+Yesterday: {score}/10
+Last 7 days average: {avg:.1f}/10 ({trend})
 
-Produce a revised schedule for the remainder of today. Keep past blocks, adjust upcoming ones.
-Return ONLY a JSON object (no markdown) with exactly these fields:
-{{
-  "schedule": [{{"time": "HH:mm", "activity": "...", "category": "CAREER|PROJECT|SPIRITUAL|PHYSICAL|LEARNING|CONTENT|REST|OTHER", "notes": "optional"}}],
-  "advice": "A short motivational message (1-2 sentences)"
-}}"""
+Today is a new day. Write a 2-sentence daily insight and list 1 priority focus for each pillar.
 
-    raw = await call_ai(prompt)
-    action = extract_json(raw)
-    return RynaResponse(action=action, raw_text=raw)
+Format:
+🔮 Daily Insight: [your insight]
+
+Today's Focus:
+• BUILD: [task]
+• SHOW: [task]
+• EARN: [task]
+• SYSTEMIZE: [task]"""
+    
+    response = await call_ai(prompt)
+    
+    return RynaResponse(response=response, action=None)
+
+
+@router.get("/history/{user_id}")
+async def get_conversation_history(user_id: str) -> list[dict]:
+    """Get conversation history."""
+    return conversations.get(user_id, [])

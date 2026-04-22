@@ -1,21 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import ryna, sync
+from backend.routers import ryna, sync, tasks, analytics
 
 app = FastAPI(
     title="GoalFlow API",
     version="2.0.0",
-    description="Backend for GoalFlow — AI PA, cloud sync",
+    description="Backend for GoalFlow v2 — AI Execution OS",
 )
 
-# CORS — allow the Vite dev server and production domain
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:3010",
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://goalflow.app",       # update when you deploy frontend
+        "https://goalflow.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -25,6 +25,8 @@ app.add_middleware(
 # Routers
 app.include_router(ryna.router, prefix="/api/v1")
 app.include_router(sync.router, prefix="/api/v1")
+app.include_router(tasks.router, prefix="/api/v1")
+app.include_router(analytics.router, prefix="/api/v1")
 
 
 @app.get("/health")

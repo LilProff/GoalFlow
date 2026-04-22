@@ -1,0 +1,29 @@
+name: Deploy to Vercel & Railway
+on:
+  push:
+    branches: [ main, master ]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install
+        run: npm ci
+      - name: Lint & Build
+        run: npm run lint --if-present && npm run build
+      - name: Deploy Frontend (Vercel)
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: --prod
+      - name: Deploy Backend (Railway)
+        run: |
+          echo "Backend deployment should be configured in Railway UI or via CLI in your CI/CD."
+          # You can wire Railway deployment here if you have CLI credentials
