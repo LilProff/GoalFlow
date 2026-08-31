@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Core palette — warm charcoal, not cold navy */
+  --bg-void:    #0c0b09;
+  --bg-base:    #111008;
+  --bg-raised:  #181510;
+  --bg-overlay: #1f1c14;
+  --bg-float:   #252018;
+
+  /* Borders */
+  --border-dim:    rgba(255,240,200,0.04);
+  --border-mid:    rgba(255,240,200,0.08);
+  --border-bright: rgba(255,240,200,0.15);
+
+  /* Text */
+  --tx-primary:   #f0ead8;
+  --tx-secondary: #a89f88;
+  --tx-muted:     #5a5448;
+  --tx-ghost:     #2e2b24;
+
+  /* Accent system */
+  --acid:   #d4f53c;   /* primary accent — acid lime */
+  --acid-2: #b8e030;
+  --ember:  #ff6b35;   /* BUILD */
+  --aqua:   #00d4b4;   /* SHOW */
+  --gold:   #f5c842;   /* EARN */
+  --slate:  #7b8fa8;   /* SYSTEMIZE */
+
+  /* Glow */
+  --glow-acid:  rgba(212,245,60,0.12);
+  --glow-ember: rgba(255,107,53,0.12);
+  --glow-aqua:  rgba(0,212,180,0.12);
+  --glow-gold:  rgba(245,200,66,0.12);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bg-void);
+  color: var(--tx-primary);
+}
+
+body { margin: 0; padding: 0; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Range ── */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 2px;
+  background: var(--border-mid);
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--acid);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+input[type='range']::-webkit-slider-thumb:hover { transform: scale(1.3); }
+
+/* ── Select ── */
+select {
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%235a5448' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 28px !important;
+}
+
+/* ── Mono tag ── */
+.mono { font-family: 'Space Mono', monospace; }
+
+/* ── Scan line overlay ── */
+.scanlines::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Grid bg ── */
+.grid-bg {
+  background-image:
+    linear-gradient(var(--border-dim) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-dim) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── Ticker animation ── */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker-track { animation: ticker 28s linear infinite; }
+
+/* ── Pulse dot ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+/* ── Blink cursor ── */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.blink { animation: blink 1s step-end infinite; }
+
+/* ── Number counter ── */
+@keyframes count-up {
+  from { opacity:0; transform: translateY(6px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.count-in { animation: count-up 0.4s ease forwards; }
+
+/* ── Accent bar ── */
+.accent-bar {
+  background: linear-gradient(90deg, var(--acid) 0%, transparent 100%);
+}
+
+/* ── Focus ── */
+:focus-visible { outline: 1px solid var(--acid); outline-offset: 2px; }
+
+/* ── Checkbox ── */
+input[type='checkbox'] { accent-color: var(--acid); }

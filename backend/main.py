@@ -1,39 +1,52 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.routers import ryna, sync, tasks, analytics
+from config import settings
+from routers import (
+    auth, daily, tasks, pillars, user, ryna, onboarding,
+    analytics, goals, planner, leaderboard, notifications,
+)
 
 app = FastAPI(
     title="GoalFlow API",
-    version="2.0.0",
-    description="Backend for GoalFlow v2 — AI Execution OS",
+    description="Backend for GoalFlow — AI-powered productivity & life OS",
+    version="1.0.0",
 )
 
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Origins come from config (ALLOWED_ORIGINS in .env) so a deployment can permit
+# its real domain without a code change. Hardcoding localhost here meant the
+# deployed frontend would have been blocked by the browser on day one.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3010",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://goalflow.app",
-    ],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(ryna.router, prefix="/api/v1")
-app.include_router(sync.router, prefix="/api/v1")
-app.include_router(tasks.router, prefix="/api/v1")
-app.include_router(analytics.router, prefix="/api/v1")
+# ── Health ────────────────────────────────────────────────────────────────────
+@app.get("/health", tags=["health"])
+async def health_check() -> dict:
+    return {"status": "healthy", "service": "goalflow-api", "version": "1.0.0"}
 
 
-@app.get("/health")
-async def health() -> dict:
-    return {"status": "ok", "service": "goalflow-api"}
+# ── API v1 ────────────────────────────────────────────────────────────────────
+from fastapi import APIRouter
 
+api_v1 = APIRouter(prefix="/api/v1")
 
-@app.get("/")
-async def root() -> dict:
-    return {"service": "GoalFlow API", "version": "2.0.0", "docs": "/docs"}
+api_v1.include_router(auth.router)
+api_v1.include_router(user.router)
+api_v1.include_router(onboarding.router)
+api_v1.include_router(pillars.router)
+api_v1.include_router(goals.router)
+api_v1.include_router(tasks.router)
+api_v1.include_router(daily.router)
+api_v1.include_router(planner.router)
+api_v1.include_router(analytics.router)
+api_v1.include_router(ryna.router)
+api_v1.include_router(leaderboard.router)
+api_v1.include_router(notifications.router)
+
+app.include_router(api_v1)

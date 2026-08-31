@@ -1,0 +1,16 @@
+- Graphify Memory Directive (Claude Code)
+- Purpose: Ensure Claude Code uses Graphify's knowledge graph to navigate architecture questions.
+- How it works: If a graph exists in graphify-out/, Claude will read GRAPH_REPORT.md to understand god nodes and communities, and the PreToolUse hook will provide a memory directive to guide the search instead of blind file-wide grep.
+- What to enable:
+- Install the Claude hook via Graphify (as per Graphify docs): `graphify claude install`.
+- After installation, Claude will automatically consult graphify-out/GRAPH_REPORT.md and use the memory directive during prompts.
+- If reporting issues, ensure graphify update has been run to refresh graph.json and GRAPH_REPORT.md.
+- Example prompt augmentation (conceptual):
+- Before architecture questions, Claude will see: [Graphify Memory] Consult GRAPH_REPORT.md for god nodes and communities before code search. Graph at graphify-out/graph.json.
+- Test plan:
+- Create a simple architecture question in Claude Code to verify that the memory directive is present in the prompt before the model searches files.
+- If memory directive is not observed, verify:
+  - graphify update has run and graphify-out/GRAPH_REPORT.md exists
+  - The hook was installed correctly via `graphify claude install` and CLAUDE Code is loading the hook
+- Troubleshooting:
+- If the directive does not surface, review Claude Code integration steps and confirm the graphify graph is populated.
