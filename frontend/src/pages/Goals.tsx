@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { Plus, MessageCircle, ChevronRight, Edit3, TrendingUp, Trash2, X } from 'lucide-react';
@@ -53,14 +53,31 @@ function GoalCard({ goal, active, onClick, daysLeft }: { goal: Goal; active: boo
 }
 
 export default function Goals() {
-  const { goals, updateGoal, addGoal, deleteGoal, setChatOpen } = useStore();
+  const { goals, updateGoal, addGoal, deleteGoal, addMilestone, toggleMilestone, deleteMilestone, setChatOpen } = useStore();
+  const [addingMilestone, setAddingMilestone] = useState(false);
+  const [milestoneTitle, setMilestoneTitle] = useState('');
+  const [milestoneDate, setMilestoneDate] = useState(defaultTarget());
+  const [editingPlan, setEditingPlan] = useState(false);
+  const [planDraft, setPlanDraft] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState({
     title: '', description: '', pillarId: 'BUILD' as PillarId,
     type: 'project' as Goal['type'], targetDate: defaultTarget(),
   });
-  const [selected, setSelected] = useState<Goal | null>(null);
+  // Holds just the id, not the Goal object — selected.milestones/progress/etc.
+  // change whenever the store updates (a toggle, an edit), and a snapshot
+  // object taken at click time would never pick that up.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = goals.find(g => g.id === selectedId) ?? null;
+  const setSelected = (g: Goal | null) => setSelectedId(g?.id ?? null);
+
+  // Drop in-progress milestone/plan drafts when switching goals, rather than
+  // leaving a half-typed milestone from goal A silently attached to goal B.
+  useEffect(() => {
+    setAddingMilestone(false); setMilestoneTitle(''); setMilestoneDate(defaultTarget());
+    setEditingPlan(false); setPlanDraft(selected?.weeklyPlan || '');
+  }, [selectedId]);
   const [pillarFilter, setPillarFilter] = useState('ALL');
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
@@ -207,17 +224,43 @@ export default function Goals() {
                     <div className="p-5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
                       <div className="flex items-center justify-between mb-3">
                         <span className="mono text-[9px] tracking-widest font-bold" style={{ color: 'var(--tx-muted)' }}>MILESTONES</span>
-                        <button className="mono text-[9px] flex items-center gap-1" style={{ color: theme.accent }}>
+                        <button onClick={() => setAddingMilestone(v => !v)}
+                          className="mono text-[9px] flex items-center gap-1" style={{ color: theme.accent }}>
                           <Plus className="w-3 h-3" /> ADD
                         </button>
                       </div>
+
+                      {addingMilestone && (
+                        <div className="flex items-center gap-2 mb-3 p-2.5" style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-dim)' }}>
+                          <input autoFocus value={milestoneTitle} onChange={e => setMilestoneTitle(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && milestoneTitle.trim() && (async () => {
+                              await addMilestone(selected.id, milestoneTitle.trim(), milestoneDate);
+                              setAddingMilestone(false);
+                            })()}
+                            placeholder="Milestone title" className="flex-1 min-w-0 bg-transparent text-xs outline-none" style={{ color: 'var(--tx-primary)' }} />
+                          <input type="date" value={milestoneDate} onChange={e => setMilestoneDate(e.target.value)}
+                            className="mono text-[9px] bg-transparent outline-none shrink-0" style={{ color: 'var(--tx-muted)' }} />
+                          <button
+                            disabled={!milestoneTitle.trim()}
+                            onClick={async () => { await addMilestone(selected.id, milestoneTitle.trim(), milestoneDate); setAddingMilestone(false); }}
+                            className="mono text-[9px] font-bold px-2 py-1 shrink-0 disabled:opacity-30"
+                            style={{ background: theme.accent, color: 'var(--bg-void)' }}>
+                            ADD
+                          </button>
+                        </div>
+                      )}
+
                       <div className="space-y-0">
+                        {selected.milestones.length === 0 && !addingMilestone && (
+                          <p className="text-xs py-2" style={{ color: 'var(--tx-ghost)' }}>No milestones yet.</p>
+                        )}
                         {selected.milestones.map(m => (
-                          <div key={m.id} className="flex items-center gap-3 py-2.5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
-                            <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0"
+                          <div key={m.id} className="group flex items-center gap-3 py-2.5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+                            <button onClick={() => toggleMilestone(selected.id, m.id)}
+                              className="w-3.5 h-3.5 flex items-center justify-center shrink-0"
                               style={{ background: m.completed ? theme.accent : 'transparent', border: `1px solid ${m.completed ? theme.accent : 'var(--border-mid)'}` }}>
                               {m.completed && <span style={{ color: 'var(--bg-void)', fontSize: 8, fontWeight: 'bold' }}>✓</span>}
-                            </div>
+                            </button>
                             <span className={`text-xs flex-1 ${m.completed ? 'line-through' : ''}`}
                               style={{ color: m.completed ? 'var(--tx-muted)' : 'var(--tx-primary)' }}>
                               {m.title}
@@ -225,24 +268,52 @@ export default function Goals() {
                             <span className="mono text-[9px]" style={{ color: 'var(--tx-ghost)' }}>
                               {format(new Date(m.dueDate), 'MMM d')}
                             </span>
+                            <button onClick={() => deleteMilestone(selected.id, m.id)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0" style={{ color: 'var(--tx-ghost)' }}>
+                              <X className="w-3 h-3" />
+                            </button>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     {/* Weekly plan */}
-                    {selected.weeklyPlan && (
-                      <div className="p-5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <TrendingUp className="w-3.5 h-3.5" style={{ color: theme.accent }} />
-                          <span className="mono text-[9px] tracking-widest font-bold" style={{ color: 'var(--tx-muted)' }}>THIS WEEK'S PLAN</span>
-                        </div>
-                        <p className="text-sm leading-relaxed" style={{ color: 'var(--tx-secondary)' }}>{selected.weeklyPlan}</p>
-                        <button className="mt-3 mono text-[9px] flex items-center gap-1 transition-colors" style={{ color: theme.accent }}>
-                          <Edit3 className="w-3 h-3" /> EDIT PLAN
-                        </button>
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-3.5 h-3.5" style={{ color: theme.accent }} />
+                        <span className="mono text-[9px] tracking-widest font-bold" style={{ color: 'var(--tx-muted)' }}>THIS WEEK'S PLAN</span>
                       </div>
-                    )}
+                      {editingPlan ? (
+                        <div className="space-y-2">
+                          <textarea autoFocus rows={4} value={planDraft} onChange={e => setPlanDraft(e.target.value)}
+                            placeholder="What's the plan for this goal this week?"
+                            className="w-full px-3 py-2 text-sm outline-none resize-none" style={inpStyle} />
+                          <div className="flex items-center gap-2">
+                            <button onClick={async () => { await updateGoal(selected.id, { weeklyPlan: planDraft }); setEditingPlan(false); }}
+                              className="mono text-[9px] font-bold px-3 py-1.5" style={{ background: theme.accent, color: 'var(--bg-void)' }}>
+                              SAVE
+                            </button>
+                            <button onClick={() => { setPlanDraft(selected.weeklyPlan || ''); setEditingPlan(false); }}
+                              className="mono text-[9px] px-3 py-1.5" style={{ color: 'var(--tx-muted)' }}>
+                              CANCEL
+                            </button>
+                          </div>
+                        </div>
+                      ) : selected.weeklyPlan ? (
+                        <>
+                          <p className="text-sm leading-relaxed" style={{ color: 'var(--tx-secondary)' }}>{selected.weeklyPlan}</p>
+                          <button onClick={() => setEditingPlan(true)}
+                            className="mt-3 mono text-[9px] flex items-center gap-1 transition-colors" style={{ color: theme.accent }}>
+                            <Edit3 className="w-3 h-3" /> EDIT PLAN
+                          </button>
+                        </>
+                      ) : (
+                        <button onClick={() => setEditingPlan(true)}
+                          className="mono text-[9px] flex items-center gap-1 transition-colors" style={{ color: 'var(--tx-muted)' }}>
+                          <Plus className="w-3 h-3" /> ADD A PLAN FOR THIS WEEK
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })()}

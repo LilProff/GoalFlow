@@ -73,6 +73,11 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
 # ── Pillars ───────────────────────────────────────────────────────
 class PillarBase(BaseModel):
     pillar_id: str
@@ -383,6 +388,17 @@ class MemorySearchRequest(BaseModel):
 
 
 # ── Notifications ──────────────────────────────────────────────
+class PushSubscriptionKeys(BaseModel):
+    p256dh: str
+    auth: str
+
+
+class PushSubscriptionCreate(BaseModel):
+    endpoint: str
+    keys: PushSubscriptionKeys
+    user_agent: Optional[str] = None
+
+
 class NotificationPrefs(BaseModel):
     push_enabled: bool = False
     morning_briefing: bool = True

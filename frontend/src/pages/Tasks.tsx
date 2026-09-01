@@ -341,7 +341,7 @@ export default function Tasks() {
 
       {/* Pillar summary */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
-        className="grid grid-cols-4 gap-2 mb-5">
+        className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
         {DEFAULT_PILLARS.map(p => {
           const theme = getPillarTheme(p.id);
           const pts = dailyData.tasks.filter(t => t.pillarId === p.id);
@@ -417,7 +417,7 @@ export default function Tasks() {
               {/* Pillar */}
               <div className="space-y-1.5">
                 <label className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>PILLAR</label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   {DEFAULT_PILLARS.map(p => {
                     const theme = getPillarTheme(p.id);
                     return (

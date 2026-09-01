@@ -1,4 +1,4 @@
-import type { User, Task, DailyData, Pillar, KPISummary, HistoryEntry, WeeklyReport, UserStatsResponse, Goal, LeaderboardEntry, TimeBlock, NotificationPreferences } from '../types';
+import type { User, Task, DailyData, Pillar, KPISummary, HistoryEntry, WeeklyReport, UserStatsResponse, Goal, LeaderboardEntry, TimeBlock, NotificationPreferences, Milestone } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8010/api/v1';
 
@@ -366,6 +366,13 @@ export const api = {
     return !!getAccessToken();
   },
 
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await fetchApi('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    });
+  },
+
   async verifyToken(): Promise<User> {
     const data = await fetchApi<AuthResponse['user']>('/auth/verify');
     return mapUser(data);
@@ -404,6 +411,26 @@ export const api = {
       body: JSON.stringify(unmapNotifPrefs(prefs)),
     });
     return mapNotifPrefs(d);
+  },
+
+  // ─── Web Push ───────────────────────────────────────────────────────────────
+  async getVapidPublicKey(): Promise<{ public_key: string; configured: boolean }> {
+    return fetchApi('/notifications/vapid-public-key');
+  },
+
+  async registerPushSubscription(sub: { endpoint: string; keys: { p256dh: string; auth: string }; userAgent?: string }): Promise<void> {
+    await fetchApi('/notifications/push-subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ endpoint: sub.endpoint, keys: sub.keys, user_agent: sub.userAgent }),
+    });
+  },
+
+  async unregisterPushSubscription(endpoint: string): Promise<void> {
+    await fetchApi(`/notifications/push-subscribe?endpoint=${encodeURIComponent(endpoint)}`, { method: 'DELETE' });
+  },
+
+  async sendTestPush(): Promise<{ sent: number; failed: number }> {
+    return fetchApi('/notifications/push-test', { method: 'POST' });
   },
 
   // Onboarding
@@ -647,6 +674,34 @@ export const api = {
 
   async deleteGoal(goalId: string): Promise<void> {
     await fetchApi(`/goals/${goalId}`, { method: 'DELETE' });
+  },
+
+  // ─── Milestones ─────────────────────────────────────────────────────────────
+  async createMilestone(goalId: string, title: string, dueDate: string): Promise<Milestone> {
+    interface RawMilestone { id: string; goal_id?: string; title?: string; due_date?: string; completed?: boolean; completed_at?: string; }
+    const data = await fetchApi<RawMilestone>(`/goals/${goalId}/milestones`, {
+      method: 'POST',
+      body: JSON.stringify({ title, due_date: dueDate, completed: false }),
+    });
+    return {
+      id: data.id, goalId: data.goal_id || goalId, title: data.title || title,
+      dueDate: data.due_date || dueDate, completed: data.completed || false, completedAt: data.completed_at,
+    };
+  },
+
+  async updateMilestone(goalId: string, milestoneId: string, updates: Partial<Pick<Milestone, 'title' | 'dueDate' | 'completed'>>): Promise<void> {
+    await fetchApi(`/goals/${goalId}/milestones/${milestoneId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        ...(updates.title   !== undefined && { title: updates.title }),
+        ...(updates.dueDate !== undefined && { due_date: updates.dueDate }),
+        ...(updates.completed !== undefined && { completed: updates.completed }),
+      }),
+    });
+  },
+
+  async deleteMilestone(goalId: string, milestoneId: string): Promise<void> {
+    await fetchApi(`/goals/${goalId}/milestones/${milestoneId}`, { method: 'DELETE' });
   },
 
   // ─── Task AI generation ────────────────────────────────────────────────────

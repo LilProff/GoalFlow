@@ -43,6 +43,13 @@ class Settings(BaseSettings):
 
     # ── Push Notifications ─────────────────────────────────────────────
     expo_push_url: str = "https://exp.host/--/api/v2/push/send"
+    # Web Push (VAPID) — used by the PWA today. vapid_public_key must match
+    # VITE_VAPID_PUBLIC_KEY on the frontend (same key pair); vapid_private_key
+    # is a real secret. Push sending is skipped (not an error) when unset, so
+    # local dev works without generating a key pair.
+    vapid_private_key: str = ""
+    vapid_public_key: str = ""
+    vapid_subject: str = ""
 
     # ── CORS ───────────────────────────────────────────────────────────
     # Override per-deployment via ALLOWED_ORIGINS in .env, e.g.

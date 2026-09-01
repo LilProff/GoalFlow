@@ -44,7 +44,12 @@ export default function Leaderboard() {
         className="grid grid-cols-3 gap-3 mb-8">
         {sorted.slice(0, 3).map((entry, i) => {
           const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd visual order
+          // podiumOrder assumes a full 3-entry podium; with fewer real users
+          // than that (the exact state right after launch — possibly just
+          // one), some slots have nothing to re-index to. Render nothing for
+          // those rather than crashing the whole page on `display.level`.
           const display = sorted.slice(0, 3)[podiumOrder[i]];
+          if (!display) return null;
           const dl = getLevelInfo(display.level);
           return (
             <motion.div key={display.userId}
@@ -78,11 +83,11 @@ export default function Leaderboard() {
       <div style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)' }}>
         <div className="px-5 py-3 grid grid-cols-12 mono text-[8px] tracking-widest" style={{ color: 'var(--tx-ghost)', borderBottom: '1px solid var(--border-dim)' }}>
           <span className="col-span-1">RANK</span>
-          <span className="col-span-4">MEMBER</span>
-          <span className="col-span-2">LEVEL</span>
+          <span className="col-span-7 sm:col-span-4">MEMBER</span>
+          <span className="hidden sm:block sm:col-span-2">LEVEL</span>
           <span className="col-span-2">STREAK</span>
           <span className="col-span-2">SCORE</span>
-          <span className="col-span-1">XP</span>
+          <span className="hidden sm:block sm:col-span-1">XP</span>
         </div>
         {sorted.map((entry, idx) => {
           const levelInfo = getLevelInfo(entry.level);
@@ -101,7 +106,7 @@ export default function Leaderboard() {
                   {entry.rank <= 3 ? ['🥇','🥈','🥉'][entry.rank - 1] : `#${entry.rank}`}
                 </span>
               </div>
-              <div className="col-span-4 flex items-center gap-2.5">
+              <div className="col-span-7 sm:col-span-4 flex items-center gap-2.5">
                 <div className="w-7 h-7 flex items-center justify-center mono text-xs font-black shrink-0"
                   style={{ background: `${levelInfo.color}20`, border: `1px solid ${levelInfo.color}50`, color: levelInfo.color }}>
                   {entry.avatarInitial}
@@ -117,7 +122,7 @@ export default function Leaderboard() {
                   </div>
                 </div>
               </div>
-              <div className="col-span-2">
+              <div className="hidden sm:block sm:col-span-2">
                 <p className="mono text-[9px] font-bold" style={{ color: levelInfo.color }}>Lv.{entry.level}</p>
                 <p className="mono text-[8px]" style={{ color: 'var(--tx-ghost)' }}>{levelInfo.label}</p>
               </div>
@@ -130,7 +135,7 @@ export default function Leaderboard() {
                   {entry.weeklyScore.toFixed(1)}
                 </span>
               </div>
-              <div className="col-span-1">
+              <div className="hidden sm:block sm:col-span-1">
                 <span className="mono text-[9px]" style={{ color: 'var(--tx-muted)' }}>{(entry.xp / 1000).toFixed(1)}k</span>
               </div>
             </motion.div>

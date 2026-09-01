@@ -7,6 +7,14 @@ export default defineConfig(async () => {
   const plugins = [
     react(),
     VitePWA({
+      // injectManifest (a hand-written service worker at src/sw.ts, with
+      // Vite substituting the precache list into it) instead of the
+      // plugin's auto-generated worker — needed for the push/
+      // notificationclick handlers in sw.ts, which a generated worker
+      // can't have.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
@@ -25,31 +33,14 @@ export default defineConfig(async () => {
           { src: '/pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
-        // Precache the built app shell (JS/CSS/HTML/icons) so the app opens
-        // instantly and the shell works offline. API calls are deliberately
-        // excluded from precaching and given NetworkFirst below — this data
-        // (goals, tasks, daily state) must never be served stale-by-default,
-        // only as an explicit fallback when there's truly no connection.
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        navigateFallbackDenylist: [/^\/api\//],
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'goalflow-api',
-              networkTimeoutSeconds: 8,
-              cacheableResponse: { statuses: [200] },
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }, // 1 day
-            },
-          },
-        ],
       },
       devOptions: {
         // Off in dev — a service worker intercepting fetches makes local
         // debugging confusing (stale responses, HMR fighting the SW cache).
         enabled: false,
+        type: 'module',
       },
     }),
   ];

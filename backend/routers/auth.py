@@ -11,7 +11,7 @@ from auth_tokens import (
 )
 from deps import get_supabase, get_current_user, safe_single
 from models import (
-    AuthSignup, AuthLogin, AuthResponse, RefreshTokenRequest,
+    AuthSignup, AuthLogin, AuthResponse, RefreshTokenRequest, ChangePasswordRequest,
     UserProfileResponse, MessageResponse,
 )
 
@@ -166,3 +166,21 @@ async def logout(user_id: str = Depends(get_current_user)):
     # user out. This endpoint exists for symmetry and future extension (e.g.
     # a refresh-token blocklist) rather than doing real work today.
     return MessageResponse(message="Logged out")
+
+
+# ── Change Password ─────────────────────────────────────────────────────────
+@router.post("/change-password", response_model=MessageResponse)
+async def change_password(
+    data: ChangePasswordRequest,
+    user_id: str = Depends(get_current_user),
+    sb: Client = Depends(get_supabase),
+):
+    if len(data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters.")
+
+    resp = safe_single(sb.table("user_profiles").select("password_hash").eq("id", user_id))
+    if not resp.data or not verify_password(data.current_password, resp.data.get("password_hash", "")):
+        raise HTTPException(status_code=401, detail="Current password is incorrect.")
+
+    sb.table("user_profiles").update({"password_hash": hash_password(data.new_password)}).eq("id", user_id).execute()
+    return MessageResponse(message="Password updated.")

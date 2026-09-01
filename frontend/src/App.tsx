@@ -4,6 +4,7 @@ import { useStore } from './lib/store';
 import { setOnUnauthorized } from './lib/api';
 import Landing from './pages/Landing';
 import AppLayout from './components/layout/AppLayout';
+import OfflineBanner from './components/layout/OfflineBanner';
 
 // Landing and the shell load eagerly (they're the first paint). Everything
 // behind auth is split out so a first-time visitor doesn't download the
@@ -65,22 +66,30 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<FullScreenLoader />}>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
-        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route path="/dashboard"    element={<Dashboard />} />
-          <Route path="/planner"      element={<Planner />} />
-          <Route path="/tasks"        element={<Tasks />} />
-          <Route path="/goals"        element={<Goals />} />
-          <Route path="/analytics"    element={<Analytics />} />
-          <Route path="/leaderboard"  element={<Leaderboard />} />
-          <Route path="/settings"     element={<Settings />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      </Suspense>
+      <div className="flex flex-col h-screen">
+        {/* One instance, above the router, so it's visible regardless of
+            which page — signed out on Landing, mid-onboarding, or in the
+            authenticated shell — connectivity drops on. */}
+        <OfflineBanner />
+        <div className="flex-1 min-h-0">
+          <Suspense fallback={<FullScreenLoader />}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />
+            <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/dashboard"    element={<Dashboard />} />
+              <Route path="/planner"      element={<Planner />} />
+              <Route path="/tasks"        element={<Tasks />} />
+              <Route path="/goals"        element={<Goals />} />
+              <Route path="/analytics"    element={<Analytics />} />
+              <Route path="/leaderboard"  element={<Leaderboard />} />
+              <Route path="/settings"     element={<Settings />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          </Suspense>
+        </div>
+      </div>
     </BrowserRouter>
   );
 }

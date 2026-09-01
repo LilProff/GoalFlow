@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -6,6 +6,8 @@ import {
   Clock, Star, Trophy, Flame, TrendingUp
 } from 'lucide-react';
 import { useStore } from '../lib/store';
+import { api } from '../lib/api';
+import { pushPermission, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '../lib/push';
 import { COACH_STYLES, TIMEZONES, LEVEL_THRESHOLDS, getLevelInfo, BADGE_DEFINITIONS } from '../lib/constants';
 
 const TABS = [
@@ -37,6 +39,79 @@ export default function Settings() {
   const [deleteText, setDeleteText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+  const [pushPerm, setPushPerm] = useState(pushPermission());
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushError, setPushError] = useState('');
+  const [testingPush, setTestingPush] = useState(false);
+  const [testPushResult, setTestPushResult] = useState('');
+
+  // The toggle reflects notificationPrefs.pushEnabled (a server-side "would
+  // like push" preference), but the ground truth for whether this *device*
+  // is actually subscribed lives in the browser. Reconcile once on mount —
+  // e.g. permission revoked outside the app, or a second device that never
+  // subscribed even though the preference (set on the first) says enabled.
+  useEffect(() => {
+    isPushSubscribed().then(subscribed => {
+      if (subscribed !== notificationPrefs.pushEnabled) {
+        updateNotificationPrefs({ pushEnabled: subscribed });
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const togglePush = async (enable: boolean) => {
+    setPushError(''); setTestPushResult(''); setPushBusy(true);
+    try {
+      if (enable) {
+        await subscribeToPush();
+      } else {
+        await unsubscribeFromPush();
+      }
+      await updateNotificationPrefs({ pushEnabled: enable });
+      setPushPerm(pushPermission());
+    } catch (e) {
+      setPushError(e instanceof Error ? e.message : 'Could not update push notifications.');
+      setPushPerm(pushPermission());
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
+  const handleTestPush = async () => {
+    setTestingPush(true); setTestPushResult('');
+    try {
+      const r = await api.sendTestPush();
+      setTestPushResult(r.sent > 0 ? '✓ Sent — check your device' : 'No device received it');
+    } catch (e) {
+      setTestPushResult(e instanceof Error ? e.message : 'Failed to send');
+    } finally {
+      setTestingPush(false);
+    }
+  };
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
+  const handleChangePassword = async () => {
+    setPasswordError(''); setPasswordSaved(false);
+    if (newPassword.length < 8) { setPasswordError('New password must be at least 8 characters.'); return; }
+    if (newPassword !== confirmPassword) { setPasswordError('New passwords do not match.'); return; }
+    setChangingPassword(true);
+    try {
+      await api.changePassword(currentPassword, newPassword);
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+      setPasswordSaved(true);
+      setTimeout(() => setPasswordSaved(false), 3000);
+    } catch (e) {
+      setPasswordError(e instanceof Error ? e.message : 'Could not update password.');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
   const [tab, setTab] = useState('profile');
   const [profileName, setProfileName] = useState(user?.name ?? '');
   const [profileOcc, setProfileOcc] = useState(user?.occupation ?? '');
@@ -307,12 +382,29 @@ export default function Settings() {
               {tab === 'notifications' && (
                 <div className="p-6 space-y-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #f5c842' }}>
                   <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#f5c842' }}>// NOTIFICATIONS</p>
-                  <div className="flex items-center justify-between p-4" style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-dim)' }}>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: 'var(--tx-primary)' }}>Push Notifications</p>
-                      <p className="mono text-[9px] mt-0.5" style={{ color: 'var(--tx-muted)' }}>BROWSER PUSH REMINDERS FOR BLOCKS & TASKS</p>
+                  <div className="p-4" style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-dim)' }}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--tx-primary)' }}>Push Notifications</p>
+                        <p className="mono text-[9px] mt-0.5" style={{ color: 'var(--tx-muted)' }}>
+                          {pushPerm === 'unsupported' ? 'NOT SUPPORTED IN THIS BROWSER'
+                            : pushPerm === 'denied' ? 'BLOCKED — ENABLE IN BROWSER SETTINGS'
+                            : 'DEVICE ALERTS FOR BLOCKS & TASKS'}
+                        </p>
+                      </div>
+                      <Toggle
+                        on={notificationPrefs.pushEnabled}
+                        onChange={togglePush}
+                      />
                     </div>
-                    <Toggle on={notificationPrefs.pushEnabled} onChange={v => updateNotificationPrefs({ pushEnabled: v })} />
+                    {pushBusy && <p className="mono text-[9px] mt-2" style={{ color: 'var(--tx-muted)' }}>WORKING…</p>}
+                    {pushError && <p className="text-xs mt-2" style={{ color: '#ff4444' }}>{pushError}</p>}
+                    {notificationPrefs.pushEnabled && !pushBusy && (
+                      <button onClick={handleTestPush} disabled={testingPush}
+                        className="mono text-[9px] mt-2 tracking-widest disabled:opacity-50" style={{ color: '#f5c842' }}>
+                        {testingPush ? 'SENDING…' : testPushResult || 'SEND TEST NOTIFICATION →'}
+                      </button>
+                    )}
                   </div>
                   {([
                     { key: 'morningBriefing'  as const, label: 'Morning Briefing',    sub: 'DAILY TASK SUMMARY AT WAKE TIME' },
@@ -373,15 +465,24 @@ export default function Settings() {
                   <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#ff6b35' }}>// SECURITY</p>
                   <div className="space-y-3">
                     <p className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>CHANGE PASSWORD</p>
-                    {['Current password', 'New password', 'Confirm new password'].map((ph, i) => (
-                      <input key={i} type="password" placeholder={ph}
-                        className={inp} style={inpStyle}
-                        onFocus={e => (e.target.style.borderColor = '#ff6b35')}
-                        onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
-                    ))}
-                    <button className="px-5 py-2.5 mono text-[10px] tracking-widest font-bold"
+                    <input type="password" placeholder="Current password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
+                      className={inp} style={inpStyle}
+                      onFocus={e => (e.target.style.borderColor = '#ff6b35')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
+                    <input type="password" placeholder="New password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+                      className={inp} style={inpStyle}
+                      onFocus={e => (e.target.style.borderColor = '#ff6b35')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
+                    <input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                      className={inp} style={inpStyle}
+                      onFocus={e => (e.target.style.borderColor = '#ff6b35')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
+                    {passwordError && <p className="text-xs" style={{ color: '#ff4444' }}>{passwordError}</p>}
+                    {passwordSaved && <p className="text-xs" style={{ color: '#00d4b4' }}>Password updated.</p>}
+                    <button onClick={handleChangePassword} disabled={changingPassword}
+                      className="px-5 py-2.5 mono text-[10px] tracking-widest font-bold disabled:opacity-50"
                       style={{ background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.25)', color: '#ff6b35' }}>
-                      UPDATE PASSWORD
+                      {changingPassword ? 'UPDATING…' : 'UPDATE PASSWORD'}
                     </button>
                   </div>
                   <div className="pt-4 space-y-3" style={{ borderTop: '1px solid var(--border-dim)' }}>

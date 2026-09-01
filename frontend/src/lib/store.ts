@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { format } from 'date-fns';
 import type {
   User, DailyData, Task, Goal, ChatMessage, OnboardingState,
@@ -65,6 +66,9 @@ interface AppState {
   updateGoal: (goalId: string, updates: Partial<Goal>) => void;
   addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => void;
   deleteGoal: (goalId: string) => void;
+  addMilestone: (goalId: string, title: string, dueDate: string) => Promise<void>;
+  toggleMilestone: (goalId: string, milestoneId: string) => Promise<void>;
+  deleteMilestone: (goalId: string, milestoneId: string) => Promise<void>;
 
   // Planner
   toggleBlock: (blockId: string, field: 'completed' | 'skipped') => Promise<void>;
@@ -127,7 +131,7 @@ const RYNA_RESPONSES = [
 ];
 
 // ─── Store ────────────────────────────────────────────────────────────────────
-export const useStore = create<AppState>((set, get) => ({
+export const useStore = create<AppState>()(persist((set, get) => ({
   isAuthenticated: false, user: null, authLoading: false,
   onboarding: defaultOnboarding,
   dailyData: null, dailyLoading: false,
@@ -309,6 +313,10 @@ export const useStore = create<AppState>((set, get) => ({
       leaderboard,
       notifications: [],
       timeBlocks,
+      // The wizard is done — drop the persisted draft so it can't resurface
+      // stale (e.g. a second onboarding after deleting and recreating an
+      // account on the same device/browser).
+      onboarding: defaultOnboarding,
     }));
     dailyData?.tasks.forEach(t => { if (t.startTime) get().syncTaskToPlanner(t); });
   },
@@ -466,6 +474,46 @@ export const useStore = create<AppState>((set, get) => ({
       await api.deleteGoal(goalId);
     } catch (e) {
       console.error('Failed to delete goal:', e);
+    }
+  },
+
+  addMilestone: async (goalId, title, dueDate) => {
+    try {
+      const milestone = await api.createMilestone(goalId, title, dueDate);
+      set(s => ({
+        goals: s.goals.map(g => g.id === goalId ? { ...g, milestones: [...g.milestones, milestone] } : g),
+      }));
+    } catch (e) {
+      console.error('Failed to add milestone:', e);
+      throw e;
+    }
+  },
+
+  toggleMilestone: async (goalId, milestoneId) => {
+    const goal = get().goals.find(g => g.id === goalId);
+    const milestone = goal?.milestones.find(m => m.id === milestoneId);
+    if (!milestone) return;
+    const completed = !milestone.completed;
+    set(s => ({
+      goals: s.goals.map(g => g.id !== goalId ? g : {
+        ...g, milestones: g.milestones.map(m => m.id === milestoneId ? { ...m, completed } : m),
+      }),
+    }));
+    try {
+      await api.updateMilestone(goalId, milestoneId, { completed });
+    } catch (e) {
+      console.error('Failed to update milestone:', e);
+    }
+  },
+
+  deleteMilestone: async (goalId, milestoneId) => {
+    set(s => ({
+      goals: s.goals.map(g => g.id !== goalId ? g : { ...g, milestones: g.milestones.filter(m => m.id !== milestoneId) }),
+    }));
+    try {
+      await api.deleteMilestone(goalId, milestoneId);
+    } catch (e) {
+      console.error('Failed to delete milestone:', e);
     }
   },
 
@@ -825,4 +873,20 @@ export const useStore = create<AppState>((set, get) => ({
     set({ ...blankUserState(), authLoading: false });
     return result;
   },
+}),
+{
+  name: 'goalflow-ui-state',
+  storage: createJSONStorage(() => localStorage),
+  // Only in-progress local drafts and device-level UI prefs persist here —
+  // never auth tokens (those have their own localStorage keys in api.ts,
+  // deliberately separate) or server-owned data (goals/tasks/etc. always
+  // come fresh from initAuth() so they can't go stale against another
+  // device). The concrete problem this solves: the onboarding wizard is a
+  // multi-minute flow with real typed input, and previously a reload or a
+  // backgrounded tab getting killed (common on mobile) silently wiped
+  // whatever step the user was on.
+  partialize: (state) => ({
+    onboarding: state.onboarding,
+    sidebarCollapsed: state.sidebarCollapsed,
+  }),
 }));

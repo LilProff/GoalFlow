@@ -17,8 +17,8 @@ function ScoreGauge({ score }: { score: number }) {
   const half = circ / 2;
   const offset = half - (pct / 100) * half;
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 100, height: 60 }}>
-      <svg width={100} height={60} viewBox="0 0 100 60">
+    <div className="relative flex items-center justify-center w-full max-w-[100px] mx-auto" style={{ aspectRatio: '100 / 60' }}>
+      <svg className="w-full h-full" viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet">
         <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="var(--border-mid)" strokeWidth="6" strokeLinecap="round" />
         <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke={color} strokeWidth="6" strokeLinecap="round"
           strokeDasharray={`${half} ${half}`} strokeDashoffset={offset}
@@ -131,20 +131,20 @@ export default function Dashboard() {
             {/* Streak */}
             <div className="p-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid #f5c842' }}>
               <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>STREAK</p>
-              <p className="mono text-4xl font-black" style={{ color: '#f5c842' }}><NumberTicker value={user.streak} /></p>
+              <p className="mono text-2xl sm:text-4xl font-black" style={{ color: '#f5c842' }}><NumberTicker value={user.streak} /></p>
               <p className="mono text-[9px] tracking-widest mt-1" style={{ color: 'var(--tx-muted)' }}>DAYS · DON'T BREAK IT</p>
             </div>
             {/* Completion */}
             <div className="p-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid var(--ember)' }}>
               <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>COMPLETION</p>
-              <p className="mono text-4xl font-black" style={{ color: 'var(--ember)' }}><NumberTicker value={pct} />%</p>
+              <p className="mono text-2xl sm:text-4xl font-black" style={{ color: 'var(--ember)' }}><NumberTicker value={pct} />%</p>
               <p className="mono text-[9px] tracking-widest mt-1" style={{ color: 'var(--tx-muted)' }}>{done}/{total} TASKS</p>
             </div>
           </motion.div>
 
           {/* Pillar Grid */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-            className="grid grid-cols-4 gap-2">
+            className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {DEFAULT_PILLARS.map(p => {
               const theme = getPillarTheme(p.id);
               const pts = dailyData.tasks.filter(t => t.pillarId === p.id);

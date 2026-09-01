@@ -201,7 +201,11 @@ const STEPS = ['Identity', 'Pillars', 'Categories', 'Goals', 'Schedule', 'Coach'
 export default function Onboarding() {
   const { onboarding, updateOnboardingStep, setOnboardingMode, completeOnboarding } = useStore();
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
+  // Every other field here correctly seeds from the persisted `onboarding`
+  // draft (see the store's zustand/persist config) — this one didn't, so a
+  // reload always silently bounced a mid-flow user back to step 1 despite
+  // the rest of their answers surviving intact.
+  const [step, setStep] = useState(() => Math.min(onboarding.step, STEPS.length - 1));
   const [loading, setLoading] = useState(false);
   const [identity, setIdentity] = useState(onboarding.identity);
   const [selectedPillars, setSelectedPillars] = useState<PillarId[]>(onboarding.pillars.selected);

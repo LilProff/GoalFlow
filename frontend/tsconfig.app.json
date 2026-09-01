@@ -15,5 +15,10 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // sw.ts runs in a ServiceWorker global scope, not DOM — it needs the
+  // "webworker" lib instead, which conflicts with "DOM" in the same
+  // compilation (both redeclare `self` differently). tsconfig.sw.json
+  // covers it separately.
+  "exclude": ["src/sw.ts"]
 }

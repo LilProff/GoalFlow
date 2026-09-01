@@ -55,8 +55,13 @@ export default function RynaChat() {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 16, scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-      className="fixed bottom-5 right-5 z-50 flex flex-col overflow-hidden"
-      style={{ width: 380, height: minimized ? 52 : 600, background: 'var(--bg-overlay)', border: '1px solid var(--border-mid)', borderTop: '2px solid #00d4b4', transition: 'height 0.2s ease' }}>
+      // A fixed 380px-wide floating panel overflows any phone viewport, and
+      // bottom-5 sits right on top of the mobile tab bar. Below md, this
+      // becomes a near-full-screen sheet that clears the tab bar and the
+      // home-indicator safe area instead; the desktop floating panel is
+      // unchanged.
+      className="fixed inset-x-3 bottom-[calc(56px+env(safe-area-inset-bottom)+12px)] top-14 md:top-auto md:inset-x-auto md:bottom-5 md:right-5 md:w-[380px] md:h-[600px] z-50 flex flex-col overflow-hidden"
+      style={{ height: minimized ? 52 : undefined, background: 'var(--bg-overlay)', border: '1px solid var(--border-mid)', borderTop: '2px solid #00d4b4', transition: 'height 0.2s ease' }}>
 
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 shrink-0" style={{ borderBottom: minimized ? 'none' : '1px solid var(--border-dim)' }}>
