@@ -44,6 +44,7 @@ async def call_ai(
         "X-Title": settings.app_name,
     }
 
+    failures: list[str] = []
     async with httpx.AsyncClient(timeout=30.0) as client:
         for model in models:
             try:
@@ -59,18 +60,35 @@ async def call_ai(
                 )
                 if resp.status_code == 200:
                     data = resp.json()
-                    return data["choices"][0]["message"]["content"]
+                    content = data["choices"][0]["message"]["content"]
+                    # A handful of OpenRouter's free models return HTTP 200
+                    # with a null/empty message body instead of an error —
+                    # treating that as success silently "worked" while
+                    # actually returning nothing. Fall through to the next
+                    # model instead.
+                    if content:
+                        return content
+                    failures.append(f"{model}: empty content")
+                    continue
                 if resp.status_code in (429, 404, 503):
+                    failures.append(f"{model}: HTTP {resp.status_code}")
                     continue  # try next model
                 # Unexpected error — raise immediately
                 resp.raise_for_status()
             except httpx.TimeoutException:
+                failures.append(f"{model}: timeout")
                 continue
-            except httpx.HTTPStatusError:
+            except httpx.HTTPStatusError as e:
+                failures.append(f"{model}: {e}")
                 continue
-            except Exception:
+            except Exception as e:
+                failures.append(f"{model}: {e}")
                 continue
 
+    # Every candidate failed — this is the one place that's genuinely worth
+    # knowing about at a glance in server logs, since the user just sees a
+    # generic fallback message with no clue why.
+    print(f"[openrouter] all models failed: {failures}")
     return "I'm having a moment. Please try again shortly."
 
 

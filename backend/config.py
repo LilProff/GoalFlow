@@ -21,17 +21,25 @@ class Settings(BaseSettings):
     # ── OpenRouter (AI) ───────────────────────────────────────────────
     openrouter_api_key: str
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    # Primary model (fastest free model for real-time chat)
-    openrouter_model: str = "meta-llama/llama-3.1-8b-instruct:free"
+    # OpenRouter's free-tier catalog rotates — models get deprecated/renamed
+    # every so often, and every slug that used to be here (llama-3.1-8b,
+    # gemma-3-4b/12b, llama-3.3-70b, arcee trinity) now 404s. These were
+    # re-verified directly against /chat/completions on 2026-09-01: each
+    # returned real, non-empty content in under 4s. If they start failing
+    # again, re-check https://openrouter.ai/models?max_price=0 for current
+    # slugs rather than assuming the code is broken.
+    openrouter_model: str = "google/gemma-4-26b-a4b-it:free"
     # Fallback models tried in order
     openrouter_fallback_models: list[str] = [
-        "google/gemma-3-4b-it:free",
-        "meta-llama/llama-3.3-70b-instruct:free",
-        "arcee-ai/trinity-large-preview:free",
-        "google/gemma-3-12b-it:free",
+        "google/gemma-4-31b-it:free",
+        "minimax/minimax-m3:free",
+        "poolside/laguna-s-2.1:free",
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     ]
-    # Heavier model for reports / goal planning
-    openrouter_smart_model: str = "moonshotai/kimi-k2.5"
+    # Heavier model for reports / goal planning — still free-tier; not the
+    # fastest option but comfortably capable enough for a periodic weekly
+    # report rather than real-time chat.
+    openrouter_smart_model: str = "google/gemma-4-31b-it:free"
 
     # ── App ────────────────────────────────────────────────────────────
     app_name: str = "GoalFlow"
