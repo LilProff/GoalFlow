@@ -2,23 +2,33 @@ import type { User, Task, DailyData, Pillar, KPISummary, HistoryEntry, WeeklyRep
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8010/api/v1';
 
-// Clerk token getter - will be set from App component
-let clerkGetToken: (() => Promise<string | null>) | null = null;
+const ACCESS_KEY = 'goalflow_token';
+const REFRESH_KEY = 'goalflow_refresh_token';
 
-export function setClerkGetToken(getter: () => Promise<string | null>) {
-  clerkGetToken = getter;
+function getAccessToken(): string | null {
+  return localStorage.getItem(ACCESS_KEY);
 }
 
-// Invoked when the API rejects our token (expired / invalid session), so the
-// app can drop the user back to a signed-out state instead of leaving every
-// page stuck on an unexplained error.
+function setTokens(accessToken: string, refreshToken: string) {
+  localStorage.setItem(ACCESS_KEY, accessToken);
+  localStorage.setItem(REFRESH_KEY, refreshToken);
+}
+
+function clearToken() {
+  localStorage.removeItem(ACCESS_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+}
+
+// Invoked when a session ends for real (refresh also failed / no refresh
+// token to try), so the app can drop the user back to signed-out instead of
+// leaving every page stuck on an unexplained error.
 let onUnauthorized: (() => void) | null = null;
 
 export function setOnUnauthorized(handler: () => void) {
   onUnauthorized = handler;
 }
 
-/** Thrown for 401s so callers can distinguish "signed out" from a real failure. */
+/** Thrown when a session genuinely ends, so callers can distinguish that from a real failure. */
 export class UnauthorizedError extends Error {
   constructor(message = 'Session expired') {
     super(message);
@@ -26,28 +36,44 @@ export class UnauthorizedError extends Error {
   }
 }
 
-async function getToken(): Promise<string | null> {
-  if (clerkGetToken) {
-    return clerkGetToken();
-  }
-  return localStorage.getItem('goalflow_token');
-}
+// Access tokens are short-lived (12h) with no SDK auto-refreshing them
+// anymore, so fetchApi has to do it itself: on a 401, try the refresh token
+// once before giving up. Concurrent 401s share one in-flight refresh instead
+// of each racing the endpoint.
+let refreshInFlight: Promise<boolean> | null = null;
 
-function clearToken() {
-  localStorage.removeItem('goalflow_token');
-  localStorage.removeItem('goalflow_refresh_token');
+async function tryRefresh(): Promise<boolean> {
+  const refreshToken = localStorage.getItem(REFRESH_KEY);
+  if (!refreshToken) return false;
+  if (!refreshInFlight) {
+    refreshInFlight = fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
+      .then(async r => {
+        if (!r.ok) return false;
+        const data = await r.json();
+        setTokens(data.access_token, data.refresh_token);
+        return true;
+      })
+      .catch(() => false)
+      .finally(() => { refreshInFlight = null; });
+  }
+  return refreshInFlight;
 }
 
 async function fetchApi<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  _retried = false,
 ): Promise<T> {
-  const token = await getToken();
+  const token = getAccessToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -58,12 +84,14 @@ async function fetchApi<T>(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-    if (response.status === 401) {
+    if (response.status === 401 && !_retried) {
+      if (await tryRefresh()) return fetchApi<T>(endpoint, options, true);
       clearToken();
       onUnauthorized?.();
+      const error = await response.json().catch(() => ({ detail: 'Session expired' }));
       throw new UnauthorizedError(error.detail || 'Session expired — please sign in again.');
     }
+    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
     throw new Error(error.detail || `HTTP ${response.status}`);
   }
 
@@ -306,15 +334,24 @@ interface RynaResponse {
   action?: RynaAction;
 }
 
-// Clerk auth endpoints - simplified since Clerk handles auth UI
 export const api = {
-  // Auth - Clerk handles login/signup, we just sync with backend
-  async syncClerkUser(clerkUserId: string): Promise<{ user: User; accessToken: string }> {
-    const data = await fetchApi<AuthResponse>('/auth/clerk-sync', {
+  // ─── Auth ───────────────────────────────────────────────────────────────
+  async signup(email: string, password: string, name: string): Promise<User> {
+    const data = await fetchApi<AuthResponse>('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ clerk_user_id: clerkUserId }),
+      body: JSON.stringify({ email, password, name }),
     });
-    return { user: mapUser(data.user), accessToken: data.access_token };
+    setTokens(data.access_token, data.refresh_token);
+    return mapUser(data.user);
+  },
+
+  async login(email: string, password: string): Promise<User> {
+    const data = await fetchApi<AuthResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+    setTokens(data.access_token, data.refresh_token);
+    return mapUser(data.user);
   },
 
   async logout(): Promise<void> {
@@ -323,6 +360,10 @@ export const api = {
     } finally {
       clearToken();
     }
+  },
+
+  isAuthenticated(): boolean {
+    return !!getAccessToken();
   },
 
   async verifyToken(): Promise<User> {

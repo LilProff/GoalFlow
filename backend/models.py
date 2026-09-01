@@ -73,12 +73,6 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
-class ClerkSyncRequest(BaseModel):
-    clerk_user_id: str
-    email: Optional[str] = None
-    name: Optional[str] = None
-
-
 # ── Pillars ───────────────────────────────────────────────────────
 class PillarBase(BaseModel):
     pillar_id: str

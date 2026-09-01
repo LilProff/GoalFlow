@@ -18,13 +18,6 @@ class Settings(BaseSettings):
     supabase_service_key: str
     supabase_anon_key: str = ""
 
-    # ── Clerk Auth ────────────────────────────────────────────────────
-    # Secret key for server-side Clerk verification (optional — we decode
-    # without signature verification since Clerk's frontend SDK already
-    # validates tokens before they reach our API)
-    clerk_secret_key: str = ""
-    clerk_publishable_key: str = ""
-
     # ── OpenRouter (AI) ───────────────────────────────────────────────
     openrouter_api_key: str
     openrouter_base_url: str = "https://openrouter.ai/api/v1"

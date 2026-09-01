@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Eye, EyeOff, Shield, Zap, Lock, Server } from 'lucide-react';
-import { SignIn, SignUp, useUser } from '@clerk/react';
+import { ArrowRight, Eye, EyeOff, Shield, Zap, Lock, Server, Loader2 } from 'lucide-react';
+import { useStore } from '../lib/store';
 
 type Mode = 'home' | 'login' | 'signup';
 
@@ -28,39 +28,6 @@ const PILLARS = [
 // numbers ("2,400+ active builders", "89% streak retention") are false
 // advertising once this page is public, and there is no analytics source
 // behind them. Swap these for real figures only when they can be measured.
-// One appearance config shared by SignIn and SignUp. The `variables` block is
-// what makes Clerk's own chrome (footer, dividers, helper text, the
-// "Development mode" strip) follow the dark theme — styling individual
-// `elements` alone left the footer rendering on Clerk's default white panel.
-const CLERK_APPEARANCE = {
-  variables: {
-    colorPrimary: '#d4f53c',
-    colorBackground: '#181510',
-    colorText: '#f0ead8',
-    colorTextSecondary: '#a89f88',
-    colorInputBackground: '#1f1c14',
-    colorInputText: '#f0ead8',
-    colorDanger: '#ff4444',
-    borderRadius: '0px',
-  },
-  elements: {
-    rootBox: 'w-full',
-    card: 'bg-transparent shadow-none',
-    headerTitle: 'hidden',
-    headerSubtitle: 'hidden',
-    socialButtonsBlockButton:
-      'bg-[var(--bg-overlay)] border border-[var(--border-mid)] hover:border-[var(--acid)] text-[var(--tx-primary)]',
-    formFieldInput:
-      'bg-[var(--bg-overlay)] border border-[var(--border-mid)] text-[var(--tx-primary)] focus:border-[var(--acid)]',
-    formButtonPrimary: 'bg-[var(--acid)] text-[var(--bg-void)] hover:bg-[var(--acid)]/90',
-    footer: 'bg-transparent',
-    footerAction: 'bg-transparent',
-    footerActionLink: 'text-[var(--acid)] hover:text-[var(--acid)]/80',
-    dividerLine: 'bg-[var(--border-mid)]',
-    dividerText: 'text-[var(--tx-muted)]',
-  },
-} as const;
-
 const STATS = [
   { value: '4',       label: 'Execution pillars'  },
   { value: '90 days', label: 'Sprint framework'   },
@@ -105,10 +72,112 @@ function PlayStoreBadge() {
   );
 }
 
+function AuthForm({
+  mode, onSwitchMode, inputBase, inputStyle,
+}: {
+  mode: 'login' | 'signup';
+  onSwitchMode: (m: Mode) => void;
+  inputBase: string;
+  inputStyle: Record<string, string>;
+}) {
+  const { login, signup } = useStore();
+  const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  // Fresh form when switching between sign-in and sign-up rather than
+  // carrying stale values (and a stale error) across.
+  useEffect(() => {
+    setName(''); setEmail(''); setPassword(''); setError('');
+  }, [mode]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (mode === 'signup' && name.trim().length < 1) {
+      setError('Enter your name.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (mode === 'signup') {
+        await signup(email.trim().toLowerCase(), password, name.trim());
+        navigate('/onboarding');
+      } else {
+        await login(email.trim().toLowerCase(), password);
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {mode === 'signup' && (
+        <div>
+          <label className="mono text-[9px] tracking-widest block mb-1.5" style={{ color: 'var(--tx-muted)' }}>NAME</label>
+          <input autoFocus value={name} onChange={e => setName(e.target.value)}
+            className={inputBase} style={inputStyle} placeholder="Your name" autoComplete="name" />
+        </div>
+      )}
+      <div>
+        <label className="mono text-[9px] tracking-widest block mb-1.5" style={{ color: 'var(--tx-muted)' }}>EMAIL</label>
+        <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+          autoFocus={mode === 'login'}
+          className={inputBase} style={inputStyle} placeholder="you@example.com" autoComplete="email" />
+      </div>
+      <div>
+        <label className="mono text-[9px] tracking-widest block mb-1.5" style={{ color: 'var(--tx-muted)' }}>PASSWORD</label>
+        <div className="relative">
+          <input type={showPassword ? 'text' : 'password'} required minLength={8}
+            value={password} onChange={e => setPassword(e.target.value)}
+            className={inputBase} style={{ ...inputStyle, paddingRight: 40 }}
+            placeholder={mode === 'signup' ? 'At least 8 characters' : 'Your password'}
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} />
+          <button type="button" onClick={() => setShowPassword(v => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--tx-muted)' }}
+            tabIndex={-1} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <p className="text-xs" style={{ color: '#ff4444' }}>{error}</p>
+      )}
+
+      <button type="submit" disabled={submitting}
+        className="w-full flex items-center justify-center gap-2 py-3 font-bold text-sm disabled:opacity-60"
+        style={{ background: 'var(--acid)', color: 'var(--bg-void)' }}>
+        {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+        {submitting ? (mode === 'signup' ? 'CREATING ACCOUNT…' : 'SIGNING IN…') : (mode === 'signup' ? 'CREATE ACCOUNT' : 'SIGN IN')}
+      </button>
+
+      <p className="text-center text-xs" style={{ color: 'var(--tx-muted)' }}>
+        {mode === 'signup' ? 'Already have an account?' : "Don't have an account?"}{' '}
+        <button type="button" onClick={() => onSwitchMode(mode === 'signup' ? 'login' : 'signup')}
+          className="font-semibold" style={{ color: 'var(--acid)' }}>
+          {mode === 'signup' ? 'Sign in' : 'Create one'}
+        </button>
+      </p>
+    </form>
+  );
+}
+
 export default function Landing() {
-  // Clerk's own "Sign in" / "Sign up" cross-links navigate to ?mode=login /
-  // ?mode=signup. Without reading that param those links dropped the user back
-  // on the marketing page instead of switching forms.
+  // The nav/CTA buttons below and the in-form cross-links both set ?mode=.
+  // Reading it here (rather than only local state) makes the form linkable
+  // and keeps browser back from leaving the app entirely.
   const [searchParams, setSearchParams] = useSearchParams();
   const urlMode = searchParams.get('mode');
   const [mode, setMode] = useState<Mode>(
@@ -128,14 +197,14 @@ export default function Landing() {
     if (next === 'home') setSearchParams({}, { replace: false });
     else setSearchParams({ mode: next === 'signup' ? 'signup' : 'login' }, { replace: false });
   };
-  const { user } = useUser();
+  const { isAuthenticated } = useStore();
   const navigate = useNavigate();
 
-  // If user is already signed in, redirect to dashboard
-  if (user) {
-    navigate('/dashboard');
-    return null;
-  }
+  // Already signed in — this page is for signed-out visitors.
+  useEffect(() => {
+    if (isAuthenticated) navigate('/dashboard', { replace: true });
+  }, [isAuthenticated, navigate]);
+  if (isAuthenticated) return null;
 
   const inputBase = "w-full px-3 py-2.5 text-sm outline-none transition-all";
   const inputStyle = { background: 'var(--bg-overlay)', border: '1px solid var(--border-mid)', color: 'var(--tx-primary)' };
@@ -345,7 +414,7 @@ export default function Landing() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                 {[
                   { icon: Lock,   title: 'Per-account data isolation',   desc: 'Every request is scoped to your verified account before it reaches the database, so one account can never read another’s goals, tasks or logs.' },
-                  { icon: Shield, title: 'Verified session tokens',       desc: 'Sign-in is handled by Clerk. Every API call carries a signed session token whose signature is verified server-side on each request, and which expires and refreshes automatically.' },
+                  { icon: Shield, title: 'Verified session tokens',       desc: 'Every API call carries a signed session token whose signature is verified server-side on each request. Passwords are hashed, never stored or logged in plain text.' },
                   { icon: Zap,    title: 'Ryna AI privacy',              desc: 'Your goals and tasks are sent to the AI provider only to generate your coaching. They are not used to train models and are not sold.' },
                   { icon: Server, title: 'Encrypted in transit & at rest',desc: 'All traffic runs over HTTPS. Data is stored in Postgres on Supabase, encrypted at rest, in the region you provision.' },
                 ].map(({ icon: Icon, title, desc }) => (
@@ -438,7 +507,7 @@ export default function Landing() {
             </footer>
           </motion.div>
         ) : (
-          /* ── Auth (Clerk) ── */
+          /* ── Auth ── */
           <motion.div key="auth"
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="flex items-center justify-center min-h-[calc(100vh-97px)] px-4 py-16">
@@ -454,21 +523,7 @@ export default function Landing() {
 
               <div className="p-6"
                 style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid var(--acid)' }}>
-                {mode === 'login' ? (
-                  <SignIn 
-                    routing="hash" 
-                    signUpUrl="?mode=signup"
-                    fallbackRedirectUrl="/dashboard"
-                    appearance={CLERK_APPEARANCE}
-                  />
-                ) : (
-                  <SignUp 
-                    routing="hash"
-                    signInUrl="?mode=login"
-                    fallbackRedirectUrl="/onboarding"
-                    appearance={CLERK_APPEARANCE}
-                  />
-                )}
+                <AuthForm mode={mode} onSwitchMode={switchMode} inputBase={inputBase} inputStyle={inputStyle} />
               </div>
 
               <button onClick={() => switchMode('home')}

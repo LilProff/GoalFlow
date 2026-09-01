@@ -35,13 +35,15 @@ interface AppState {
 
   // Auth
   logout: () => Promise<void>;
-  /** Loads the signed-in user's data. Resolves false if the backend has no
-   *  profile for this token yet (i.e. a first-time Clerk user needing sync). */
+  /** Checks for a stored token and, if valid, loads the signed-in user's
+   *  data. Resolves false if there's no valid session — that's the normal
+   *  signed-out state, not an error. */
   initAuth: () => Promise<boolean>;
   /** Local-only sign-out reset — no network call. */
   resetAuthState: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
   logDay: () => Promise<void>;
-  setUserFromClerk: (userId: string, email: string, name: string) => Promise<void>;
   updateProfile: (updates: Partial<Pick<User, 'name' | 'timezone' | 'occupation' | 'weeklyHours' | 'coachStyle' | 'has9to5' | 'workStartTime' | 'workEndTime'>>) => Promise<void>;
 
   // Onboarding
@@ -138,7 +140,7 @@ export const useStore = create<AppState>((set, get) => ({
   notificationPrefs: defaultNotifPrefs,
   sidebarCollapsed: false,
 
-  // ── Auth (Clerk-based) ───────────────────────────────────────────────────
+  // ── Auth (self-issued JWT) ────────────────────────────────────────────────
   logout: async () => {
     try {
       await api.logout();
@@ -150,8 +152,44 @@ export const useStore = create<AppState>((set, get) => ({
 
   resetAuthState: () => set({ ...blankUserState(), authLoading: false }),
 
+  login: async (email, password) => {
+    set({ authLoading: true });
+    try {
+      await api.login(email, password);
+      await get().initAuth();
+    } catch (e) {
+      set({ authLoading: false });
+      throw e;
+    }
+  },
+
+  signup: async (email, password, name) => {
+    set({ authLoading: true });
+    try {
+      await api.signup(email, password, name);
+      await get().initAuth();
+      // Pre-fill the onboarding wizard's name field with what they just typed
+      // — they shouldn't have to re-enter it a screen later.
+      set(s => ({
+        onboarding: s.user?.onboardingComplete
+          ? s.onboarding
+          : { ...s.onboarding, identity: { ...s.onboarding.identity, name } },
+      }));
+    } catch (e) {
+      set({ authLoading: false });
+      throw e;
+    }
+  },
+
   initAuth: async () => {
-    // Auth state is managed by Clerk - just sync with backend if needed
+    // Called on app boot to check for a stored token, and after login/signup
+    // to load everything else. A thrown/failed verify here means there's no
+    // valid session (no token, or token+refresh both expired) — genuinely
+    // signed out, not an error to surface.
+    if (!api.isAuthenticated()) {
+      set({ authLoading: false });
+      return false;
+    }
     try {
       const user = await api.verifyToken();
       const [dailyData, pillars, stats, history, kpi, weeklyReport, goals, leaderboard, timeBlocks, notifPrefs] = await Promise.all([
@@ -183,60 +221,9 @@ export const useStore = create<AppState>((set, get) => ({
       dailyData?.tasks.forEach(t => { if (t.startTime) get().syncTaskToPlanner(t); });
       return true;
     } catch {
-      // No profile yet (first-time Clerk user) or not signed in — the caller
-      // decides whether to run a clerk-sync.
+      // No stored token, or it (and its refresh) are no longer valid.
       set({ authLoading: false });
       return false;
-    }
-  },
-
-  setUserFromClerk: async (userId: string, email: string, name: string) => {
-    set({ authLoading: true });
-    try {
-      // Sync with backend - create/get user record
-      const { user } = await api.syncClerkUser(userId);
-      const [dailyData, pillars, stats, history, kpi, weeklyReport, goals, leaderboard, timeBlocks, notifPrefs] = await Promise.all([
-        api.getToday().catch(() => null),
-        api.getPillars().catch(() => []),
-        api.getUserStats().catch(() => ({ xp: 0, level: 1, streak_current: 0, streak_longest: 0 })),
-        api.getHistory(14).catch(() => []),
-        api.getKPISummary().catch(() => null),
-        api.getWeeklyReport().catch(() => null),
-        api.getGoals().catch(() => []),
-        api.getLeaderboard().catch(() => []),
-        api.getPlannerBlocks().catch(() => []),
-        api.getNotificationPrefs().catch(() => null),
-      ]);
-      set({
-        isAuthenticated: true,
-        authLoading: false,
-        user: {
-          ...user,
-          name: name || user.name,
-          email: email || user.email,
-          level: stats.level,
-          xp: stats.xp,
-          streak: stats.streak_current,
-          longestStreak: stats.streak_longest,
-          pillars,
-          onboardingComplete: user.onboardingComplete
-        },
-        dailyData,
-        goals,
-        history,
-        kpi,
-        weeklyReport,
-        leaderboard,
-        timeBlocks,
-        ...(notifPrefs ? { notificationPrefs: notifPrefs } : {}),
-        onboarding: user.onboardingComplete
-          ? defaultOnboarding
-          : { ...defaultOnboarding, identity: { ...defaultOnboarding.identity, name: name || '' } },
-      });
-      dailyData?.tasks.forEach(t => { if (t.startTime) get().syncTaskToPlanner(t); });
-    } catch (error) {
-      console.error('Clerk sync error:', error);
-      set({ authLoading: false });
     }
   },
 

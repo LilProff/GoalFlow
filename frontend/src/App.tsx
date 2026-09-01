@@ -1,8 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, lazy, Suspense } from 'react';
-import { useAuth, useUser } from '@clerk/react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { useStore } from './lib/store';
-import { setClerkGetToken, setOnUnauthorized } from './lib/api';
+import { setOnUnauthorized } from './lib/api';
 import Landing from './pages/Landing';
 import AppLayout from './components/layout/AppLayout';
 
@@ -18,7 +17,7 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 
-function PageLoader() {
+function FullScreenLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-void)', color: 'var(--tx-primary)' }}>
       <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -27,92 +26,46 @@ function PageLoader() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { user } = useStore();
-  
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-void)', color: 'var(--tx-primary)' }}>
-        <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm">Loading...</p>
-      </div>
-    );
-  }
-  
-  if (!isSignedIn) return <Navigate to="/" replace />;
+  const { isAuthenticated, user } = useStore();
+  if (!isAuthenticated) return <Navigate to="/" replace />;
   if (!user?.onboardingComplete) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
 }
 
 function OnboardingRoute({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, isLoaded } = useAuth();
-  
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-void)', color: 'var(--tx-primary)' }}>
-        <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm">Loading...</p>
-      </div>
-    );
-  }
-  
-  if (!isSignedIn) return <Navigate to="/" replace />;
+  const { isAuthenticated } = useStore();
+  if (!isAuthenticated) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 export default function App() {
-  const { initAuth, setUserFromClerk, resetAuthState, authLoading } = useStore();
-  const { isLoaded, isSignedIn, getToken, userId, signOut } = useAuth();
-  const { user: clerkUser } = useUser();
+  const { initAuth, resetAuthState, authLoading } = useStore();
+  // Distinguishes "haven't checked for a stored session yet" from "checked,
+  // and there isn't one" — without this, ProtectedRoute would flash a
+  // redirect to "/" on every reload before the token check resolves.
+  const [bootChecking, setBootChecking] = useState(true);
 
-  // Wire Clerk's getToken to API
   useEffect(() => {
-    setClerkGetToken(getToken);
-  }, [getToken]);
+    // A rejected token (expired, refresh also failed) means the session is
+    // genuinely over — drop local state so the UI reflects signed-out rather
+    // than getting stuck on a broken authenticated view.
+    setOnUnauthorized(() => resetAuthState());
+  }, [resetAuthState]);
 
-  // If the API ever rejects our token, the session is genuinely gone (Clerk
-  // refreshes tokens transparently otherwise) — clear Clerk's client state so
-  // the user lands back on the marketing page instead of a broken dashboard.
   useEffect(() => {
-    setOnUnauthorized(() => { void signOut(); });
-  }, [signOut]);
+    initAuth().finally(() => setBootChecking(false));
+    // Intentionally run once on mount — login()/signup() update auth state
+    // directly and don't need this effect to re-fire.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Handle Clerk auth state changes
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    if (isSignedIn && userId) {
-      // initAuth() resolves false when the backend has no profile for this
-      // Clerk user yet — that's a first-time signup, so create one. Clerk is
-      // the only place the real email/name exist, so pass them through;
-      // sending blanks here created profiles with empty names and emails.
-      initAuth().then(loaded => {
-        if (loaded) return;
-        const email = clerkUser?.primaryEmailAddress?.emailAddress ?? '';
-        const name = clerkUser?.fullName ?? clerkUser?.firstName ?? '';
-        return setUserFromClerk(userId, email, name).catch(err => {
-          console.error('Failed to sync clerk user:', err);
-        });
-      });
-    } else {
-      // Signed out — reset locally. Calling initAuth() here fired a
-      // guaranteed-to-fail /auth/verify on every visit to the marketing page.
-      resetAuthState();
-    }
-  }, [isLoaded, isSignedIn, userId, clerkUser]);
-
-  if (!isLoaded || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-void)', color: 'var(--tx-primary)' }}>
-        <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm">Loading...</p>
-      </div>
-    );
+  if (bootChecking || authLoading) {
+    return <FullScreenLoader />;
   }
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={<FullScreenLoader />}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/onboarding" element={<OnboardingRoute><Onboarding /></OnboardingRoute>} />

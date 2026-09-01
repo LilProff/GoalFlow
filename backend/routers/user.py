@@ -1,8 +1,6 @@
-import httpx
 from fastapi import APIRouter, HTTPException, Depends
 from supabase import Client
 
-from config import settings
 from deps import get_current_user, get_supabase, safe_single
 from models import UserStatsResponse, UserStatsUpdate
 
@@ -70,35 +68,15 @@ async def delete_account(user_id: str = Depends(get_current_user), sb: Client = 
     """
     Permanently delete this account and everything belonging to it.
 
-    Deletes the user_profiles row first — every other table references it with
+    user_profiles is both the identity (email + password_hash) and the profile
+    now, so deleting the row is a complete account deletion — no separate
+    identity provider to clean up. Every other table references it with
     `on delete cascade`, so goals, tasks, time blocks, logs, stats, badges,
-    memories and conversations go with it. Then removes the Clerk user so the
-    same email can sign up fresh; without that step the account would come back
-    as an empty profile on next sign-in.
+    memories and conversations go with it.
     """
     try:
         sb.table("user_profiles").delete().eq("id", user_id).execute()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete account data: {e}")
 
-    clerk_deleted = False
-    if settings.clerk_secret_key:
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                resp = await client.delete(
-                    f"https://api.clerk.com/v1/users/{user_id}",
-                    headers={"Authorization": f"Bearer {settings.clerk_secret_key}"},
-                )
-            clerk_deleted = resp.status_code in (200, 204, 404)
-        except Exception:
-            clerk_deleted = False
-
-    # The data is gone either way; report whether the identity was removed too
-    # so the caller can tell the user if a manual cleanup is still needed.
-    return {
-        "ok": True,
-        "data_deleted": True,
-        "identity_deleted": clerk_deleted,
-        "message": "Account deleted." if clerk_deleted else
-                   "Account data deleted. The sign-in identity could not be removed automatically.",
-    }
+    return {"ok": True, "message": "Account deleted."}
