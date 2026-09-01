@@ -1,4 +1,4 @@
-import type { User, Task, DailyData, Pillar, KPISummary, HistoryEntry, WeeklyReport, UserStatsResponse, Goal, LeaderboardEntry, TimeBlock, NotificationPreferences, Milestone } from '../types';
+import type { User, Task, DailyData, Pillar, KPISummary, HistoryEntry, WeeklyReport, UserStatsResponse, Goal, LeaderboardEntry, TimeBlock, NotificationPreferences, Milestone, PaceStatus, GoalImportDraft, ImportDraftGoal } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8010/api/v1';
 
@@ -101,6 +101,33 @@ async function fetchApi<T>(
   return (text ? JSON.parse(text) : undefined) as T;
 }
 
+// A separate path for multipart uploads (the goal-import file) — the
+// browser needs to set its own Content-Type with a boundary, so this
+// deliberately doesn't send the JSON header fetchApi always adds. Mirrors
+// fetchApi's auth/401-refresh handling rather than sharing it, since the
+// body shape (FormData vs. JSON) differs at every step.
+async function fetchApiUpload<T>(endpoint: string, formData: FormData, _retried = false): Promise<T> {
+  const token = getAccessToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(`${API_BASE}${endpoint}`, { method: 'POST', headers, body: formData });
+
+  if (!response.ok) {
+    if (response.status === 401 && !_retried) {
+      if (await tryRefresh()) return fetchApiUpload<T>(endpoint, formData, true);
+      clearToken();
+      onUnauthorized?.();
+      const error = await response.json().catch(() => ({ detail: 'Session expired' }));
+      throw new UnauthorizedError(error.detail || 'Session expired — please sign in again.');
+    }
+    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+    throw new Error(error.detail || `HTTP ${response.status}`);
+  }
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
 function average(values: number[]): number {
   if (!values.length) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -195,6 +222,7 @@ interface RawTask {
   start_time?: string;
   end_time?: string;
   created_at?: string;
+  subtasks?: { id: string; title: string; completed: boolean }[];
 }
 
 function mapTask(t: RawTask): Task {
@@ -210,6 +238,60 @@ function mapTask(t: RawTask): Task {
     startTime: t.start_time,
     endTime: t.end_time,
     createdAt: t.created_at || '',
+    subtasks: t.subtasks || [],
+  };
+}
+
+interface RawGoal {
+  id: string;
+  user_id?: string;
+  pillar_id?: string;
+  title?: string;
+  description?: string;
+  target_date?: string;
+  status?: string;
+  progress?: number;
+  goal_type?: string;
+  weekly_kpis?: string[];
+  weekly_plan?: string;
+  strategy?: string;
+  milestones?: unknown[];
+  created_at?: string;
+  parent_goal_id?: string | null;
+  timeline_type?: string;
+  origin?: string;
+  timeline_history?: { from_date: string; to_date: string; reason: string; adjusted_at: string }[];
+  pace?: { expected_progress: number; status: string; days_remaining: number } | null;
+}
+
+/** `fallback` fills in fields a POST response echoes back incompletely (mirrors what createGoal previously did inline). */
+function mapGoal(g: RawGoal, fallback?: Partial<Goal>): Goal {
+  return {
+    id: g.id,
+    userId: g.user_id || fallback?.userId || '',
+    pillarId: (g.pillar_id || fallback?.pillarId || 'BUILD') as Goal['pillarId'],
+    title: g.title || fallback?.title || '',
+    description: g.description || fallback?.description || '',
+    targetDate: g.target_date || fallback?.targetDate || '',
+    status: (g.status || fallback?.status || 'active') as Goal['status'],
+    progress: g.progress ?? fallback?.progress ?? 0,
+    type: (g.goal_type || fallback?.type || 'project') as Goal['type'],
+    weeklyKPIs: g.weekly_kpis || fallback?.weeklyKPIs || [],
+    weeklyPlan: g.weekly_plan ?? fallback?.weeklyPlan,
+    strategy: g.strategy ?? fallback?.strategy,
+    milestones: (g.milestones || fallback?.milestones || []) as Goal['milestones'],
+    createdAt: g.created_at || fallback?.createdAt || new Date().toISOString(),
+    parentGoalId: g.parent_goal_id ?? fallback?.parentGoalId ?? null,
+    timelineType: (g.timeline_type || fallback?.timelineType || 'short-term') as Goal['timelineType'],
+    origin: (g.origin || fallback?.origin || 'manual') as Goal['origin'],
+    timelineHistory: (g.timeline_history || []).map(h => ({
+      fromDate: h.from_date, toDate: h.to_date, reason: h.reason, adjustedAt: h.adjusted_at,
+    })),
+    pace: g.pace ? {
+      expectedProgress: g.pace.expected_progress,
+      status: g.pace.status as PaceStatus,
+      daysRemaining: g.pace.days_remaining,
+    } : null,
   };
 }
 
@@ -448,6 +530,60 @@ export const api = {
     });
   },
 
+  // AI-import onboarding — parses an uploaded doc into an editable draft
+  // (nothing persisted yet), then confirmGoalsImport actually writes it.
+  async importGoalsFile(file: File): Promise<GoalImportDraft> {
+    const form = new FormData();
+    form.append('file', file);
+    interface RawDraftTask { title: string; description?: string; estimated_minutes: number; subtasks: string[]; }
+    interface RawDraftGoal {
+      draft_id: string; pillar_id: string; title: string; description?: string;
+      timeline_type: string; goal_type: string; target_date?: string;
+      parent_draft_id?: string | null; tasks: RawDraftTask[];
+    }
+    const data = await fetchApiUpload<{ life_areas_summary?: string; goals: RawDraftGoal[] }>('/onboarding/import', form);
+    return {
+      lifeAreasSummary: data.life_areas_summary,
+      goals: data.goals.map(g => ({
+        draftId: g.draft_id,
+        pillarId: g.pillar_id as Goal['pillarId'],
+        title: g.title,
+        description: g.description,
+        timelineType: g.timeline_type as Goal['timelineType'],
+        type: g.goal_type as Goal['type'],
+        targetDate: g.target_date,
+        parentDraftId: g.parent_draft_id,
+        tasks: g.tasks.map(t => ({
+          title: t.title, description: t.description,
+          estimatedMinutes: t.estimated_minutes, subtasks: t.subtasks || [],
+        })),
+      })),
+    };
+  },
+
+  async confirmGoalsImport(goals: ImportDraftGoal[]): Promise<{ ok: boolean; goalsCreated: number }> {
+    const data = await fetchApi<{ ok: boolean; goals_created: number }>('/onboarding/import/confirm', {
+      method: 'POST',
+      body: JSON.stringify({
+        goals: goals.map(g => ({
+          draft_id: g.draftId,
+          pillar_id: g.pillarId,
+          title: g.title,
+          description: g.description,
+          timeline_type: g.timelineType,
+          goal_type: g.type,
+          target_date: g.targetDate,
+          parent_draft_id: g.parentDraftId,
+          tasks: g.tasks.map(t => ({
+            title: t.title, description: t.description,
+            estimated_minutes: t.estimatedMinutes, subtasks: t.subtasks,
+          })),
+        })),
+      }),
+    });
+    return { ok: data.ok, goalsCreated: data.goals_created };
+  },
+
   async getOnboardingStatus(): Promise<{ complete: boolean; mode: string }> {
     return fetchApi('/onboarding/status');
   },
@@ -583,90 +719,51 @@ export const api = {
 
   // ─── Goals ──────────────────────────────────────────────────────────────────
   async getGoals(): Promise<Goal[]> {
-    interface RawGoal {
-      id: string;
-      user_id?: string;
-      pillar_id?: string;
-      title?: string;
-      description?: string;
-      target_date?: string;
-      status?: string;
-      progress?: number;
-      goal_type?: string;
-      weekly_kpis?: string[];
-      weekly_plan?: string;
-      strategy?: string;
-      milestones?: unknown[];
-      created_at?: string;
-    }
     const data = await fetchApi<RawGoal[]>('/goals/');
-    return data.map(g => ({
-      id: g.id,
-      userId: g.user_id || '',
-      pillarId: (g.pillar_id || 'BUILD') as Goal['pillarId'],
-      title: g.title || '',
-      description: g.description || '',
-      targetDate: g.target_date || '',
-      status: (g.status || 'active') as Goal['status'],
-      progress: g.progress || 0,
-      type: (g.goal_type || 'project') as Goal['type'],
-      weeklyKPIs: g.weekly_kpis || [],
-      weeklyPlan: g.weekly_plan,
-      strategy: g.strategy,
-      milestones: (g.milestones || []) as Goal['milestones'],
-      createdAt: g.created_at || new Date().toISOString(),
-    }));
+    return data.map(g => mapGoal(g));
   },
 
   async createGoal(goal: Omit<Goal, 'id' | 'createdAt'>): Promise<Goal> {
-    interface RawGoal { id: string; user_id?: string; pillar_id?: string; title?: string; description?: string; target_date?: string; status?: string; progress?: number; goal_type?: string; weekly_kpis?: string[]; weekly_plan?: string; strategy?: string; milestones?: unknown[]; created_at?: string; }
     const data = await fetchApi<RawGoal>('/goals/', {
       method: 'POST',
       body: JSON.stringify({
-        pillar_id:   goal.pillarId,
-        title:       goal.title,
-        description: goal.description,
-        target_date: goal.targetDate,
-        status:      goal.status,
-        progress:    goal.progress,
-        goal_type:   goal.type,
-        weekly_kpis: goal.weeklyKPIs,
-        weekly_plan: goal.weeklyPlan,
-        strategy:    goal.strategy,
-        milestones:  goal.milestones || [],
+        pillar_id:        goal.pillarId,
+        title:            goal.title,
+        description:      goal.description,
+        // Omitted (rather than sent as '') when the timeline is left for
+        // the system to propose — the backend estimates one from
+        // timeline_type/goal_type instead of forcing a fixed window.
+        ...(goal.targetDate && { target_date: goal.targetDate }),
+        status:            goal.status,
+        progress:          goal.progress,
+        goal_type:         goal.type,
+        weekly_kpis:       goal.weeklyKPIs,
+        weekly_plan:       goal.weeklyPlan,
+        strategy:          goal.strategy,
+        milestones:        goal.milestones || [],
+        parent_goal_id:    goal.parentGoalId || null,
+        timeline_type:     goal.timelineType,
+        origin:            goal.origin,
       }),
     });
-    return {
-      id:          data.id,
-      userId:      data.user_id || '',
-      pillarId:    (data.pillar_id || goal.pillarId) as Goal['pillarId'],
-      title:       data.title || goal.title,
-      description: data.description || goal.description || '',
-      targetDate:  data.target_date || goal.targetDate,
-      status:      (data.status || goal.status) as Goal['status'],
-      progress:    data.progress ?? goal.progress,
-      type:        (data.goal_type || goal.type) as Goal['type'],
-      weeklyKPIs:  data.weekly_kpis || goal.weeklyKPIs,
-      weeklyPlan:  data.weekly_plan || goal.weeklyPlan,
-      strategy:    data.strategy || goal.strategy,
-      milestones:  (data.milestones || []) as Goal['milestones'],
-      createdAt:   data.created_at || new Date().toISOString(),
-    };
+    return mapGoal(data, goal);
   },
 
   async updateGoal(goalId: string, updates: Partial<Goal>): Promise<Partial<Goal>> {
     await fetchApi(`/goals/${goalId}`, {
       method: 'PATCH',
       body: JSON.stringify({
-        ...(updates.title       !== undefined && { title:       updates.title }),
-        ...(updates.description !== undefined && { description: updates.description }),
-        ...(updates.targetDate  !== undefined && { target_date: updates.targetDate }),
-        ...(updates.status      !== undefined && { status:      updates.status }),
-        ...(updates.progress    !== undefined && { progress:    updates.progress }),
-        ...(updates.type        !== undefined && { goal_type:   updates.type }),
-        ...(updates.weeklyKPIs  !== undefined && { weekly_kpis: updates.weeklyKPIs }),
-        ...(updates.weeklyPlan  !== undefined && { weekly_plan: updates.weeklyPlan }),
-        ...(updates.strategy    !== undefined && { strategy:    updates.strategy }),
+        ...(updates.title        !== undefined && { title:           updates.title }),
+        ...(updates.description  !== undefined && { description:     updates.description }),
+        ...(updates.targetDate   !== undefined && { target_date:     updates.targetDate }),
+        ...(updates.status       !== undefined && { status:          updates.status }),
+        ...(updates.progress     !== undefined && { progress:        updates.progress }),
+        ...(updates.type         !== undefined && { goal_type:       updates.type }),
+        ...(updates.weeklyKPIs   !== undefined && { weekly_kpis:     updates.weeklyKPIs }),
+        ...(updates.weeklyPlan   !== undefined && { weekly_plan:     updates.weeklyPlan }),
+        ...(updates.strategy     !== undefined && { strategy:        updates.strategy }),
+        ...(updates.parentGoalId !== undefined && { parent_goal_id:  updates.parentGoalId }),
+        ...(updates.timelineType !== undefined && { timeline_type:   updates.timelineType }),
       }),
     });
     return updates;
@@ -674,6 +771,12 @@ export const api = {
 
   async deleteGoal(goalId: string): Promise<void> {
     await fetchApi(`/goals/${goalId}`, { method: 'DELETE' });
+  },
+
+  /** Explicit, user-triggered timeline adjustment — never automatic. */
+  async replanGoalTimeline(goalId: string): Promise<{ goal: Goal; coachNote?: string }> {
+    const data = await fetchApi<{ goal: RawGoal; coach_note?: string }>(`/goals/${goalId}/replan`, { method: 'POST' });
+    return { goal: mapGoal(data.goal), coachNote: data.coach_note };
   },
 
   // ─── Milestones ─────────────────────────────────────────────────────────────

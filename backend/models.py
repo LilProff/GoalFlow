@@ -142,6 +142,11 @@ class MilestoneUpdate(BaseModel):
     completed: Optional[bool] = None
 
 
+TimelineType = Literal["long-term", "short-term"]
+GoalOrigin = Literal["manual", "ai_import"]
+PaceStatus = Literal["ahead", "on_track", "behind"]
+
+
 class GoalBase(BaseModel):
     pillar_id: str
     title: str
@@ -153,9 +158,20 @@ class GoalBase(BaseModel):
     weekly_kpis: Optional[list[str]] = Field(default_factory=list)
     weekly_plan: Optional[str] = None
     strategy: Optional[str] = None
+    # A goal is long-term or short-term rather than everyone sharing one
+    # fixed sprint length; a short-term goal can ladder up to a long-term
+    # one via parent_goal_id.
+    parent_goal_id: Optional[str] = None
+    timeline_type: TimelineType = "short-term"
+    origin: GoalOrigin = "manual"
 
 
 class GoalCreate(GoalBase):
+    # Manual creation (Goals.tsx) always sends a target_date the user picked.
+    # The AI-import confirm step often doesn't have one yet — leaving this
+    # optional lets create_goal() fall back to estimate_target_date()
+    # instead of forcing every caller to compute it themselves.
+    target_date: Optional[date] = None  # type: ignore[assignment]
     milestones: Optional[list[MilestoneCreate]] = Field(default_factory=list)
 
 
@@ -169,12 +185,24 @@ class GoalUpdate(BaseModel):
     weekly_kpis: Optional[list[str]] = None
     weekly_plan: Optional[str] = None
     strategy: Optional[str] = None
+    parent_goal_id: Optional[str] = None
+    timeline_type: Optional[TimelineType] = None
+
+
+class GoalPace(BaseModel):
+    expected_progress: float
+    status: PaceStatus
+    days_remaining: int
 
 
 class GoalResponse(GoalBase):
     id: str
     user_id: str
     milestones: list[dict] = Field(default_factory=list)
+    timeline_history: list[dict] = Field(default_factory=list)
+    # Computed at read time (see services/goal_timeline.py) — never stored,
+    # so it's always fresh against today's date rather than going stale.
+    pace: Optional[GoalPace] = None
     created_at: datetime
 
     @field_validator("goal_type", mode="before")
@@ -185,6 +213,44 @@ class GoalResponse(GoalBase):
         # column has no DB-level default. Treat that the same as GoalBase's
         # own "project" default instead of failing response validation.
         return v or "project"
+
+
+class GoalReplanResponse(BaseModel):
+    goal: GoalResponse
+    coach_note: Optional[str] = None
+
+
+# ── Goal import (AI-assisted onboarding) ───────────────────────────────
+class ImportDraftTask(BaseModel):
+    title: str
+    description: Optional[str] = None
+    estimated_minutes: int = 30
+    subtasks: list[str] = Field(default_factory=list)
+
+
+class ImportDraftGoal(BaseModel):
+    # A stable id scoped to this draft only (e.g. "g1") — lets a short-term
+    # goal reference its long-term parent by id before either has a real
+    # database row, and survives the user deleting/editing other entries
+    # in the review step (unlike a plain array index).
+    draft_id: str
+    pillar_id: str
+    title: str
+    description: Optional[str] = None
+    timeline_type: TimelineType = "short-term"
+    goal_type: GoalType = "project"
+    target_date: Optional[date] = None
+    parent_draft_id: Optional[str] = None
+    tasks: list[ImportDraftTask] = Field(default_factory=list)
+
+
+class GoalImportDraft(BaseModel):
+    life_areas_summary: Optional[str] = None
+    goals: list[ImportDraftGoal] = Field(default_factory=list)
+
+
+class GoalImportConfirmRequest(BaseModel):
+    goals: list[ImportDraftGoal]
 
 
 # ── Tasks ────────────────────────────────────────────────────────
@@ -199,6 +265,9 @@ class TaskBase(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     ai_context: Optional[str] = None
+    # Lightweight checklist within a task — modeled the same low-overhead
+    # way milestones are for goals (a JSONB list, no separate table).
+    subtasks: list[dict] = Field(default_factory=list)
 
 
 class TaskCreate(TaskBase):
@@ -214,6 +283,7 @@ class TaskUpdate(BaseModel):
     end_time: Optional[str] = None
     ai_context: Optional[str] = None
     is_ai_generated: Optional[bool] = None
+    subtasks: Optional[list[dict]] = None
 
 
 class TaskResponse(TaskBase):

@@ -47,7 +47,15 @@ async def get_today(user_id: str = Depends(get_current_user), sb: Client = Depen
             id=log["id"], user_id=user_id, date_key=today,
             build_hours=log.get("build_hours", 0.0),
             score=log.get("score", 0.0),
-            reflection=log.get("reflection", {"accomplished": "", "blocked": "", "grateful": "", "tomorrow_focus": ""}),
+            # daily_logs stores reflection as four flat columns (see
+            # schema.sql), not a nested JSON column — reassemble the shape
+            # the frontend/model expect from those.
+            reflection={
+                "accomplished":   log.get("reflection_accomplished") or "",
+                "blocked":        log.get("reflection_blocked") or "",
+                "grateful":       log.get("reflection_grateful") or "",
+                "tomorrow_focus": log.get("reflection_tomorrow_focus") or "",
+            },
             pillar_completion=log.get("pillar_completion", {}),
             tasks=tasks,
             updated_at=log.get("updated_at", ""),
@@ -63,12 +71,20 @@ async def log_day(data: dict, user_id: str = Depends(get_current_user), sb: Clie
         tasks_resp = sb.table("tasks").select("*").eq("user_id", user_id).eq("date_key", today).execute()
         tasks = tasks_resp.data or []
         score = calculate_score(tasks)
-        reflection = data.get("reflection", {})
+        reflection = data.get("reflection", {}) or {}
         payload = {
             "user_id": user_id, "date_key": today,
             "build_hours": data.get("build_hours", 0.0),
             "score": score,
-            "reflection": reflection,
+            # daily_logs has no "reflection" column — it's four flat
+            # columns (see schema.sql). Sending a nested "reflection" key
+            # here makes PostgREST reject the whole upsert with a schema
+            # error, so nothing (not even build_hours/score) was ever
+            # actually saved.
+            "reflection_accomplished":   reflection.get("accomplished", ""),
+            "reflection_blocked":        reflection.get("blocked", ""),
+            "reflection_grateful":       reflection.get("grateful", ""),
+            "reflection_tomorrow_focus": reflection.get("tomorrow_focus", ""),
             "pillar_completion": data.get("pillar_completion", {}),
             "updated_at": today,
         }

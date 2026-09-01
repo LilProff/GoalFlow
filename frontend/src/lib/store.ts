@@ -4,7 +4,8 @@ import { format } from 'date-fns';
 import type {
   User, DailyData, Task, Goal, ChatMessage, OnboardingState,
   NotificationPreferences, KPISummary, HistoryEntry, WeeklyReport,
-  LeaderboardEntry, AppNotification, TimeBlock, MCPAction, CoachStyle, TaskStatus
+  LeaderboardEntry, AppNotification, TimeBlock, MCPAction, CoachStyle, TaskStatus,
+  GoalImportDraft, ImportDraftGoal,
 } from '../types';
 import { api } from './api';
 import { DEFAULT_PILLARS, LIFE_CATEGORIES } from './constants';
@@ -33,6 +34,7 @@ interface AppState {
   timeBlocks: TimeBlock[]; plannerLoading: boolean;
   notificationPrefs: NotificationPreferences;
   sidebarCollapsed: boolean;
+  goalImportDraft: GoalImportDraft | null; goalImportLoading: boolean; goalImportError: string | null;
 
   // Auth
   logout: () => Promise<void>;
@@ -50,7 +52,7 @@ interface AppState {
   // Onboarding
   completeOnboarding: () => void;
   updateOnboardingStep: (step: number, data: Partial<OnboardingState>) => void;
-  setOnboardingMode: (mode: 'form' | 'chat') => void;
+  setOnboardingMode: (mode: 'form' | 'chat' | 'import') => void;
 
   // Daily / Tasks
   toggleTask: (taskId: string) => void;
@@ -69,6 +71,14 @@ interface AppState {
   addMilestone: (goalId: string, title: string, dueDate: string) => Promise<void>;
   toggleMilestone: (goalId: string, milestoneId: string) => Promise<void>;
   deleteMilestone: (goalId: string, milestoneId: string) => Promise<void>;
+  /** Explicit "adjust my timeline" action — the adaptive engine never runs silently. */
+  replanGoalTimeline: (goalId: string) => Promise<string | undefined>;
+
+  // AI-import onboarding
+  submitGoalImport: (file: File) => Promise<void>;
+  updateGoalImportDraft: (goals: ImportDraftGoal[]) => void;
+  confirmGoalImport: () => Promise<void>;
+  clearGoalImportDraft: () => void;
 
   // Planner
   toggleBlock: (blockId: string, field: 'completed' | 'skipped') => Promise<void>;
@@ -143,6 +153,7 @@ export const useStore = create<AppState>()(persist((set, get) => ({
   timeBlocks: [], plannerLoading: false,
   notificationPrefs: defaultNotifPrefs,
   sidebarCollapsed: false,
+  goalImportDraft: null, goalImportLoading: false, goalImportError: null,
 
   // ── Auth (self-issued JWT) ────────────────────────────────────────────────
   logout: async () => {
@@ -517,6 +528,64 @@ export const useStore = create<AppState>()(persist((set, get) => ({
     }
   },
 
+  replanGoalTimeline: async (goalId) => {
+    try {
+      const { goal, coachNote } = await api.replanGoalTimeline(goalId);
+      set(s => ({ goals: s.goals.map(g => g.id === goalId ? goal : g) }));
+      return coachNote;
+    } catch (e) {
+      console.error('Failed to adjust goal timeline:', e);
+      throw e;
+    }
+  },
+
+  // ── AI-import onboarding ─────────────────────────────────────────────────
+  submitGoalImport: async (file) => {
+    set({ goalImportLoading: true, goalImportError: null });
+    try {
+      const draft = await api.importGoalsFile(file);
+      set({ goalImportDraft: draft, goalImportLoading: false });
+    } catch (e) {
+      set({
+        goalImportLoading: false,
+        goalImportError: e instanceof Error ? e.message : 'Could not read that file.',
+      });
+      throw e;
+    }
+  },
+
+  updateGoalImportDraft: (goals) => set(s => (
+    s.goalImportDraft ? { goalImportDraft: { ...s.goalImportDraft, goals } } : {}
+  )),
+
+  confirmGoalImport: async () => {
+    const draft = get().goalImportDraft;
+    if (!draft) return;
+    await api.confirmGoalsImport(draft.goals);
+    await api.completeOnboarding('import').catch(console.error);
+
+    const [dailyData, pillars, history, kpi, weeklyReport, goals, leaderboard, timeBlocks] = await Promise.all([
+      api.getToday().catch(() => null),
+      api.getPillars().catch(() => []),
+      api.getHistory(14).catch(() => []),
+      api.getKPISummary().catch(() => null),
+      api.getWeeklyReport().catch(() => null),
+      api.getGoals().catch(() => []),
+      api.getLeaderboard().catch(() => []),
+      api.getPlannerBlocks().catch(() => []),
+    ]);
+    set(s => ({
+      user: { ...s.user!, onboardingComplete: true, pillars },
+      dailyData, goals, kpi, history, weeklyReport, leaderboard, timeBlocks,
+      chatMessages: [], notifications: [],
+      goalImportDraft: null,
+      onboarding: defaultOnboarding,
+    }));
+    dailyData?.tasks.forEach(t => { if (t.startTime) get().syncTaskToPlanner(t); });
+  },
+
+  clearGoalImportDraft: () => set({ goalImportDraft: null, goalImportError: null }),
+
   // ── Planner ───────────────────────────────────────────────────────────────
   toggleBlock: async (blockId, field) => {
     // Task-derived blocks (id `task-<taskId>`) are a client-side projection
@@ -799,12 +868,18 @@ export const useStore = create<AppState>()(persist((set, get) => ({
             pillarId,
             title,
             description: '',
-            targetDate: format(new Date(Date.now() + 90 * 86400000), 'yyyy-MM-dd'),
+            // Left blank — the backend proposes a target date from
+            // timelineType/goal_type rather than a fixed window.
+            targetDate: '',
             status: 'active',
             progress: 0,
             type: 'project',
             weeklyKPIs: [],
             milestones: [],
+            parentGoalId: null,
+            timelineType: 'short-term',
+            origin: 'manual',
+            timelineHistory: [],
           });
           return `Goal "${title}" added to ${pillarId}.`;
         }
@@ -828,7 +903,7 @@ export const useStore = create<AppState>()(persist((set, get) => ({
       
       if (type === 'generate_content_idea') {
         const pillar = String(p.pillar || 'BUILD');
-        return `Content idea for ${pillar}:\n\n**"How I achieved [goal] in 90 days using the ${pillar} pillar..."**\n\nThread format. Start with the result, show the process, end with a question.\n\nPost before 2pm for best reach.`;
+        return `Content idea for ${pillar}:\n\n**"How I made progress on [goal] using the ${pillar} pillar..."**\n\nThread format. Start with the result, show the process, end with a question.\n\nPost before 2pm for best reach.`;
       }
       
       return `Action ${type} executed.`;

@@ -1,12 +1,14 @@
 import json
 import re
-from datetime import date
+from datetime import date, datetime
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from supabase import Client
 
 from deps import get_current_user, get_supabase, safe_single
-from models import GoalCreate, GoalUpdate, GoalResponse, MilestoneCreate, MilestoneUpdate, MessageResponse
+from models import GoalCreate, GoalUpdate, GoalResponse, GoalReplanResponse, MilestoneCreate, MilestoneUpdate, MessageResponse
 from services.openrouter import call_ai
+from services.goal_timeline import estimate_target_date, compute_pace, propose_replan
 
 router = APIRouter(prefix="/goals", tags=["goals"])
 
@@ -14,6 +16,30 @@ router = APIRouter(prefix="/goals", tags=["goals"])
 def _attach_milestones(goal: dict, milestones: list[dict]) -> dict:
     """Merge milestone list into a goal dict."""
     return {**goal, "milestones": milestones}
+
+
+def _attach_pace(goal: dict) -> dict:
+    """
+    Compute today's pace (ahead/on_track/behind) against the goal's current
+    target date. Read-only — never written back to the DB, so it's always
+    fresh rather than a stale snapshot from whenever it was last saved.
+    """
+    try:
+        created_raw = goal.get("created_at")
+        created_at = (
+            datetime.fromisoformat(created_raw.replace("Z", "+00:00")).date()
+            if isinstance(created_raw, str) else date.today()
+        )
+        target = goal.get("target_date")
+        target_date = date.fromisoformat(target) if isinstance(target, str) else target
+        if not target_date:
+            return goal
+        pace = compute_pace(goal.get("progress", 0), created_at, target_date)
+    except Exception:
+        # Pace is a nice-to-have readout, not core data — never let a bad
+        # timestamp take the whole goals list down.
+        return goal
+    return {**goal, "pace": pace}
 
 
 # ── List goals (with milestones via PostgREST join) ───────────────────────────
@@ -28,7 +54,7 @@ async def list_goals(
         if status:
             q = q.eq("status", status)
         resp = q.order("created_at", desc=True).execute()
-        return resp.data or []
+        return [_attach_pace(g) for g in (resp.data or [])]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -51,7 +77,7 @@ async def get_goal(
         )
         if not resp.data:
             raise HTTPException(status_code=404, detail="Goal not found")
-        return resp.data
+        return _attach_pace(resp.data)
     except HTTPException:
         raise
     except Exception as e:
@@ -66,18 +92,25 @@ async def create_goal(
     sb: Client = Depends(get_supabase),
 ) -> GoalResponse:
     try:
+        # Manual creation (Goals.tsx) sends a target_date the user picked;
+        # callers that don't have one yet (the AI-import confirm step) get
+        # one proposed instead of falling back to a hardcoded window.
+        target_date = data.target_date or estimate_target_date(data.timeline_type, data.goal_type)
         payload = {
-            "user_id":     user_id,
-            "pillar_id":   data.pillar_id,
-            "title":       data.title,
-            "description": data.description,
-            "target_date": data.target_date.isoformat(),
-            "status":      data.status,
-            "progress":    data.progress,
-            "goal_type":   data.goal_type,
-            "weekly_kpis": data.weekly_kpis or [],
-            "weekly_plan": data.weekly_plan,
-            "strategy":    data.strategy,
+            "user_id":          user_id,
+            "pillar_id":        data.pillar_id,
+            "title":            data.title,
+            "description":      data.description,
+            "target_date":      target_date.isoformat(),
+            "status":           data.status,
+            "progress":         data.progress,
+            "goal_type":        data.goal_type,
+            "weekly_kpis":      data.weekly_kpis or [],
+            "weekly_plan":      data.weekly_plan,
+            "strategy":         data.strategy,
+            "parent_goal_id":   data.parent_goal_id,
+            "timeline_type":    data.timeline_type,
+            "origin":           data.origin,
         }
         resp = sb.table("goals").insert(payload).execute()
         if not resp.data:
@@ -100,7 +133,7 @@ async def create_goal(
             ms_resp = sb.table("milestones").insert(ms_rows).execute()
             milestones = ms_resp.data or []
 
-        return _attach_milestones(goal, milestones)
+        return _attach_pace(_attach_milestones(goal, milestones))
     except HTTPException:
         raise
     except Exception as e:
@@ -134,7 +167,7 @@ async def update_goal(
 
         # Fetch milestones
         ms_resp = sb.table("milestones").select("*").eq("goal_id", goal_id).execute()
-        return _attach_milestones(goal, ms_resp.data or [])
+        return _attach_pace(_attach_milestones(goal, ms_resp.data or []))
     except HTTPException:
         raise
     except Exception as e:
@@ -346,6 +379,78 @@ Return ONLY valid JSON (no fences):
         sb.table("goals").update({"weekly_plan": json.dumps(plan)}).eq("id", goal_id).eq("user_id", user_id).execute()
 
         return plan
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Adjust timeline (adaptive replan) ──────────────────────────────────────────
+@router.post("/{goal_id}/replan", response_model=GoalReplanResponse)
+async def replan_goal(
+    goal_id: str,
+    user_id: str = Depends(get_current_user),
+    sb: Client = Depends(get_supabase),
+) -> GoalReplanResponse:
+    """
+    Explicit, user/Ryna-triggered timeline adjustment — never runs on its
+    own in the background (there's no scheduler in this backend). Recomputes
+    pace, proposes a new target date if the goal is meaningfully ahead or
+    behind, and records why in timeline_history rather than silently moving
+    the deadline.
+    """
+    try:
+        goal_resp = (
+            sb.table("goals")
+            .select("*")
+            .eq("id", goal_id)
+            .eq("user_id", user_id)
+            .single()
+            .execute()
+        )
+        if not goal_resp.data:
+            raise HTTPException(status_code=404, detail="Goal not found")
+        goal = goal_resp.data
+
+        created_at = datetime.fromisoformat(str(goal["created_at"]).replace("Z", "+00:00")).date()
+        current_target = date.fromisoformat(str(goal["target_date"]))
+        pace = compute_pace(goal.get("progress", 0), created_at, current_target)
+        new_target = propose_replan(pace, current_target)
+
+        coach_note: Optional[str] = None
+        if new_target != current_target:
+            history = list(goal.get("timeline_history") or [])
+            history.append({
+                "from_date": current_target.isoformat(),
+                "to_date":   new_target.isoformat(),
+                "reason":    f"{pace['status']} pace ({pace['expected_progress']}% expected vs {goal.get('progress', 0)}% actual)",
+                "adjusted_at": datetime.utcnow().isoformat(),
+            })
+            update_resp = (
+                sb.table("goals")
+                .update({"target_date": new_target.isoformat(), "timeline_history": history})
+                .eq("id", goal_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
+            goal = update_resp.data[0] if update_resp.data else {**goal, "target_date": new_target.isoformat(), "timeline_history": history}
+
+            try:
+                coach_note = await call_ai(
+                    f"""In one short, encouraging sentence, tell the user their goal timeline for
+"{goal['title']}" was just adjusted because they're running {pace['status']} of pace
+(expected {pace['expected_progress']}% progress, actually at {goal.get('progress', 0)}%).
+The new target date is {new_target.isoformat()}. Don't lecture — be matter-of-fact and forward-looking.""",
+                    max_tokens=80, temperature=0.6,
+                )
+            except Exception:
+                coach_note = None
+
+        ms_resp = sb.table("milestones").select("*").eq("goal_id", goal_id).execute()
+        return GoalReplanResponse(
+            goal=_attach_pace(_attach_milestones(goal, ms_resp.data or [])),
+            coach_note=coach_note,
+        )
     except HTTPException:
         raise
     except Exception as e:

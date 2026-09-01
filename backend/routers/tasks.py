@@ -65,7 +65,7 @@ Return ONLY a JSON array:
             tasks_to_insert.append({
                 "user_id": user_id, "date_key": today,
                 "pillar_id": g["pillar_id"], "title": f"Work on: {g['title'][:60]}",
-                "description": "From your 90-day goal",
+                "description": "From your active goal",
                 "estimated_minutes": 90, "start_time": st, "end_time": et,
                 "status": "pending", "is_ai_generated": True,
             })
@@ -82,7 +82,7 @@ Return ONLY a JSON array:
 # ── Spread Goals into Today ────────────────────────────────────────────────────
 @router.post("/spread-goals", response_model=list[TaskResponse])
 async def spread_goal_tasks(user_id: str = Depends(get_current_user), sb: Client = Depends(get_supabase)):
-    """Break 90-day goals into concrete daily actions."""
+    """Break active goals into concrete daily actions."""
     today = date.today().isoformat()
     goals_resp = sb.table("goals").select("pillar_id,title,progress").eq("user_id", user_id).eq("status", "active").execute()
     goals = goals_resp.data or []
@@ -90,7 +90,7 @@ async def spread_goal_tasks(user_id: str = Depends(get_current_user), sb: Client
         raise HTTPException(status_code=400, detail="No active goals to spread from")
 
     goals_text = "\n".join(f"- {g['pillar_id']}: {g['title']} ({g.get('progress',0)}% done)" for g in goals)
-    prompt = f"""Break these 90-day goals into today's tasks.
+    prompt = f"""Break these active goals into today's tasks.
 Goals:\n{goals_text}
 
 1-2 tasks per goal. Return ONLY a JSON array:
@@ -110,15 +110,15 @@ Goals:\n{goals_text}
                     "description": t.get("description", ""),
                     "estimated_minutes": t.get("estimated_minutes", 60),
                     "start_time": t.get("start_time"), "end_time": t.get("end_time"),
-                    "status": "pending", "is_ai_generated": True, "ai_context": "Spread from 90-day goal",
+                    "status": "pending", "is_ai_generated": True, "ai_context": "Spread from active goal",
                 })
     except Exception:
         for g in goals[:6]:
             tasks_to_insert.append({
                 "user_id": user_id, "date_key": today, "pillar_id": g["pillar_id"],
-                "title": f"Progress: {g['title'][:60]}", "description": "Move the needle on your 90-day goal",
+                "title": f"Progress: {g['title'][:60]}", "description": "Move the needle on your goal",
                 "estimated_minutes": 60, "status": "pending", "is_ai_generated": True,
-                "ai_context": "Spread from 90-day goal",
+                "ai_context": "Spread from active goal",
             })
 
     if not tasks_to_insert:

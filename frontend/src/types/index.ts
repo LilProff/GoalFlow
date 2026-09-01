@@ -5,7 +5,10 @@ export type GoalStatus = 'active' | 'completed' | 'paused' | 'at-risk';
 export type PillarId = string;
 export type CategoryId = string;
 export type MessageRole = 'user' | 'assistant' | 'system';
-export type OnboardingMode = 'form' | 'chat';
+export type OnboardingMode = 'form' | 'chat' | 'import';
+export type TimelineType = 'long-term' | 'short-term';
+export type GoalOrigin = 'manual' | 'ai_import';
+export type PaceStatus = 'ahead' | 'on_track' | 'behind';
 
 // ─── Life Categories (complete person framework) ──────────────────────────────
 export interface LifeCategory {
@@ -83,6 +86,12 @@ export interface LeaderboardEntry {
 }
 
 // ─── Tasks ────────────────────────────────────────────────────────────────────
+export interface Subtask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   pillarId: PillarId;
@@ -99,6 +108,7 @@ export interface Task {
   createdAt: string;
   completedAt?: string;
   aiContext?: string; // why Ryna assigned this
+  subtasks?: Subtask[]; // lightweight checklist within the task
 }
 
 // ─── Daily Data ───────────────────────────────────────────────────────────────
@@ -131,6 +141,19 @@ export interface Milestone {
   completedAt?: string;
 }
 
+export interface TimelineAdjustment {
+  fromDate: string;
+  toDate: string;
+  reason: string;
+  adjustedAt: string;
+}
+
+export interface GoalPace {
+  expectedProgress: number;
+  status: PaceStatus;
+  daysRemaining: number;
+}
+
 export interface Goal {
   id: string;
   userId: string;
@@ -147,6 +170,39 @@ export interface Goal {
   strategy?: string;
   type: 'outcome' | 'learning' | 'certification' | 'habit' | 'project';
   createdAt: string;
+  // Long-term goals have no parent; short-term goals ladder up to one via
+  // parentGoalId. Not every goal is forced onto the same fixed window —
+  // see timelineType/pace.
+  parentGoalId?: string | null;
+  timelineType: TimelineType;
+  origin: GoalOrigin;
+  timelineHistory: TimelineAdjustment[];
+  pace?: GoalPace | null; // computed server-side at read time, never stored client-side
+}
+
+// ─── AI-import onboarding ─────────────────────────────────────────────────────
+export interface ImportDraftTask {
+  title: string;
+  description?: string;
+  estimatedMinutes: number;
+  subtasks: string[];
+}
+
+export interface ImportDraftGoal {
+  draftId: string;
+  pillarId: PillarId;
+  title: string;
+  description?: string;
+  timelineType: TimelineType;
+  type: Goal['type'];
+  targetDate?: string;
+  parentDraftId?: string | null;
+  tasks: ImportDraftTask[];
+}
+
+export interface GoalImportDraft {
+  lifeAreasSummary?: string;
+  goals: ImportDraftGoal[];
 }
 
 // ─── Time Planner ─────────────────────────────────────────────────────────────
