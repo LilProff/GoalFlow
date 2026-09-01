@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoalFlow - Goals</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#301400",
+                        "on-primary": "#3f008e",
+                        "on-tertiary": "#4f2500",
+                        "surface-container-lowest": "#0e0e11",
+                        "outline-variant": "#4a4455",
+                        "glass-stroke": "rgba(255, 255, 255, 0.12)",
+                        "coral-red": "#EF4444",
+                        "on-secondary-fixed-variant": "#005236",
+                        "tertiary": "#ffb784",
+                        "primary": "#d2bbff",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1f1f22",
+                        "glass-fill": "rgba(15, 15, 20, 0.7)",
+                        "on-secondary": "#003824",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#ccc3d8",
+                        "vivid-emerald": "#10B981",
+                        "warm-amber": "#F59E0B",
+                        "surface-container-high": "#2a2a2d",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "pillar-show": "#14B8A6",
+                        "surface-tint": "#d2bbff",
+                        "secondary-fixed": "#6ffbbe",
+                        "background": "#131316",
+                        "inverse-primary": "#732ee4",
+                        "pillar-earn": "#FACC15",
+                        "on-surface": "#e5e1e6",
+                        "secondary-container": "#00a572",
+                        "surface": "#131316",
+                        "surface-bright": "#39393c",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "pillar-build": "#F97316",
+                        "inverse-on-surface": "#303033",
+                        "primary-container": "#7c3aed",
+                        "on-primary-container": "#ede0ff",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "surface-container-highest": "#353438",
+                        "surface-variant": "#353438",
+                        "on-primary-fixed": "#25005a",
+                        "on-background": "#e5e1e6",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#131316",
+                        "primary-fixed": "#eaddff",
+                        "on-error": "#690005",
+                        "pillar-systemize": "#64748B",
+                        "electric-violet": "#8B5CF6",
+                        "inverse-surface": "#e5e1e6",
+                        "outline": "#958da1",
+                        "on-secondary-fixed": "#002113",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-container-low": "#1b1b1e",
+                        "secondary": "#4edea3",
+                        "on-secondary-container": "#00311f",
+                        "error-container": "#93000a",
+                        "tertiary-container": "#a15100"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-sm": "12px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "gutter-md": "20px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "numeric-stat": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "eyebrow": ["Inter"],
+                        "display-hero": ["Inter"],
+                        "body-md": ["Inter"],
+                        "code-info": ["Inter"]
+                    },
+                    "fontSize": {
+                        "numeric-stat": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "eyebrow": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+                        "display-hero": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "code-info": ["11px", { "lineHeight": "14px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #131316;
+            color: #e5e1e6;
+            overflow-x: hidden;
+        }
+        
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #8B5CF6; }
+        .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: #FACC15; }
+
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            border-top: 0.5px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-pill {
+            background: rgba(15, 15, 20, 0.85);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 0.5px solid #8B5CF6;
+        }
+        
+        .gauge-bg { stroke: rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased min-h-screen flex flex-col relative pb-[100px] md:pb-0">
+<!-- Ambient Background -->
+<div class="ambient-blob blob-1"></div>
+<div class="ambient-blob blob-2"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-glass-fill backdrop-blur-xl border-b border-glass-stroke transition-all duration-300 ease-in-out md:hidden">
+<button class="text-on-surface-variant hover:bg-white/10 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">GoalFlow</h1>
+<button class="text-electric-violet hover:bg-white/10 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+</button>
+</header>
+<!-- Desktop Sidebar Placeholder -->
+<aside class="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-[240px] glass-panel z-40 p-6">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter mb-10">GoalFlow</h1>
+<nav class="flex flex-col gap-4 flex-1">
+<a class="flex items-center gap-3 text-on-surface-variant/60 hover:text-primary p-2 rounded-lg transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span>Today</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant/60 hover:text-primary p-2 rounded-lg transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span>Planner</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container/20 text-primary p-2 rounded-lg transition-colors font-body-lg text-body-lg border border-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]" href="#">
+<span class="material-symbols-outlined" data-icon="assignment" data-weight="fill" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span>Goals</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant/60 hover:text-primary p-2 rounded-lg transition-colors font-body-lg text-body-lg" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+<span>Wins</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 mt-16 md:mt-0 md:ml-[240px] p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-gutter-md">
+<!-- Left Column: Goals Overview -->
+<section class="flex-1 flex flex-col gap-6">
+<!-- Header Area -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<h2 class="font-display-hero text-display-hero text-on-surface">Goals</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Strategic objectives across all pillars.</p>
+</div>
+<div class="flex gap-3">
+<button class="glass-panel flex items-center gap-2 px-4 py-2 rounded-full font-label-sm text-label-sm text-electric-violet hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+                        AI Planner
+                    </button>
+<button class="bg-gradient-to-r from-electric-violet to-primary-container text-white flex items-center gap-2 px-4 py-2 rounded-full font-label-sm text-label-sm shadow-[0_4px_14px_0_rgba(139,92,246,0.39)] hover:shadow-[0_6px_20px_rgba(139,92,246,0.5)] transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Goal
+                    </button>
+</div>
+</div>
+<!-- Goals Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-md">
+<!-- Pillar: Earn -->
+<div class="glass-panel rounded-xl p-5 flex flex-col gap-4 cursor-pointer hover:bg-white/5 transition-colors group border-pillar-earn/30">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-pillar-earn shadow-[0_0_8px_rgba(250,204,21,0.6)]"></span>
+<span class="font-eyebrow text-eyebrow text-pillar-earn uppercase">Earn</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-md">45 Days Left</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Launch SaaS MVP</h3>
+<p class="font-body-sm text-body-md text-on-surface-variant line-clamp-2 mt-1">Deploy version 1.0 to early access users and secure first 10 paying customers.</p>
+</div>
+<div class="mt-auto">
+<div class="flex justify-between font-label-sm text-label-sm mb-2">
+<span class="text-on-surface-variant">Progress</span>
+<span class="text-pillar-earn font-numeric-stat text-[14px]">65%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden flex gap-[2px]">
+<div class="h-full bg-pillar-earn w-1/4 rounded-l-full"></div>
+<div class="h-full bg-pillar-earn w-1/4"></div>
+<div class="h-full bg-pillar-earn/40 w-1/4"></div>
+<div class="h-full bg-transparent w-1/4 rounded-r-full"></div>
+</div>
+</div>
+</div>
+<!-- Pillar: Build -->
+<div class="glass-panel rounded-xl p-5 flex flex-col gap-4 cursor-pointer hover:bg-white/5 transition-colors group">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-pillar-build shadow-[0_0_8px_rgba(249,115,22,0.6)]"></span>
+<span class="font-eyebrow text-eyebrow text-pillar-build uppercase">Build</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-md">12 Days Left</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Complete Next.js Course</h3>
+<p class="font-body-sm text-body-md text-on-surface-variant line-clamp-2 mt-1">Finish advanced routing and server actions modules.</p>
+</div>
+<div class="mt-auto">
+<div class="flex justify-between font-label-sm text-label-sm mb-2">
+<span class="text-on-surface-variant">Progress</span>
+<span class="text-pillar-build font-numeric-stat text-[14px]">80%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden flex gap-[2px]">
+<div class="h-full bg-pillar-build w-1/5 rounded-l-full"></div>
+<div class="h-full bg-pillar-build w-1/5"></div>
+<div class="h-full bg-pillar-build w-1/5"></div>
+<div class="h-full bg-pillar-build w-1/5"></div>
+<div class="h-full bg-transparent w-1/5 rounded-r-full"></div>
+</div>
+</div>
+</div>
+<!-- Pillar: Show -->
+<div class="glass-panel rounded-xl p-5 flex flex-col gap-4 cursor-pointer hover:bg-white/5 transition-colors group">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-pillar-show shadow-[0_0_8px_rgba(20,184,166,0.6)]"></span>
+<span class="font-eyebrow text-eyebrow text-pillar-show uppercase">Show</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-md">90 Days Left</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface group-hover:text-primary transition-colors">Publish 10 Tech Blogs</h3>
+<p class="font-body-sm text-body-md text-on-surface-variant line-clamp-2 mt-1">Write and publish high-quality technical articles on Medium/Dev.to.</p>
+</div>
+<div class="mt-auto">
+<div class="flex justify-between font-label-sm text-label-sm mb-2">
+<span class="text-on-surface-variant">Progress</span>
+<span class="text-pillar-show font-numeric-stat text-[14px]">20%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden flex gap-[2px]">
+<div class="h-full bg-pillar-show w-1/5 rounded-l-full"></div>
+<div class="h-full bg-pillar-show/30 w-1/5"></div>
+<div class="h-full bg-transparent w-3/5 rounded-r-full"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Detail / AI (Visible on Desktop, Overlay on Mobile normally, but shown side-by-side here for layout demonstration) -->
+<section class="w-full md:w-[400px] flex flex-col gap-gutter-md">
+<!-- Detail Card (Simulating selected state) -->
+<div class="glass-panel rounded-xl flex flex-col h-full overflow-hidden border-pillar-earn/50 shadow-[0_0_30px_rgba(250,204,21,0.05)] relative">
+<!-- Header -->
+<div class="p-5 border-b border-glass-stroke bg-gradient-to-b from-pillar-earn/10 to-transparent">
+<div class="flex justify-between items-start mb-4">
+<span class="font-eyebrow text-eyebrow text-pillar-earn uppercase bg-pillar-earn/10 px-2 py-1 rounded">Earn Pillar</span>
+<button class="text-on-surface-variant hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface leading-tight">Launch SaaS MVP</h3>
+<div class="flex gap-4 mt-4 font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">calendar_month</span> Deadline: Oct 15</div>
+<div class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">flag</span> High Priority</div>
+</div>
+</div>
+<!-- Scrollable Content -->
+<div class="p-5 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-6">
+<!-- Milestones -->
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-electric-violet">task_alt</span> Milestones
+                        </h4>
+<div class="flex flex-col gap-2">
+<label class="flex items-start gap-3 p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer border border-transparent hover:border-glass-stroke">
+<input checked="" class="mt-1 w-4 h-4 rounded text-electric-violet bg-background border-outline-variant focus:ring-electric-violet focus:ring-offset-background" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface-variant line-through">Database Schema Design</span>
+</label>
+<label class="flex items-start gap-3 p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer border border-transparent hover:border-glass-stroke">
+<input checked="" class="mt-1 w-4 h-4 rounded text-electric-violet bg-background border-outline-variant focus:ring-electric-violet focus:ring-offset-background" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface-variant line-through">Auth Integration</span>
+</label>
+<label class="flex items-start gap-3 p-3 rounded-lg bg-surface-container-high border border-primary/30 shadow-[0_0_10px_rgba(139,92,246,0.1)] transition-colors cursor-pointer">
+<input class="mt-1 w-4 h-4 rounded text-electric-violet bg-background border-outline-variant focus:ring-electric-violet focus:ring-offset-background" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface">Core Dashboard UI</span>
+</label>
+<label class="flex items-start gap-3 p-3 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer border border-transparent hover:border-glass-stroke">
+<input class="mt-1 w-4 h-4 rounded text-electric-violet bg-background border-outline-variant focus:ring-electric-violet focus:ring-offset-background" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface">Stripe Payment Flow</span>
+</label>
+</div>
+</div>
+<!-- This Week's Plan -->
+<div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-electric-violet">edit_note</span> This Week's Plan
+                        </h4>
+<textarea class="w-full bg-surface-container text-on-surface font-body-md text-body-md rounded-lg p-3 border border-glass-stroke focus:border-electric-violet focus:ring-1 focus:ring-electric-violet transition-all resize-none h-24 placeholder:text-outline" placeholder="What are you doing this week to move the needle?">Focus on finalizing the Dashboard UI components and start wiring up the mock data to the backend API endpoints.</textarea>
+</div>
+</div>
+<!-- Embedded Ryna AI Chat -->
+<div class="mt-auto border-t border-glass-stroke bg-surface-container-lowest/80 backdrop-blur-md p-4">
+<div class="flex items-center gap-2 mb-3">
+<div class="relative">
+<span class="material-symbols-outlined text-electric-violet">smart_toy</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-vivid-emerald rounded-full border border-[#131316] animate-pulse"></span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Ryna AI Assistant</span>
+</div>
+<div class="bg-surface-container rounded-lg p-3 mb-3 border border-glass-stroke">
+<p class="font-body-md text-body-md text-on-surface text-sm">You're slightly behind on the "Core Dashboard UI" milestone. Want me to break it down into smaller daily tasks?</p>
+</div>
+<div class="relative">
+<input class="w-full bg-background text-on-surface font-body-md text-body-md rounded-full py-2 pl-4 pr-10 border border-glass-stroke focus:border-electric-violet focus:ring-1 focus:ring-electric-violet transition-all text-sm placeholder:text-outline-variant" placeholder="Ask Ryna to replan..." type="text"/>
+<button class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-primary hover:text-white transition-colors bg-primary-container/20 rounded-full">
+<span class="material-symbols-outlined text-[16px]">arrow_upward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 py-2 glass-pill rounded-full mx-auto mb-6 w-[calc(100%-32px)] max-w-md shadow-xl md:hidden">
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+</a>
+<a class="flex items-center justify-center bg-primary-container/30 text-primary rounded-full p-3 shadow-[0_0_15px_rgba(139,92,246,0.5)] scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="assignment" data-weight="fill" style="font-variation-settings: 'FILL' 1;">assignment</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</a>
+</nav>
+</body></html>

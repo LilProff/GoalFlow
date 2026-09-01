@@ -11,7 +11,7 @@ import SegBar from '../components/ui/SegBar';
 import NumberTicker from '../components/ui/NumberTicker';
 
 const PILLAR_COLORS: Record<string, string> = {
-  BUILD: '#ff6b35', SHOW: '#00d4b4', EARN: '#f5c842', SYSTEMIZE: '#7b8fa8',
+  BUILD: '#F97316', SHOW: '#14B8A6', EARN: '#FACC15', SYSTEMIZE: '#64748B',
 };
 
 const ChartTip = ({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string; color: string }[]; label?: string }) => {
@@ -32,7 +32,29 @@ export default function Analytics() {
   const { kpi, history, weeklyReport } = useStore();
   const [tab, setTab] = useState<typeof TABS[number]>('OVERVIEW');
 
-  if (!kpi || !history.length) return null;
+  // A brand-new account (or one that hasn't logged a day yet — history only
+  // gets an entry once "Save Reflection" runs on the Dashboard) has no
+  // daily_logs rows yet. Silently rendering nothing here reads as a broken
+  // page rather than "you haven't logged anything yet."
+  if (!kpi) return null;
+  if (!history.length) {
+    return (
+      <div className="p-6 max-w-screen-xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="mb-8 pb-5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+          <p className="mono text-[9px] tracking-widest mb-1" style={{ color: 'var(--tx-muted)' }}>EXECUTION ANALYTICS</p>
+          <h1 className="text-2xl font-black">Analytics</h1>
+        </motion.div>
+        <div className="glass-panel rounded-xl p-10 text-center">
+          <p className="text-2xl mb-3" style={{ color: 'var(--tx-ghost)' }}>◈</p>
+          <p className="font-bold text-sm mb-1.5" style={{ color: 'var(--tx-primary)' }}>No data yet</p>
+          <p className="text-xs max-w-xs mx-auto leading-relaxed" style={{ color: 'var(--tx-secondary)' }}>
+            Analytics builds up from your daily logs. Complete a task or two today, then save your reflection from the Dashboard — your first data point shows up here right after.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const chartData = history.map(h => ({
     date: h.dateKey.slice(5),
@@ -47,9 +69,9 @@ export default function Analytics() {
 
   const kpiCards = [
     { label: 'CURRENT SCORE', value: kpi.currentScore, dec: 1, suffix: '/10',    color: 'var(--acid)' },
-    { label: 'STREAK',        value: kpi.streak,        dec: 0, suffix: ' days',  color: '#f5c842' },
-    { label: 'BUILD HOURS',   value: kpi.buildHoursThisWeek, dec: 1, suffix: 'h this week', color: '#ff6b35' },
-    { label: 'TASKS DONE',    value: kpi.totalTasksCompleted, dec: 0, suffix: ' all time', color: '#00d4b4' },
+    { label: 'STREAK',        value: kpi.streak,        dec: 0, suffix: ' days',  color: '#FACC15' },
+    { label: 'BUILD HOURS',   value: kpi.buildHoursThisWeek, dec: 1, suffix: 'h this week', color: '#F97316' },
+    { label: 'TASKS DONE',    value: kpi.totalTasksCompleted, dec: 0, suffix: ' all time', color: 'var(--success)' },
   ];
 
   return (
@@ -138,7 +160,7 @@ export default function Analytics() {
                 <XAxis dataKey="date" tick={{ fill: 'var(--tx-ghost)', fontSize: 10, fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'var(--tx-ghost)', fontSize: 10, fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTip />} />
-                <Bar dataKey="hours" fill="#ff6b35" radius={[2, 2, 0, 0]} opacity={0.75} name="Build Hours" />
+                <Bar dataKey="hours" fill="#F97316" radius={[2, 2, 0, 0]} opacity={0.75} name="Build Hours" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -159,19 +181,19 @@ export default function Analytics() {
               <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--tx-secondary)' }}>{weeklyReport.summary}</p>
               <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <p className="mono text-[9px] tracking-widest mb-2 font-bold" style={{ color: '#00d4b4' }}>+ HIGHLIGHTS</p>
+                  <p className="mono text-[9px] tracking-widest mb-2 font-bold" style={{ color: 'var(--success)' }}>+ HIGHLIGHTS</p>
                   {weeklyReport.highlights.map((h, i) => (
                     <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
-                      <span className="mono text-[9px] mt-0.5" style={{ color: '#00d4b4' }}>+</span>
+                      <span className="mono text-[9px] mt-0.5" style={{ color: 'var(--success)' }}>+</span>
                       <span className="text-xs" style={{ color: 'var(--tx-secondary)' }}>{h}</span>
                     </div>
                   ))}
                 </div>
                 <div>
-                  <p className="mono text-[9px] tracking-widest mb-2 font-bold" style={{ color: '#f5c842' }}>→ IMPROVEMENTS</p>
+                  <p className="mono text-[9px] tracking-widest mb-2 font-bold" style={{ color: '#FACC15' }}>→ IMPROVEMENTS</p>
                   {weeklyReport.improvements.map((imp, i) => (
                     <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
-                      <span className="mono text-[9px] mt-0.5" style={{ color: '#f5c842' }}>→</span>
+                      <span className="mono text-[9px] mt-0.5" style={{ color: '#FACC15' }}>→</span>
                       <span className="text-xs" style={{ color: 'var(--tx-secondary)' }}>{imp}</span>
                     </div>
                   ))}
@@ -179,14 +201,14 @@ export default function Analytics() {
               </div>
             </div>
             {/* Ryna insight */}
-            <div className="p-5 flex items-start gap-4"
-              style={{ background: 'rgba(0,212,180,0.04)', border: '1px solid rgba(0,212,180,0.15)' }}>
-              <div className="w-7 h-7 shrink-0 flex items-center justify-center"
-                style={{ background: 'rgba(0,212,180,0.12)', border: '1px solid rgba(0,212,180,0.25)' }}>
-                <Zap className="w-3.5 h-3.5" style={{ color: '#00d4b4' }} />
+            <div className="glass-panel p-5 flex items-start gap-4"
+              style={{ borderLeft: '2px solid rgba(139,92,246,0.5)' }}>
+              <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center"
+                style={{ background: 'rgba(139,92,246,0.18)', border: '1px solid rgba(139,92,246,0.4)' }}>
+                <Zap className="w-3.5 h-3.5" style={{ color: 'var(--acid)' }} />
               </div>
               <div>
-                <p className="mono text-[9px] tracking-widest mb-2 font-bold" style={{ color: '#00d4b4' }}>RYNA'S WEEKLY INSIGHT</p>
+                <p className="mono text-[9px] tracking-widest mb-2 font-bold" style={{ color: 'var(--acid)' }}>RYNA'S WEEKLY INSIGHT</p>
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--tx-secondary)' }}>{weeklyReport.aiInsight}</p>
               </div>
             </div>
@@ -230,7 +252,7 @@ export default function Analytics() {
                 <YAxis tick={{ fill: 'var(--tx-ghost)', fontSize: 10, fontFamily: 'Space Mono' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<ChartTip />} />
                 <Line type="monotone" dataKey="score" stroke="var(--acid)" strokeWidth={2} dot={false} name="Score" />
-                <Line type="monotone" dataKey="hours" stroke="#ff6b35" strokeWidth={2} dot={false} name="Build Hours" />
+                <Line type="monotone" dataKey="hours" stroke="#F97316" strokeWidth={2} dot={false} name="Build Hours" />
               </LineChart>
             </ResponsiveContainer>
           </div>

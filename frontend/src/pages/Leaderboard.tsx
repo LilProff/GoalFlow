@@ -4,8 +4,8 @@ import { Flame, Crown } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { getLevelInfo } from '../lib/constants';
 
-const RANK_COLORS = ['#f5c842', '#94a3b8', '#ff6b35'];
-const RARITY_COLORS = { common: '#5a5448', rare: '#60a5fa', epic: '#a78bfa', legendary: '#f5c842' };
+const RANK_COLORS = ['#FACC15', '#94a3b8', '#F97316'];
+const RARITY_COLORS = { common: '#5a5448', rare: '#60a5fa', epic: '#a78bfa', legendary: '#FACC15' };
 
 export default function Leaderboard() {
   const { leaderboard, user } = useStore();
@@ -56,11 +56,11 @@ export default function Leaderboard() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}
               className={`p-5 text-center relative ${podiumOrder[i] === 0 ? 'order-2' : podiumOrder[i] === 1 ? 'order-1' : 'order-3'}`}
               style={{
-                background: display.userId === user?.id ? 'rgba(212,245,60,0.06)' : 'var(--bg-raised)',
+                background: display.userId === user?.id ? 'rgba(139,92,246,0.06)' : 'var(--bg-raised)',
                 border: `1px solid ${RANK_COLORS[podiumOrder[i]] || 'var(--border-mid)'}40`,
                 borderTop: `3px solid ${RANK_COLORS[podiumOrder[i]] || 'var(--border-mid)'}`,
               }}>
-              {podiumOrder[i] === 0 && <Crown className="w-4 h-4 mx-auto mb-2" style={{ color: '#f5c842' }} />}
+              {podiumOrder[i] === 0 && <Crown className="w-4 h-4 mx-auto mb-2" style={{ color: '#FACC15' }} />}
               <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center mono text-xl font-black"
                 style={{ background: `${RANK_COLORS[podiumOrder[i]] || 'var(--border-mid)'}20`, border: `2px solid ${RANK_COLORS[podiumOrder[i]] || 'var(--border-mid)'}`, color: RANK_COLORS[podiumOrder[i]] || 'var(--tx-primary)' }}>
                 {display.avatarInitial}
@@ -98,7 +98,7 @@ export default function Leaderboard() {
               className="px-5 py-3.5 grid grid-cols-12 items-center transition-all"
               style={{
                 borderBottom: '1px solid var(--border-dim)',
-                background: isMe ? 'rgba(212,245,60,0.04)' : 'transparent',
+                background: isMe ? 'rgba(139,92,246,0.04)' : 'transparent',
                 borderLeft: isMe ? '2px solid var(--acid)' : '2px solid transparent',
               }}>
               <div className="col-span-1">
@@ -127,11 +127,11 @@ export default function Leaderboard() {
                 <p className="mono text-[8px]" style={{ color: 'var(--tx-ghost)' }}>{levelInfo.label}</p>
               </div>
               <div className="col-span-2 flex items-center gap-1.5">
-                <Flame className="w-3 h-3" style={{ color: entry.streak >= 14 ? '#f5c842' : 'var(--tx-muted)' }} />
+                <Flame className="w-3 h-3" style={{ color: entry.streak >= 14 ? '#FACC15' : 'var(--tx-muted)' }} />
                 <span className="mono text-[10px] font-bold" style={{ color: 'var(--tx-primary)' }}>{entry.streak}d</span>
               </div>
               <div className="col-span-2">
-                <span className="mono text-[10px] font-bold" style={{ color: entry.weeklyScore >= 8 ? '#00d4b4' : entry.weeklyScore >= 6 ? 'var(--acid)' : 'var(--tx-secondary)' }}>
+                <span className="mono text-[10px] font-bold" style={{ color: entry.weeklyScore >= 8 ? 'var(--success)' : entry.weeklyScore >= 6 ? 'var(--acid)' : 'var(--tx-secondary)' }}>
                   {entry.weeklyScore.toFixed(1)}
                 </span>
               </div>
@@ -146,7 +146,7 @@ export default function Leaderboard() {
       {/* My position summary */}
       {myEntry && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="mt-6 p-5" style={{ background: 'rgba(212,245,60,0.04)', border: '1px solid rgba(212,245,60,0.15)', borderTop: '2px solid var(--acid)' }}>
+          className="mt-6 p-5" style={{ background: 'rgba(139,92,246,0.04)', border: '1px solid rgba(139,92,246,0.15)', borderTop: '2px solid var(--acid)' }}>
           <div className="flex items-center justify-between">
             <div>
               <p className="mono text-[9px] tracking-widest mb-1" style={{ color: 'var(--acid)' }}>YOUR POSITION</p>

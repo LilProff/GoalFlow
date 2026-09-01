@@ -13,10 +13,11 @@ export default function SegBar({ value, color = 'var(--acid)', segments = 20, he
       {Array.from({ length: segments }, (_, i) => (
         <div
           key={i}
-          className="flex-1 rounded-[1px] transition-all duration-300"
+          className="flex-1 rounded-full transition-all duration-300"
           style={{
             background: i < filled ? color : 'var(--border-mid)',
             opacity: i < filled ? (0.5 + (i / segments) * 0.5) : 1,
+            boxShadow: i < filled ? `0 0 6px ${color}80` : 'none',
           }}
         />
       ))}

@@ -1,48 +1,65 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Core palette — warm charcoal, not cold navy */
-  --bg-void:    #0c0b09;
-  --bg-base:    #111008;
-  --bg-raised:  #181510;
-  --bg-overlay: #1f1c14;
-  --bg-float:   #252018;
+  /* Core palette — dark-mode glassmorphism (adopted from stitch_goalflow_mobile_redesign) */
+  --bg-void:    #0b0b0e;   /* deepest base */
+  --bg-base:    #0e0e11;   /* surface-container-lowest */
+  --bg-raised:  #1b1b1e;   /* surface-container-low — glass panels sit on this */
+  --bg-overlay: #1f1f22;   /* surface-container */
+  --bg-float:   #2a2a2d;   /* surface-container-high — floating/elevated glass */
 
-  /* Borders */
-  --border-dim:    rgba(255,240,200,0.04);
-  --border-mid:    rgba(255,240,200,0.08);
-  --border-bright: rgba(255,240,200,0.15);
+  /* Glass surface fills (used with backdrop-blur, see .glass-panel below) */
+  --glass-fill:       rgba(15, 15, 20, 0.7);
+  --glass-fill-float: rgba(20, 20, 26, 0.75);
+  --glass-stroke:     rgba(255, 255, 255, 0.12);
+  --glass-stroke-top: rgba(255, 255, 255, 0.2);
+
+  /* Borders (legacy names kept — every component already references these) */
+  --border-dim:    rgba(255,255,255,0.06);
+  --border-mid:    rgba(255,255,255,0.12);
+  --border-bright: rgba(255,255,255,0.2);
 
   /* Text */
-  --tx-primary:   #f0ead8;
-  --tx-secondary: #a89f88;
-  --tx-muted:     #5a5448;
-  --tx-ghost:     #2e2b24;
+  --tx-primary:   #e5e1e6;
+  --tx-secondary: #ccc3d8;
+  --tx-muted:     #958da1;
+  --tx-ghost:     #4a4455;
 
   /* Accent system */
-  --acid:   #d4f53c;   /* primary accent — acid lime */
-  --acid-2: #b8e030;
-  --ember:  #ff6b35;   /* BUILD */
-  --aqua:   #00d4b4;   /* SHOW */
-  --gold:   #f5c842;   /* EARN */
-  --slate:  #7b8fa8;   /* SYSTEMIZE */
+  --acid:   #8B5CF6;   /* primary accent — electric violet (was acid lime) */
+  --acid-2: #7C3AED;
+  --ember:  #F97316;   /* BUILD */
+  --aqua:   #14B8A6;   /* SHOW */
+  --gold:   #FACC15;   /* EARN */
+  --slate:  #64748B;   /* SYSTEMIZE */
+
+  /* Functional */
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger:  #EF4444;
 
   /* Glow */
-  --glow-acid:  rgba(212,245,60,0.12);
-  --glow-ember: rgba(255,107,53,0.12);
-  --glow-aqua:  rgba(0,212,180,0.12);
-  --glow-gold:  rgba(245,200,66,0.12);
+  --glow-acid:  rgba(139,92,246,0.35);
+  --glow-ember: rgba(249,115,22,0.35);
+  --glow-aqua:  rgba(20,184,166,0.35);
+  --glow-gold:  rgba(250,204,21,0.35);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #4f46e5, #8b5cf6);
+  --gradient-ambient:
+    radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%);
 }
 
 * { box-sizing: border-box; }
 
 html {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: var(--bg-void);
+  background: var(--bg-base);
   color: var(--tx-primary);
 }
 
@@ -85,7 +102,35 @@ select {
 }
 
 /* ── Mono tag ── */
-.mono { font-family: 'Space Mono', monospace; }
+/* Kept the class name (every component still uses it for labels/data), now
+   just tightened tracking on Inter rather than switching typeface entirely —
+   there's no monospace face in the new system. */
+.mono { font-family: 'Inter', sans-serif; letter-spacing: 0.02em; }
+
+/* ── Glass surfaces (dark-mode glassmorphism, per goalflow/DESIGN.md) ── */
+.glass-panel {
+  background: var(--glass-fill);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 0.5px solid var(--glass-stroke);
+  border-top: 0.5px solid var(--glass-stroke-top);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+/* Level 2 (DESIGN.md): floating nav pill + Ryna panel — heavier blur, violet edge */
+.glass-panel-float {
+  background: var(--glass-fill-float);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 0.5px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+.bg-gradient-ambient { background: var(--gradient-ambient); }
+.btn-gradient {
+  background: var(--gradient-primary);
+  color: #fff;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+.btn-gradient:hover { opacity: 0.9; }
 
 /* ── Scan line overlay ── */
 .scanlines::after {

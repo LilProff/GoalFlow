@@ -31,8 +31,8 @@ export default function Sidebar() {
       initial={false}
       animate={{ width: sidebarCollapsed ? 56 : 220 }}
       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-      className="relative flex flex-col h-screen shrink-0 overflow-hidden"
-      style={{ background: 'var(--bg-void)', borderRight: '1px solid var(--border-mid)' }}
+      className="glass-panel relative flex flex-col h-screen shrink-0 overflow-hidden"
+      style={{ borderRadius: 0 }}
     >
       {/* Wordmark */}
       <div className="flex items-center h-14 px-3.5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
@@ -50,7 +50,7 @@ export default function Sidebar() {
               className="ml-3 flex items-baseline gap-1.5"
             >
               <span className="text-sm font-bold tracking-widest uppercase" style={{ color: 'var(--tx-primary)' }}>GoalFlow</span>
-              <span className="mono text-[9px] px-1 py-0.5" style={{ color: 'var(--acid)', border: '1px solid rgba(212,245,60,0.3)' }}>BETA</span>
+              <span className="mono text-[9px] px-1 py-0.5 rounded-full" style={{ color: 'var(--acid)', border: '1px solid rgba(139,92,246,0.3)' }}>BETA</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -74,7 +74,7 @@ export default function Sidebar() {
                   <motion.div
                     layoutId="sidebar-active"
                     className="absolute inset-0"
-                    style={{ background: 'rgba(212,245,60,0.06)', border: '1px solid rgba(212,245,60,0.12)' }}
+                    style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)' }}
                     transition={{ type: 'spring', stiffness: 500, damping: 40 }}
                   />
                 )}
@@ -102,7 +102,7 @@ export default function Sidebar() {
           onClick={() => setChatOpen(true)}
           className="group flex items-center gap-3 px-2 py-2 transition-all duration-100"
           style={{ color: 'var(--tx-muted)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#00d4b4')}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--acid)')}
           onMouseLeave={e => (e.currentTarget.style.color = 'var(--tx-muted)')}
         >
           <MessageCircle className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
@@ -149,7 +149,7 @@ export default function Sidebar() {
                 onClick={() => { logout(); navigate('/'); }}
                 className="p-1 transition-colors"
                 style={{ color: 'var(--tx-muted)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#ff4444')}
+                onMouseEnter={e => (e.currentTarget.style.color = '#EF4444')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--tx-muted)')}>
                 <LogOut className="w-3 h-3" />
               </motion.button>

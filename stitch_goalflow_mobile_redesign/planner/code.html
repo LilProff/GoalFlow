@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoalFlow - Planner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-fixed": "#301400",
+                      "on-primary": "#3f008e",
+                      "on-tertiary": "#4f2500",
+                      "surface-container-lowest": "#0e0e11",
+                      "outline-variant": "#4a4455",
+                      "glass-stroke": "rgba(255, 255, 255, 0.12)",
+                      "coral-red": "#EF4444",
+                      "on-secondary-fixed-variant": "#005236",
+                      "tertiary": "#ffb784",
+                      "primary": "#d2bbff",
+                      "on-error-container": "#ffdad6",
+                      "surface-container": "#1f1f22",
+                      "glass-fill": "rgba(15, 15, 20, 0.7)",
+                      "on-secondary": "#003824",
+                      "secondary-fixed-dim": "#4edea3",
+                      "on-surface-variant": "#ccc3d8",
+                      "vivid-emerald": "#10B981",
+                      "warm-amber": "#F59E0B",
+                      "surface-container-high": "#2a2a2d",
+                      "on-tertiary-fixed-variant": "#713700",
+                      "pillar-show": "#14B8A6",
+                      "surface-tint": "#d2bbff",
+                      "secondary-fixed": "#6ffbbe",
+                      "background": "#131316",
+                      "inverse-primary": "#732ee4",
+                      "pillar-earn": "#FACC15",
+                      "on-surface": "#e5e1e6",
+                      "secondary-container": "#00a572",
+                      "surface": "#131316",
+                      "surface-bright": "#39393c",
+                      "on-primary-fixed-variant": "#5a00c6",
+                      "pillar-build": "#F97316",
+                      "inverse-on-surface": "#303033",
+                      "primary-container": "#7c3aed",
+                      "on-primary-container": "#ede0ff",
+                      "tertiary-fixed-dim": "#ffb784",
+                      "surface-container-highest": "#353438",
+                      "surface-variant": "#353438",
+                      "on-primary-fixed": "#25005a",
+                      "on-background": "#e5e1e6",
+                      "on-tertiary-container": "#ffe0cd",
+                      "primary-fixed-dim": "#d2bbff",
+                      "surface-dim": "#131316",
+                      "primary-fixed": "#eaddff",
+                      "on-error": "#690005",
+                      "pillar-systemize": "#64748B",
+                      "electric-violet": "#8B5CF6",
+                      "inverse-surface": "#e5e1e6",
+                      "outline": "#958da1",
+                      "on-secondary-fixed": "#002113",
+                      "error": "#ffb4ab",
+                      "tertiary-fixed": "#ffdcc6",
+                      "surface-container-low": "#1b1b1e",
+                      "secondary": "#4edea3",
+                      "on-secondary-container": "#00311f",
+                      "error-container": "#93000a",
+                      "tertiary-container": "#a15100"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter-sm": "12px",
+                      "margin-mobile": "16px",
+                      "margin-desktop": "32px",
+                      "gutter-md": "20px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "numeric-stat": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "eyebrow": ["Inter"],
+                      "display-hero": ["Inter"],
+                      "body-md": ["Inter"],
+                      "code-info": ["Inter"]
+              },
+              "fontSize": {
+                      "numeric-stat": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "eyebrow": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                      "display-hero": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "code-info": ["11px", {"lineHeight": "14px", "fontWeight": "400"}]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-surface');
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .glass-panel {
+            background: theme('colors.glass-fill');
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 0.5px solid theme('colors.glass-stroke');
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .glass-edge {
+            border-top: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        /* Custom scrollbar for timeline */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.surface-container-highest');
+            border-radius: theme('borderRadius.full');
+        }
+        
+        /* Ambient Background Blur */
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.15;
+            animation: pulse 10s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.2) translate(20px, -20px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden pb-24 md:pb-0">
+<!-- Ambient Background -->
+<div class="ambient-blob bg-electric-violet w-[500px] h-[500px] top-[-100px] left-[-100px]"></div>
+<div class="ambient-blob bg-vivid-emerald w-[400px] h-[400px] bottom-[10%] right-[-50px]" style="animation-delay: -5s;"></div>
+<!-- Desktop TopAppBar (hidden on mobile, simulated for layout structure) -->
+<header class="hidden md:flex fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-glass-fill dark:bg-glass-fill backdrop-blur-xl border-b border-glass-stroke text-electric-violet dark:text-electric-violet transition-all duration-300 ease-in-out">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">menu</span>
+<span class="font-headline-lg text-headline-lg text-primary tracking-tighter">GoalFlow</span>
+</div>
+<nav class="flex gap-6 items-center">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors hover:bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                Dashboard
+            </a>
+<a class="font-label-sm text-label-sm text-primary flex items-center justify-center bg-primary-container/30 rounded-full px-4 py-1.5 shadow-[0_0_15px_rgba(139,92,246,0.5)] flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[18px]">event_note</span>
+                Planner
+            </a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors hover:bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[18px]">assignment</span>
+                Tasks
+            </a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors hover:bg-white/10 px-3 py-1.5 rounded-full flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-[18px]">emoji_events</span>
+                Metrics
+            </a>
+</nav>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">smart_toy</span>
+</header>
+<!-- Main Layout -->
+<main class="pt-6 md:pt-24 px-margin-mobile md:px-margin-desktop max-w-[1440px] mx-auto h-screen flex flex-col md:flex-row gap-gutter-md">
+<!-- Left Column: Execution (Planner) -->
+<section class="flex-1 flex flex-col h-full overflow-hidden">
+<!-- Planner Header -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-gutter-md shrink-0">
+<div>
+<p class="font-eyebrow text-eyebrow text-on-surface-variant uppercase tracking-widest mb-1">Oct 24, 2023</p>
+<h1 class="font-display-hero text-display-hero text-on-surface m-0">Day Planner</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="glass-panel rounded-full px-4 py-1.5 flex items-center gap-2 border border-glass-stroke">
+<div class="w-2 h-2 rounded-full bg-vivid-emerald shadow-[0_0_8px_#10B981] animate-pulse"></div>
+<span class="font-code-info text-code-info text-vivid-emerald font-mono">NOW 14:32</span>
+</div>
+<button class="glass-panel rounded-full p-2 hover:bg-white/10 transition-colors group" title="AI Reshuffle">
+<span class="material-symbols-outlined text-primary group-hover:rotate-180 transition-transform duration-500">chevron_forward</span>
+</button>
+<button class="bg-gradient-to-r from-electric-violet to-primary-container text-white font-label-sm text-label-sm px-4 py-2 rounded-full flex items-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_25px_rgba(139,92,246,0.6)] transition-shadow">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Add Block
+                    </button>
+</div>
+</header>
+<!-- View Toggle & Timeline Container -->
+<div class="glass-panel glass-edge rounded-xl flex-1 flex flex-col overflow-hidden relative">
+<!-- Toggle -->
+<div class="absolute top-4 right-4 z-10 glass-panel rounded-full flex border border-glass-stroke p-1">
+<button class="px-3 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[16px]">view_timeline</span>
+                        Timeline
+                    </button>
+<button class="px-3 py-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">format_list_bulleted</span>
+                        List
+                    </button>
+</div>
+<!-- Timeline Scroll Area -->
+<div class="flex-1 overflow-y-auto p-4 md:p-6 relative hide-scrollbar">
+<!-- Time Markers (Background Grid) -->
+<div class="absolute left-0 w-full h-[1200px] flex flex-col pointer-events-none">
+<!-- Hour intervals (simplified for example) -->
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-50 relative">
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">08:00</span>
+</div>
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-50 relative">
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">09:00</span>
+</div>
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-50 relative">
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">10:00</span>
+</div>
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-50 relative">
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">11:00</span>
+</div>
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-50 relative">
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">12:00</span>
+</div>
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-30 border-dashed relative">
+<!-- Current Time Line -->
+<div class="absolute w-full border-t border-vivid-emerald top-[60%] left-0 z-20 flex items-center">
+<div class="w-2 h-2 rounded-full bg-vivid-emerald shadow-[0_0_8px_#10B981] -translate-x-1"></div>
+</div>
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">13:00</span>
+</div>
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-50 relative">
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">14:00</span>
+</div>
+<div class="flex-1 border-t border-glass-stroke flex items-start px-2 opacity-50 relative">
+<span class="font-code-info text-code-info text-on-surface-variant -translate-y-1/2 bg-surface px-1">15:00</span>
+</div>
+</div>
+<!-- Blocks Container -->
+<div class="ml-14 relative h-[1200px]">
+<!-- Block: Morning Routine (Past) -->
+<div class="absolute top-[0%] h-[12.5%] w-full pr-4 p-1">
+<div class="w-full h-full bg-surface-container-high/50 border border-glass-stroke rounded-lg p-3 flex flex-col justify-between opacity-60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-pillar-show">self_improvement</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Morning Routine</span>
+</div>
+<span class="font-code-info text-code-info text-on-surface-variant/50">08:00 - 09:00</span>
+</div>
+</div>
+<!-- Block: Deep Work (Past) -->
+<div class="absolute top-[12.5%] h-[37.5%] w-[80%] pr-4 p-1">
+<div class="w-full h-full bg-surface-container-high/50 border border-glass-stroke rounded-lg p-3 flex flex-col justify-between opacity-60">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-pillar-earn">work</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Deep Work: Q4 Specs</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-vivid-emerald" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant/70 mt-2 line-clamp-2">Finish drafting the API endpoints for the new user profile service.</p>
+<span class="font-code-info text-code-info text-on-surface-variant/50 mt-auto">09:00 - 12:00</span>
+</div>
+</div>
+<!-- Block: Workout (Current) -->
+<div class="absolute top-[50%] h-[18.75%] w-[90%] pr-4 p-1 z-10">
+<div class="w-full h-full bg-primary-container/20 border border-primary/50 rounded-lg p-3 flex flex-col justify-between shadow-[0_0_15px_rgba(139,92,246,0.15)] relative overflow-hidden">
+<!-- Active highlight edge -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">fitness_center</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">Zone 2 Cardio</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface mt-1">45 min stationary bike, HR 135-145.</p>
+<span class="font-code-info text-code-info text-primary/80 mt-auto">12:00 - 13:30 • IN PROGRESS</span>
+</div>
+</div>
+<!-- Block: Planning (Future) -->
+<div class="absolute top-[75%] h-[12.5%] w-full pr-4 p-1">
+<div class="w-full h-full glass-panel border border-glass-stroke rounded-lg p-3 flex flex-col justify-between hover:bg-white/5 transition-colors cursor-pointer">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-pillar-systemize">account_tree</span>
+<span class="font-label-sm text-label-sm text-on-surface">Weekly Review</span>
+</div>
+<span class="font-code-info text-code-info text-on-surface-variant">14:00 - 15:00</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Intelligence (Stats/Ryna AI) (Hidden on sm, visible on md+) -->
+<aside class="w-full md:w-[320px] lg:w-[380px] shrink-0 flex flex-col gap-gutter-md pb-24 md:pb-6">
+<!-- Day Score Card -->
+<div class="glass-panel glass-edge rounded-xl p-5 flex flex-col items-center justify-center relative overflow-hidden">
+<!-- Abstract BG for score -->
+<div class="absolute inset-0 bg-gradient-to-br from-pillar-earn/10 to-transparent pointer-events-none"></div>
+<h3 class="font-eyebrow text-eyebrow text-on-surface-variant w-full text-left mb-4">Day Score</h3>
+<div class="relative w-32 h-32 flex items-center justify-center">
+<!-- SVG Circle Gauge (Simulated) -->
+<svg class="w-full h-full -rotate-90" viewbox="0 0 100 100">
+<!-- Background track -->
+<circle class="text-surface-container-highest" cx="50" cy="50" fill="none" r="40" stroke="currentColor" stroke-dasharray="251" stroke-dashoffset="0" stroke-width="8"></circle>
+<!-- Progress track (approx 72%) -->
+<circle class="drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" cx="50" cy="50" fill="none" r="40" stroke="url(#score-gradient)" stroke-dasharray="251" stroke-dashoffset="70" stroke-linecap="round" stroke-width="8"></circle>
+<defs>
+<lineargradient id="score-gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#FACC15"></stop>
+<stop offset="100%" stop-color="#10B981"></stop>
+</lineargradient>
+</defs>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="font-numeric-stat text-numeric-stat text-on-surface">72</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-vivid-emerald mt-2">+5 vs Yesterday</p>
+</div>
+<!-- Life Metrics Grid -->
+<div class="grid grid-cols-2 gap-gutter-sm">
+<!-- Sleep -->
+<div class="glass-panel rounded-lg p-3 border border-glass-stroke hover:border-pillar-systemize/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-[20px] text-pillar-systemize">bedtime</span>
+<span class="font-code-info text-code-info text-on-surface-variant">7h 12m</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-pillar-systemize h-full w-[85%] group-hover:bg-opacity-80"></div>
+</div>
+</div>
+<!-- Spiritual -->
+<div class="glass-panel rounded-lg p-3 border border-glass-stroke hover:border-pillar-show/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-[20px] text-pillar-show">self_improvement</span>
+<span class="font-code-info text-code-info text-on-surface-variant">20m</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-pillar-show h-full w-[100%] shadow-[0_0_5px_#14B8A6]"></div>
+</div>
+</div>
+<!-- Exercise -->
+<div class="glass-panel rounded-lg p-3 border border-glass-stroke hover:border-primary/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-[20px] text-primary">fitness_center</span>
+<span class="font-code-info text-code-info text-primary animate-pulse">In Prog</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[60%] group-hover:bg-opacity-80"></div>
+</div>
+</div>
+<!-- Focus -->
+<div class="glass-panel rounded-lg p-3 border border-glass-stroke hover:border-pillar-earn/50 transition-colors cursor-pointer group">
+<div class="flex justify-between items-start mb-2">
+<span class="material-symbols-outlined text-[20px] text-pillar-earn">psychology</span>
+<span class="font-code-info text-code-info text-on-surface-variant">3h 45m</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-pillar-earn h-full w-[70%] group-hover:bg-opacity-80"></div>
+</div>
+</div>
+</div>
+<!-- Ryna AI Panel -->
+<div class="glass-panel glass-edge rounded-xl p-4 border border-primary/30 mt-auto md:mt-0 relative overflow-hidden group">
+<!-- AI Glow effect -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-[30px] group-hover:bg-primary/30 transition-all duration-700"></div>
+<div class="flex items-center gap-2 mb-3">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest flex items-center justify-center border border-glass-stroke">
+<span class="material-symbols-outlined text-[14px] text-primary">smart_toy</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold tracking-wide">Ryna Says</span>
+<div class="w-1.5 h-1.5 rounded-full bg-vivid-emerald ml-auto animate-pulse" title="System Online"></div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                    "You're tracking well on Deep Work today. Considering your recent sleep deficit, I recommend capping your workout at 45m and prioritizing the Weekly Review over starting a new task block."
+                </p>
+<button class="mt-3 text-primary font-label-sm text-label-sm hover:text-white transition-colors flex items-center gap-1 opacity-70 group-hover:opacity-100">
+                    Reschedule based on advice
+                    <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</aside>
+</main>
+<!-- Mobile BottomNavBar (Hidden on md and up) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 py-2 bg-glass-fill dark:bg-glass-fill backdrop-blur-2xl border border-glass-stroke shadow-xl rounded-full mx-auto mb-6 w-[calc(100%-32px)] max-w-md font-label-sm text-label-sm text-electric-violet dark:text-electric-violet transition-transform">
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+</a>
+<!-- Active Tab: Planner (Exact Match to Page Title 'Day Planner') -->
+<a class="flex items-center justify-center bg-primary-container/30 text-primary rounded-full p-3 shadow-[0_0_15px_rgba(139,92,246,0.5)] scale-90 transition-transform hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">event_note</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">assignment</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">more_horiz</span>
+</a>
+</nav>
+</body></html>

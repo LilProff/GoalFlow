@@ -11,7 +11,7 @@ const V = {
   acid:    'bg-[var(--acid)] text-[var(--bg-void)] font-bold hover:bg-[var(--acid-2)] border border-transparent',
   ghost:   'bg-transparent text-[var(--tx-secondary)] hover:text-[var(--tx-primary)] hover:bg-[var(--border-dim)] border border-transparent',
   outline: 'bg-transparent text-[var(--tx-secondary)] border border-[var(--border-mid)] hover:border-[var(--border-bright)] hover:text-[var(--tx-primary)]',
-  danger:  'bg-transparent text-[#ff4444] border border-[#ff444430] hover:bg-[#ff444410]',
+  danger:  'bg-transparent text-[#EF4444] border border-[#EF444430] hover:bg-[#EF444410]',
   dim:     'bg-[var(--bg-overlay)] text-[var(--tx-secondary)] border border-[var(--border-mid)] hover:text-[var(--tx-primary)] hover:border-[var(--border-bright)]',
 };
 

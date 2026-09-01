@@ -63,7 +63,7 @@ function TaskEditor({ task, onSave, onClose }: { task: Task; onSave: (updates: P
               {[25, 45, 60, 90].map(d => (
                 <button key={d} onClick={() => setDuration(d)}
                   className="flex-1 py-2 mono text-[8px] transition-all"
-                  style={{ background: duration === d ? 'rgba(212,245,60,0.1)' : 'var(--bg-raised)', border: `1px solid ${duration === d ? 'var(--acid)' : 'var(--border-dim)'}`, color: duration === d ? 'var(--acid)' : 'var(--tx-ghost)' }}>
+                  style={{ background: duration === d ? 'rgba(139,92,246,0.1)' : 'var(--bg-raised)', border: `1px solid ${duration === d ? 'var(--acid)' : 'var(--border-dim)'}`, color: duration === d ? 'var(--acid)' : 'var(--tx-ghost)' }}>
                   {d}m
                 </button>
               ))}
@@ -178,7 +178,7 @@ function TaskCard({
             <button onClick={onDelete}
               className="p-1.5 transition-all opacity-0 group-hover:opacity-100"
               style={{ color: 'var(--tx-ghost)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#ff4444')}
+              onMouseEnter={e => (e.currentTarget.style.color = '#EF4444')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--tx-ghost)')}>
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -272,7 +272,7 @@ export default function Tasks() {
               </span>
             )}
             {unscheduledCount > 0 && (
-              <span className="mono text-[9px] px-2 py-0.5" style={{ color: '#f5c842', background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.2)' }}>
+              <span className="mono text-[9px] px-2 py-0.5" style={{ color: '#FACC15', background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.2)' }}>
                 {unscheduledCount} without time slot
               </span>
             )}
@@ -281,7 +281,7 @@ export default function Tasks() {
         <div className="flex items-center gap-2 flex-wrap justify-end">
           <button onClick={() => generateTasks()} disabled={dailyLoading}
             className="flex items-center gap-2 px-3 py-2 mono text-[9px] tracking-widest transition-all disabled:opacity-40"
-            style={{ background: 'rgba(212,245,60,0.06)', border: '1px solid rgba(212,245,60,0.2)', color: 'var(--acid)' }}>
+            style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)', color: 'var(--acid)' }}>
             <RefreshCw className={`w-3 h-3 ${dailyLoading ? 'animate-spin' : ''}`} />
             {dailyLoading ? 'GENERATING...' : 'AI GENERATE'}
           </button>
@@ -301,7 +301,7 @@ export default function Tasks() {
         <div className="flex-1">
           <p className="text-sm font-semibold" style={{ color: 'var(--tx-primary)' }}>Goal-to-Task Intelligence</p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--tx-secondary)' }}>
-            Ryna spreads your {goals.length} active goals across daily tasks — balancing workload, respecting sleep (6–8h), and building toward your 90-day targets without overworking you. Each task is allocated a Pomodoro-style time slot in the planner.
+            Ryna spreads your {goals.length} active goals across daily tasks — balancing workload, respecting sleep (6–8h), and building toward each goal's target timeline without overworking you. Each task is allocated a Pomodoro-style time slot in the planner.
           </p>
         </div>
         <button onClick={() => setShowGoalSpread(!showGoalSpread)}
@@ -370,7 +370,7 @@ export default function Tasks() {
         {STATUS_OPTS.map(({ v, label }) => (
           <button key={v} onClick={() => setStatusFilter(v)}
             className="mono text-[9px] px-3 py-1.5 tracking-widest transition-all"
-            style={{ background: statusFilter === v ? 'rgba(212,245,60,0.08)' : 'var(--bg-raised)', border: `1px solid ${statusFilter === v ? 'var(--acid)' : 'var(--border-dim)'}`, color: statusFilter === v ? 'var(--acid)' : 'var(--tx-muted)' }}>
+            style={{ background: statusFilter === v ? 'rgba(139,92,246,0.08)' : 'var(--bg-raised)', border: `1px solid ${statusFilter === v ? 'var(--acid)' : 'var(--border-dim)'}`, color: statusFilter === v ? 'var(--acid)' : 'var(--tx-muted)' }}>
             {label}
           </button>
         ))}
@@ -472,7 +472,7 @@ export default function Tasks() {
                   {[{ mins: 25, label: '25m Pomodoro' }, { mins: 45, label: '45m Focus' }, { mins: 60, label: '1h Deep' }, { mins: 90, label: '90m Flow' }].map(p => (
                     <button key={p.mins} onClick={() => setNewMins(p.mins)}
                       className="flex-1 py-2 mono text-[8px] flex items-center justify-center gap-1 transition-all"
-                      style={{ background: newMins === p.mins ? 'rgba(212,245,60,0.1)' : 'var(--bg-raised)', border: `1px solid ${newMins === p.mins ? 'var(--acid)' : 'var(--border-dim)'}`, color: newMins === p.mins ? 'var(--acid)' : 'var(--tx-ghost)' }}>
+                      style={{ background: newMins === p.mins ? 'rgba(139,92,246,0.1)' : 'var(--bg-raised)', border: `1px solid ${newMins === p.mins ? 'var(--acid)' : 'var(--border-dim)'}`, color: newMins === p.mins ? 'var(--acid)' : 'var(--tx-ghost)' }}>
                       <Timer className="w-2.5 h-2.5" />{p.mins}m
                     </button>
                   ))}

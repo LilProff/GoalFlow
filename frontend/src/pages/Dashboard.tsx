@@ -12,7 +12,7 @@ const PILLAR_SYMS: Record<string, string> = { BUILD: '◈', SHOW: '◎', EARN: '
 
 function ScoreGauge({ score }: { score: number }) {
   const pct = (score / 10) * 100;
-  const color = score >= 8 ? '#00d4b4' : score >= 6 ? '#d4f53c' : score >= 4 ? '#f5c842' : '#ff6b35';
+  const color = score >= 8 ? 'var(--success)' : score >= 6 ? 'var(--acid)' : score >= 4 ? 'var(--warning)' : 'var(--danger)';
   const r = 42, circ = 2 * Math.PI * r;
   const half = circ / 2;
   const offset = half - (pct / 100) * half;
@@ -22,7 +22,7 @@ function ScoreGauge({ score }: { score: number }) {
         <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="var(--border-mid)" strokeWidth="6" strokeLinecap="round" />
         <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke={color} strokeWidth="6" strokeLinecap="round"
           strokeDasharray={`${half} ${half}`} strokeDashoffset={offset}
-          style={{ transition: 'stroke-dashoffset 0.8s ease, stroke 0.4s' }} />
+          style={{ transition: 'stroke-dashoffset 0.8s ease, stroke 0.4s', filter: `drop-shadow(0 0 4px ${color})` }} />
       </svg>
       <div className="absolute bottom-1 text-center">
         <p className="mono text-lg font-bold leading-none" style={{ color }}><NumberTicker value={score} decimals={1} /></p>
@@ -91,7 +91,7 @@ export default function Dashboard() {
         style={{ borderBottom: '1px solid var(--border-dim)' }}>
         <div>
           <p className="mono text-[9px] tracking-widest mb-1" style={{ color: 'var(--tx-muted)' }}>
-            {format(new Date(), 'EEEE, MMM d yyyy').toUpperCase()} · DAY {user.streak + 1} OF SPRINT
+            {format(new Date(), 'EEEE, MMM d yyyy').toUpperCase()} · {user.streak > 0 ? `${user.streak}-DAY STREAK` : 'NEW STREAK STARTS TODAY'}
           </p>
           <h1 className="text-2xl font-black">
             {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},{' '}
@@ -109,8 +109,7 @@ export default function Dashboard() {
             {dailyLoading ? 'GENERATING...' : 'REGEN TASKS'}
           </button>
           <button onClick={() => setChatOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 mono text-[10px] tracking-widest font-bold transition-all"
-            style={{ background: 'rgba(0,212,180,0.08)', border: '1px solid rgba(0,212,180,0.2)', color: '#00d4b4' }}>
+            className="btn-gradient flex items-center gap-2 px-3 py-2 rounded-lg mono text-[10px] tracking-widest font-bold transition-all">
             <MessageCircle className="w-3 h-3" /> ASK RYNA
           </button>
         </div>
@@ -124,18 +123,18 @@ export default function Dashboard() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }}
             className="grid grid-cols-3 gap-3">
             {/* Score */}
-            <div className="p-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid var(--acid)' }}>
+            <div className="glass-panel rounded-xl p-4" style={{ borderTop: '2px solid var(--acid)' }}>
               <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>TODAY'S SCORE</p>
               <ScoreGauge score={dailyData.score} />
             </div>
             {/* Streak */}
-            <div className="p-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid #f5c842' }}>
+            <div className="glass-panel rounded-xl p-4" style={{ borderTop: '2px solid #FACC15' }}>
               <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>STREAK</p>
-              <p className="mono text-2xl sm:text-4xl font-black" style={{ color: '#f5c842' }}><NumberTicker value={user.streak} /></p>
+              <p className="mono text-2xl sm:text-4xl font-black" style={{ color: '#FACC15' }}><NumberTicker value={user.streak} /></p>
               <p className="mono text-[9px] tracking-widest mt-1" style={{ color: 'var(--tx-muted)' }}>DAYS · DON'T BREAK IT</p>
             </div>
             {/* Completion */}
-            <div className="p-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid var(--ember)' }}>
+            <div className="glass-panel rounded-xl p-4" style={{ borderTop: '2px solid var(--ember)' }}>
               <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>COMPLETION</p>
               <p className="mono text-2xl sm:text-4xl font-black" style={{ color: 'var(--ember)' }}><NumberTicker value={pct} />%</p>
               <p className="mono text-[9px] tracking-widest mt-1" style={{ color: 'var(--tx-muted)' }}>{done}/{total} TASKS</p>
@@ -153,11 +152,10 @@ export default function Dashboard() {
               const active = pillarFilter === p.id;
               return (
                 <button key={p.id} onClick={() => setPillarFilter(active ? 'ALL' : p.id)}
-                  className="p-3 text-left transition-all"
+                  className="glass-panel rounded-xl p-3 text-left transition-all"
                   style={{
-                    background: active ? theme.bg : 'var(--bg-raised)',
-                    border: `1px solid ${active ? theme.border : 'var(--border-dim)'}`,
-                    borderTop: `2px solid ${active ? theme.accent : 'var(--border-dim)'}`,
+                    background: active ? theme.bg : undefined,
+                    borderTop: `2px solid ${active ? theme.accent : 'transparent'}`,
                   }}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-lg" style={{ color: theme.accent }}>{PILLAR_SYMS[p.id]}</span>
@@ -175,7 +173,7 @@ export default function Dashboard() {
 
           {/* Tasks panel */}
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-            style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)' }}>
+            className="glass-panel rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border-dim)' }}>
               <div className="flex items-center gap-4">
                 <span className="mono text-[10px] font-bold tracking-widest" style={{ color: 'var(--tx-primary)' }}>TASKS</span>
@@ -184,7 +182,7 @@ export default function Dashboard() {
                     <button key={f} onClick={() => setPillarFilter(f)}
                       className="mono text-[9px] px-2 py-1 tracking-widest transition-all"
                       style={{
-                        background: pillarFilter === f ? 'rgba(212,245,60,0.1)' : 'transparent',
+                        background: pillarFilter === f ? 'rgba(139,92,246,0.1)' : 'transparent',
                         border: `1px solid ${pillarFilter === f ? 'var(--acid)' : 'transparent'}`,
                         color: pillarFilter === f ? 'var(--acid)' : 'var(--tx-muted)',
                       }}>
@@ -229,7 +227,7 @@ export default function Dashboard() {
         <div className="col-span-12 lg:col-span-4 space-y-4">
           {/* Build Hours */}
           <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-            className="p-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid var(--ember)' }}>
+            className="glass-panel rounded-xl p-5" style={{ borderTop: '2px solid var(--ember)' }}>
             <div className="flex items-center justify-between mb-4">
               <p className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>BUILD HOURS TODAY</p>
               <p className="mono text-2xl font-black" style={{ color: 'var(--ember)' }}><NumberTicker value={dailyData.buildHours} decimals={1} /></p>
@@ -245,7 +243,7 @@ export default function Dashboard() {
 
           {/* Weekly stats */}
           <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.14 }}
-            className="p-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)' }}>
+            className="glass-panel rounded-xl p-5">
             <p className="mono text-[9px] tracking-widest mb-4" style={{ color: 'var(--tx-muted)' }}>THIS WEEK</p>
             <div className="space-y-3">
               {[
@@ -264,7 +262,7 @@ export default function Dashboard() {
 
           {/* Daily Reflection */}
           <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 }}
-            style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)' }}>
+            className="glass-panel rounded-xl overflow-hidden">
             <button onClick={() => setReflOpen(r => !r)}
               className="w-full flex items-center justify-between px-5 py-3 transition-colors"
               style={{ borderBottom: reflOpen ? '1px solid var(--border-dim)' : 'none' }}>

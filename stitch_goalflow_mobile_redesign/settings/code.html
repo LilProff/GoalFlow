@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoalFlow - Profile &amp; Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#301400",
+                        "on-primary": "#3f008e",
+                        "on-tertiary": "#4f2500",
+                        "surface-container-lowest": "#0e0e11",
+                        "outline-variant": "#4a4455",
+                        "glass-stroke": "rgba(255, 255, 255, 0.12)",
+                        "coral-red": "#EF4444",
+                        "on-secondary-fixed-variant": "#005236",
+                        "tertiary": "#ffb784",
+                        "primary": "#d2bbff",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1f1f22",
+                        "glass-fill": "rgba(15, 15, 20, 0.7)",
+                        "on-secondary": "#003824",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#ccc3d8",
+                        "vivid-emerald": "#10B981",
+                        "warm-amber": "#F59E0B",
+                        "surface-container-high": "#2a2a2d",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "pillar-show": "#14B8A6",
+                        "surface-tint": "#d2bbff",
+                        "secondary-fixed": "#6ffbbe",
+                        "background": "#131316",
+                        "inverse-primary": "#732ee4",
+                        "pillar-earn": "#FACC15",
+                        "on-surface": "#e5e1e6",
+                        "secondary-container": "#00a572",
+                        "surface": "#131316",
+                        "surface-bright": "#39393c",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "pillar-build": "#F97316",
+                        "inverse-on-surface": "#303033",
+                        "primary-container": "#7c3aed",
+                        "on-primary-container": "#ede0ff",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "surface-container-highest": "#353438",
+                        "surface-variant": "#353438",
+                        "on-primary-fixed": "#25005a",
+                        "on-background": "#e5e1e6",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#131316",
+                        "primary-fixed": "#eaddff",
+                        "on-error": "#690005",
+                        "pillar-systemize": "#64748B",
+                        "electric-violet": "#8B5CF6",
+                        "inverse-surface": "#e5e1e6",
+                        "outline": "#958da1",
+                        "on-secondary-fixed": "#002113",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-container-low": "#1b1b1e",
+                        "secondary": "#4edea3",
+                        "on-secondary-container": "#00311f",
+                        "error-container": "#93000a",
+                        "tertiary-container": "#a15100"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-sm": "12px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "gutter-md": "20px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "numeric-stat": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "eyebrow": ["Inter"],
+                        "display-hero": ["Inter"],
+                        "body-md": ["Inter"],
+                        "code-info": ["Inter"]
+                    },
+                    "fontSize": {
+                        "numeric-stat": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "eyebrow": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+                        "display-hero": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "code-info": ["11px", { "lineHeight": "14px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0B0B0E;
+            color: #e5e1e6;
+            overflow-x: hidden;
+        }
+        
+        /* Ambient Blobs */
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: -1;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 40vw; height: 40vw; background: #8B5CF6; }
+        .blob-2 { bottom: -20%; right: -10%; width: 50vw; height: 50vw; background: #00a572; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(5%, 5%) scale(1.1); }
+        }
+
+        /* Glass Panels */
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            border-top: 0.5px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-nav-pill {
+            background: rgba(15, 15, 20, 0.7);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 0.5px solid #8B5CF6;
+        }
+        
+        /* Custom Scrollbar for Milestones */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Toggles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #8B5CF6;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #8B5CF6;
+        }
+        .toggle-checkbox:checked + .toggle-label:after {
+            transform: translateX(100%);
+            border-color: white;
+        }
+
+        /* Delete Modal Overlay */
+        #delete-modal {
+            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.6);
+        }
+    </style>
+</head>
+<body class="antialiased pb-24 md:pb-0 pt-16 md:pt-0">
+<!-- Ambient Background -->
+<div class="ambient-blob blob-1"></div>
+<div class="ambient-blob blob-2"></div>
+<!-- Top App Bar (Mobile) -->
+<header class="md:hidden fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-glass-fill dark:bg-glass-fill backdrop-blur-xl border-b border-glass-stroke transition-all duration-300 ease-in-out">
+<button class="text-electric-violet dark:text-electric-violet hover:bg-white/10 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter">GoalFlow</h1>
+<button class="text-electric-violet dark:text-electric-violet hover:bg-white/10 p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+</button>
+</header>
+<div class="max-w-7xl mx-auto md:flex h-screen md:pt-6 px-margin-mobile md:px-margin-desktop gap-gutter-md">
+<!-- Sidebar Navigation (Desktop) - Hidden on Mobile -->
+<aside class="hidden md:flex flex-col w-60 shrink-0 h-[calc(100vh-48px)] sticky top-6">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter mb-8 px-4">GoalFlow</h1>
+<nav class="space-y-2 flex-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-body-md text-body-md">Planner</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+<span class="font-body-md text-body-md">Notes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span class="font-body-md text-body-md">Tasks</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+<span class="font-body-md text-body-md">Milestones</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-container/20 text-primary border border-primary/30 transition-colors shadow-[0_0_15px_rgba(139,92,246,0.2)]" href="#">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+<span class="font-body-md text-body-md">More</span>
+</a>
+</nav>
+<div class="glass-panel p-4 rounded-xl mt-auto">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-10 h-10 rounded-full object-cover border border-glass-stroke" data-alt="A small circular avatar of a futuristic AI assistant glowing with a soft green light, set against a dark glassmorphism background. The aesthetic is high-tech, sleek, and minimalist, emphasizing dark mode deep space vibes with sharp green accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOgoBL0hF34uFI_6i6cu4zetURV11ZzsvO249oGtXGIEEZ82FsCeIy8OoqqM_8Dp-mLrpHA7zGVynNhN3B2-88S6NXfTQ2NK5N9vyP1YV23D2Q33fZ7yCZcQPDn2OFlp2jGV9y3qCiMKxPHKQruMQLjUcb0_K6dwX1B5_Ur4H5yPtXpdlqSDku3Jv8YK7BGq3-1yOyN1ZK7gIlVGJFzBpMbSSG1-GN24hZZhziN__7QEQaBiFnS20oBw"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-secondary-fixed rounded-full border-2 border-surface-container-lowest"></div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-secondary-fixed mb-1">Ryna AI Active</p>
+<p class="font-code-info text-code-info text-on-surface-variant">Monitoring progress...</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col gap-gutter-md pb-24 md:pb-8 h-full md:overflow-y-auto no-scrollbar">
+<!-- Sub Navigation Tabs -->
+<div class="flex gap-4 border-b border-glass-stroke pb-2 sticky top-0 bg-background/80 backdrop-blur-md z-10 pt-4 md:pt-0">
+<button class="font-label-sm text-label-sm text-primary border-b-2 border-primary pb-2 px-1 transition-colors">Profile</button>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface pb-2 px-1 transition-colors">Notifications</button>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface pb-2 px-1 transition-colors">Appearance</button>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface pb-2 px-1 transition-colors">Security</button>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-md mt-4">
+<!-- Left Column (Identity & Milestones) -->
+<div class="lg:col-span-7 flex flex-col gap-gutter-md">
+<!-- Identity Card -->
+<div class="glass-panel rounded-xl p-6 relative overflow-hidden group">
+<!-- Decorative Background Gradient -->
+<div class="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-6">
+<div class="relative">
+<img class="w-24 h-24 rounded-xl object-cover border border-glass-stroke shadow-lg" data-alt="A portrait of a determined professional in a dimly lit, high-tech environment. The lighting is dramatic, with soft neon violet rim lights highlighting their features against a deep obsidian background. The mood is focused and futuristic, characteristic of a high-performance productivity dark mode UI." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATOtNn_Drdxc8nXKd5zwUpJXLlafOxMh5sXvgCHTQDMuvJQU2j4vNEBRuTEnPPHgELiTuzmA1lHpfegvtPNAWElQ-nMwxlMLZ51CnAdyJmvxlMd1E7n--79Xa2PI_jlEqLnZrn3svi02YKbnTCFLd9aWkDGkPmyZu5XTtsnBMnZ2d-MirOWsXtFzUCBWWhTmz9ETULRqmk3jFdcYmhw3vL5gYZQM3jgKsUfq5uRnGTq02djbyj76EAKw"/>
+<div class="absolute -bottom-3 -right-3 bg-surface-container-high border border-glass-stroke px-2 py-1 rounded-md shadow-md flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[14px]" data-icon="star" data-weight="fill">star</span>
+<span class="font-label-sm text-label-sm text-on-surface">Lvl 42</span>
+</div>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">Alex Mercer</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-3">Architect of Systems</p>
+<div class="flex gap-2">
+<span class="px-2 py-1 bg-white/5 border border-glass-stroke rounded text-[10px] text-on-surface-variant uppercase tracking-wider">Pro User</span>
+<span class="px-2 py-1 bg-white/5 border border-glass-stroke rounded text-[10px] text-on-surface-variant uppercase tracking-wider">Early Adopter</span>
+</div>
+</div>
+</div>
+<button class="p-2 bg-white/5 hover:bg-white/10 rounded-lg border border-glass-stroke transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="edit">edit</span>
+</button>
+</div>
+<!-- XP Progress -->
+<div class="mt-8">
+<div class="flex justify-between items-end mb-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">XP to Level 43</span>
+<span class="font-numeric-stat text-[20px] leading-none text-primary">8,450 / 10,000</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden border border-glass-stroke">
+<div class="h-full bg-gradient-to-r from-electric-violet to-primary w-[84%] rounded-full shadow-[0_0_10px_rgba(139,92,246,0.5)]"></div>
+</div>
+</div>
+</div>
+<!-- Level Roadmap (Horizontal Scroll) -->
+<div class="glass-panel rounded-xl p-6">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Milestone Roadmap</h3>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-2 snap-x">
+<!-- Unlocked Milestone -->
+<div class="shrink-0 w-48 bg-white/5 border border-glass-stroke rounded-lg p-4 snap-start relative opacity-60">
+<div class="absolute top-2 right-2">
+<span class="material-symbols-outlined text-vivid-emerald text-[16px]" data-icon="check_circle" data-weight="fill">check_circle</span>
+</div>
+<div class="w-10 h-10 bg-surface-container-highest rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="directions_run">directions_run</span>
+</div>
+<h4 class="font-label-sm text-label-sm text-on-surface mb-1">Momentum Builder</h4>
+<p class="font-code-info text-code-info text-on-surface-variant">7 day streak</p>
+</div>
+<!-- Current Milestone -->
+<div class="shrink-0 w-48 bg-primary-container/10 border border-primary/50 rounded-lg p-4 snap-start relative shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+<div class="absolute top-0 left-0 w-full h-1 bg-primary/20 rounded-t-lg overflow-hidden">
+<div class="w-3/4 h-full bg-primary shadow-[0_0_5px_#d2bbff]"></div>
+</div>
+<div class="w-10 h-10 bg-primary/20 border border-primary/30 rounded-full flex items-center justify-center mb-3 mt-1">
+<span class="material-symbols-outlined text-primary" data-icon="bolt">bolt</span>
+</div>
+<h4 class="font-label-sm text-label-sm text-primary mb-1">Deep Work Master</h4>
+<p class="font-code-info text-code-info text-on-surface-variant">50 hrs focused</p>
+</div>
+<!-- Locked Milestone -->
+<div class="shrink-0 w-48 bg-surface-container-lowest/50 border border-glass-stroke border-dashed rounded-lg p-4 snap-start">
+<div class="w-10 h-10 bg-surface-container-highest rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-outline-variant" data-icon="lock">lock</span>
+</div>
+<h4 class="font-label-sm text-label-sm text-outline-variant mb-1">Systemizer</h4>
+<p class="font-code-info text-code-info text-outline-variant">Lvl 50 Required</p>
+</div>
+<!-- Locked Milestone -->
+<div class="shrink-0 w-48 bg-surface-container-lowest/50 border border-glass-stroke border-dashed rounded-lg p-4 snap-start">
+<div class="w-10 h-10 bg-surface-container-highest rounded-full flex items-center justify-center mb-3">
+<span class="material-symbols-outlined text-outline-variant" data-icon="lock">lock</span>
+</div>
+<h4 class="font-label-sm text-label-sm text-outline-variant mb-1">Zen State</h4>
+<p class="font-code-info text-code-info text-outline-variant">Lvl 60 Required</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (Settings & Actions) -->
+<div class="lg:col-span-5 flex flex-col gap-gutter-md">
+<!-- Preferences Toggles -->
+<div class="glass-panel rounded-xl p-6">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="tune">tune</span>
+                            Preferences
+                        </h3>
+<div class="space-y-6">
+<!-- Toggle Item -->
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-body-md text-body-md text-on-surface">Push Notifications</h4>
+<p class="font-code-info text-code-info text-on-surface-variant mt-1">Receive alerts on your device.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-surface-container-highest appearance-none cursor-pointer z-10 transition-transform duration-300 transform translate-x-full border-transparent" id="toggle1" name="toggle" style="right:0; border-color: transparent;" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-primary cursor-pointer transition-colors duration-300" for="toggle1"></label>
+</div>
+</div>
+<hr class="border-glass-stroke"/>
+<!-- Toggle Item -->
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-body-md text-body-md text-on-surface">Daily Reminders</h4>
+<p class="font-code-info text-code-info text-on-surface-variant mt-1">Morning briefing &amp; evening review.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-surface-container-highest appearance-none cursor-pointer z-10 transition-transform duration-300 transform translate-x-full border-transparent" id="toggle2" name="toggle" style="right:0; border-color: transparent;" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-primary cursor-pointer transition-colors duration-300" for="toggle2"></label>
+</div>
+</div>
+<hr class="border-glass-stroke"/>
+<!-- Toggle Item -->
+<div class="flex items-center justify-between">
+<div>
+<div class="flex items-center gap-2">
+<h4 class="font-body-md text-body-md text-on-surface">Coach Nudges</h4>
+<span class="px-1.5 py-0.5 bg-secondary-fixed/20 text-secondary-fixed rounded text-[10px] font-bold">RYNA AI</span>
+</div>
+<p class="font-code-info text-code-info text-on-surface-variant mt-1">Contextual motivation from AI.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-outline-variant border-4 border-surface-container-highest appearance-none cursor-pointer z-10 transition-transform duration-300" id="toggle3" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-surface-container-highest cursor-pointer transition-colors duration-300" for="toggle3"></label>
+</div>
+</div>
+</div>
+</div>
+<!-- Danger Zone -->
+<div class="glass-panel rounded-xl p-6 border-coral-red/30 bg-surface-container-lowest/50">
+<h3 class="font-eyebrow text-eyebrow text-coral-red mb-4">DANGER ZONE</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+<button class="font-label-sm text-label-sm text-coral-red hover:text-white hover:bg-coral-red/20 px-4 py-2 rounded-lg border border-coral-red/50 transition-all w-full text-center" onclick="document.getElementById('delete-modal').classList.remove('hidden')">
+                            Delete Account
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Navigation Bar (Mobile) -->
+<nav class="md:hidden glass-nav-pill fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 py-2 rounded-full mx-auto mb-6 w-[calc(100%-32px)] max-w-md shadow-xl transition-all duration-300 ease-in-out">
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="event_note">event_note</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+</a>
+<a class="flex items-center justify-center bg-primary-container/30 text-primary rounded-full p-3 shadow-[0_0_15px_rgba(139,92,246,0.5)] scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="more_horiz" data-weight="fill">more_horiz</span>
+</a>
+</nav>
+<!-- Delete Account Modal -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" id="delete-modal">
+<div class="glass-panel w-full max-w-md rounded-2xl p-6 border-coral-red/50 relative">
+<button class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface" onclick="document.getElementById('delete-modal').classList.add('hidden')">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<div class="w-12 h-12 rounded-full bg-coral-red/20 flex items-center justify-center mb-4 border border-coral-red/50">
+<span class="material-symbols-outlined text-coral-red" data-icon="warning">warning</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Delete Account</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">
+                This action is irreversible. All your data, milestones, and system configurations will be permanently destroyed.
+            </p>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">To confirm, type "DELETE" below:</label>
+<input class="w-full bg-surface-container-lowest border border-glass-stroke rounded-lg px-4 py-3 font-code-info text-code-info text-on-surface focus:outline-none focus:border-coral-red focus:ring-1 focus:ring-coral-red transition-all mb-6 placeholder-outline-variant" placeholder="DELETE" type="text"/>
+<div class="flex gap-3">
+<button class="flex-1 px-4 py-2 rounded-lg border border-glass-stroke bg-white/5 hover:bg-white/10 font-label-sm text-label-sm text-on-surface transition-colors" onclick="document.getElementById('delete-modal').classList.add('hidden')">
+                    Cancel
+                </button>
+<button class="flex-1 px-4 py-2 rounded-lg bg-coral-red/20 border border-coral-red text-coral-red hover:bg-coral-red hover:text-white font-label-sm text-label-sm transition-colors">
+                    Destroy Data
+                </button>
+</div>
+</div>
+</div>
+</body></html>

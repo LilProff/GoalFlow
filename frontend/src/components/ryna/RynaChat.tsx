@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Minimize2, Maximize2, Zap, ChevronRight } from 'lucide-react';
 import { useStore } from '../../lib/store';
@@ -7,12 +7,12 @@ import type { MCPAction } from '../../types';
 
 function MCPActionCard({ action, onExecute, executed }: { action: MCPAction; onExecute: () => void; executed: boolean }) {
   return (
-    <div className="mt-2 p-2.5" style={{ background: 'rgba(212,245,60,0.06)', border: '1px solid rgba(212,245,60,0.2)', borderLeft: '2px solid var(--acid)' }}>
+    <div className="mt-2 p-2.5 rounded-lg" style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.3)', borderLeft: '2px solid var(--acid)' }}>
       <p className="mono text-[8px] tracking-widest mb-1.5" style={{ color: 'var(--acid)' }}>RYNA CAN DO THIS FOR YOU</p>
       <p className="text-xs mb-2" style={{ color: 'var(--tx-secondary)' }}>{action.preview}</p>
       <button onClick={onExecute} disabled={executed}
         className="flex items-center gap-1.5 mono text-[9px] font-bold px-3 py-1.5 transition-all disabled:opacity-50"
-        style={{ background: executed ? 'rgba(0,212,180,0.1)' : 'var(--acid)', color: executed ? '#00d4b4' : 'var(--bg-void)', border: executed ? '1px solid rgba(0,212,180,0.3)' : 'none' }}>
+        style={{ background: executed ? 'rgba(139,92,246,0.12)' : 'var(--acid)', color: executed ? 'var(--acid)' : 'var(--bg-void)', border: executed ? '1px solid rgba(139,92,246,0.4)' : 'none' }}>
         {executed ? '✓ EXECUTED' : <><Zap className="w-3 h-3" /> EXECUTE ACTION</>}
       </button>
     </div>
@@ -56,22 +56,22 @@ export default function RynaChat() {
       exit={{ opacity: 0, y: 16, scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 500, damping: 40 }}
       // A fixed 380px-wide floating panel overflows any phone viewport, and
-      // bottom-5 sits right on top of the mobile tab bar. Below md, this
-      // becomes a near-full-screen sheet that clears the tab bar and the
+      // the floating pill nav needs clearance below it. Below md, this
+      // becomes a near-full-screen sheet that clears the pill and the
       // home-indicator safe area instead; the desktop floating panel is
       // unchanged.
-      className="fixed inset-x-3 bottom-[calc(56px+env(safe-area-inset-bottom)+12px)] top-14 md:top-auto md:inset-x-auto md:bottom-5 md:right-5 md:w-[380px] md:h-[600px] z-50 flex flex-col overflow-hidden"
-      style={{ height: minimized ? 52 : undefined, background: 'var(--bg-overlay)', border: '1px solid var(--border-mid)', borderTop: '2px solid #00d4b4', transition: 'height 0.2s ease' }}>
+      className="glass-panel-float fixed inset-x-3 bottom-[calc(88px+env(safe-area-inset-bottom))] top-14 md:top-auto md:inset-x-auto md:bottom-5 md:right-5 md:w-[380px] md:h-[600px] z-50 flex flex-col overflow-hidden rounded-2xl"
+      style={{ height: minimized ? 52 : undefined, transition: 'height 0.2s ease' }}>
 
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 shrink-0" style={{ borderBottom: minimized ? 'none' : '1px solid var(--border-dim)' }}>
-        <div className="w-6 h-6 flex items-center justify-center shrink-0" style={{ background: 'rgba(0,212,180,0.15)', border: '1px solid rgba(0,212,180,0.3)' }}>
-          <Zap className="w-3 h-3" style={{ color: '#00d4b4' }} />
+        <div className="w-6 h-6 flex items-center justify-center shrink-0" style={{ background: 'rgba(139,92,246,0.18)', border: '1px solid rgba(139,92,246,0.4)' }}>
+          <Zap className="w-3 h-3" style={{ color: 'var(--acid)' }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="mono text-[10px] font-black tracking-widest" style={{ color: '#00d4b4' }}>RYNA</span>
-            <span className="w-1 h-1 rounded-full pulse-dot" style={{ background: '#00d4b4' }} />
+            <span className="mono text-[10px] font-black tracking-widest" style={{ color: 'var(--acid)' }}>RYNA</span>
+            <span className="w-1 h-1 rounded-full pulse-dot" style={{ background: 'var(--acid)' }} />
             {!minimized && coachInfo && (
               <span className="mono text-[8px] px-1.5 py-0.5" style={{ color: 'var(--tx-muted)', border: '1px solid var(--border-dim)' }}>
                 {coachInfo.symbol} {coachInfo.label.toUpperCase()}
@@ -83,7 +83,7 @@ export default function RynaChat() {
           <button onClick={() => setMinimized(!minimized)} className="p-1.5 transition-colors" style={{ color: 'var(--tx-muted)' }} onMouseEnter={e => (e.currentTarget.style.color = 'var(--tx-primary)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--tx-muted)')}>
             {minimized ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}
           </button>
-          <button onClick={() => setChatOpen(false)} className="p-1.5 transition-colors" style={{ color: 'var(--tx-muted)' }} onMouseEnter={e => (e.currentTarget.style.color = '#ff4444')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--tx-muted)')}>
+          <button onClick={() => setChatOpen(false)} className="p-1.5 transition-colors" style={{ color: 'var(--tx-muted)' }} onMouseEnter={e => (e.currentTarget.style.color = 'var(--danger)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--tx-muted)')}>
             <X className="w-3 h-3" />
           </button>
         </div>
@@ -95,7 +95,7 @@ export default function RynaChat() {
           <AnimatePresence>
             {resultMsg && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                className="px-4 py-2.5 mono text-[9px] shrink-0" style={{ background: 'rgba(0,212,180,0.08)', borderBottom: '1px solid rgba(0,212,180,0.2)', color: '#00d4b4' }}>
+                className="px-4 py-2.5 mono text-[9px] shrink-0" style={{ background: 'rgba(139,92,246,0.1)', borderBottom: '1px solid rgba(139,92,246,0.3)', color: 'var(--acid)' }}>
                 ✓ {resultMsg}
               </motion.div>
             )}
@@ -108,14 +108,14 @@ export default function RynaChat() {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className="max-w-[88%]">
                   {msg.role === 'assistant' && (
-                    <p className="mono text-[8px] tracking-widest mb-1" style={{ color: '#00d4b4' }}>RYNA</p>
+                    <p className="mono text-[8px] tracking-widest mb-1" style={{ color: 'var(--acid)' }}>RYNA</p>
                   )}
                   <div className="px-3 py-2.5 text-xs leading-relaxed whitespace-pre-line"
                     style={{
-                      background: msg.role === 'user' ? 'rgba(212,245,60,0.07)' : 'var(--bg-raised)',
-                      border: `1px solid ${msg.role === 'user' ? 'rgba(212,245,60,0.18)' : 'var(--border-dim)'}`,
+                      background: msg.role === 'user' ? 'rgba(139,92,246,0.1)' : 'var(--bg-raised)',
+                      border: `1px solid ${msg.role === 'user' ? 'rgba(139,92,246,0.25)' : 'var(--border-dim)'}`,
                       color: msg.role === 'user' ? 'var(--acid)' : 'var(--tx-secondary)',
-                      borderLeft: msg.role === 'assistant' ? '2px solid #00d4b4' : undefined,
+                      borderLeft: msg.role === 'assistant' ? '2px solid var(--acid)' : undefined,
                     }}>
                     {msg.content}
                   </div>
@@ -147,8 +147,8 @@ export default function RynaChat() {
 
             {chatLoading && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                <div className="px-3 py-2.5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderLeft: '2px solid #00d4b4' }}>
-                  <div className="flex gap-1.5">{[0,1,2].map(i => <div key={i} className="w-1 h-1 rounded-full animate-bounce" style={{ background: '#00d4b4', animationDelay: `${i*0.15}s` }} />)}</div>
+                <div className="px-3 py-2.5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderLeft: '2px solid var(--acid)' }}>
+                  <div className="flex gap-1.5">{[0,1,2].map(i => <div key={i} className="w-1 h-1 rounded-full animate-bounce" style={{ background: 'var(--acid)', animationDelay: `${i*0.15}s` }} />)}</div>
                 </div>
               </motion.div>
             )}
@@ -162,7 +162,7 @@ export default function RynaChat() {
                 <button key={qa.id} onClick={() => sendChatMessage(qa.prompt)} disabled={chatLoading}
                   className="flex items-center gap-1 mono text-[9px] px-2.5 py-1.5 whitespace-nowrap transition-all disabled:opacity-30"
                   style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', color: 'var(--tx-muted)' }}
-                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--acid)'; e.currentTarget.style.borderColor = 'rgba(212,245,60,0.3)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--acid)'; e.currentTarget.style.borderColor = 'rgba(139,92,246,0.4)'; }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'var(--tx-muted)'; e.currentTarget.style.borderColor = 'var(--border-dim)'; }}>
                   <span>{qa.icon}</span>{qa.label.toUpperCase()}
                   {qa.mcpAction && <ChevronRight className="w-2.5 h-2.5 opacity-50" />}
@@ -178,7 +178,7 @@ export default function RynaChat() {
                 <button key={cs.id} onClick={() => switchCoachStyle(cs.id)}
                   className="mono text-[8px] px-2 py-1 whitespace-nowrap transition-all"
                   style={{
-                    background: user?.coachStyle === cs.id ? 'rgba(212,245,60,0.08)' : 'transparent',
+                    background: user?.coachStyle === cs.id ? 'rgba(139,92,246,0.12)' : 'transparent',
                     border: `1px solid ${user?.coachStyle === cs.id ? 'var(--acid)' : 'var(--border-dim)'}`,
                     color: user?.coachStyle === cs.id ? 'var(--acid)' : 'var(--tx-ghost)',
                   }}>
@@ -196,11 +196,11 @@ export default function RynaChat() {
                 disabled={chatLoading}
                 className="flex-1 px-3 py-2 text-xs outline-none transition-all"
                 style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', color: 'var(--tx-primary)' }}
-                onFocus={e => (e.target.style.borderColor = '#00d4b4')}
+                onFocus={e => (e.target.style.borderColor = 'var(--acid)')}
                 onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
               <button onClick={handleSend} disabled={!input.trim() || chatLoading}
                 className="px-3 py-2 transition-all disabled:opacity-30"
-                style={{ background: 'rgba(0,212,180,0.1)', border: '1px solid rgba(0,212,180,0.25)', color: '#00d4b4' }}>
+                style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.35)', color: 'var(--acid)' }}>
                 <Send className="w-3.5 h-3.5" />
               </button>
             </div>

@@ -17,8 +17,8 @@ const TABS = [
   { id: 'security',      label: 'SECURITY',      icon: Shield  },
 ];
 
-const RARITY_COLORS = { common: '#7b8fa8', rare: '#60a5fa', epic: '#a78bfa', legendary: '#f5c842' };
-const RARITY_GLOW   = { common: 'rgba(123,143,168,0.15)', rare: 'rgba(96,165,250,0.15)', epic: 'rgba(167,139,250,0.15)', legendary: 'rgba(245,200,66,0.2)' };
+const RARITY_COLORS = { common: '#64748B', rare: '#60a5fa', epic: '#a78bfa', legendary: '#FACC15' };
+const RARITY_GLOW   = { common: 'rgba(100,116,139,0.15)', rare: 'rgba(96,165,250,0.15)', epic: 'rgba(167,139,250,0.15)', legendary: 'rgba(250,204,21,0.2)' };
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -156,7 +156,7 @@ export default function Settings() {
             {TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setTab(id)}
                 className="w-full flex items-center gap-3 px-4 py-3 transition-all text-left"
-                style={{ background: tab === id ? 'rgba(212,245,60,0.06)' : 'transparent', borderLeft: `2px solid ${tab === id ? 'var(--acid)' : 'transparent'}`, borderBottom: '1px solid var(--border-dim)', color: tab === id ? 'var(--acid)' : 'var(--tx-muted)' }}>
+                style={{ background: tab === id ? 'rgba(139,92,246,0.06)' : 'transparent', borderLeft: `2px solid ${tab === id ? 'var(--acid)' : 'transparent'}`, borderBottom: '1px solid var(--border-dim)', color: tab === id ? 'var(--acid)' : 'var(--tx-muted)' }}>
                 <Icon className="w-3.5 h-3.5 shrink-0" />
                 <span className="mono text-[9px] tracking-widest font-bold flex-1">{label}</span>
                 {tab === id && <ChevronRight className="w-3 h-3" />}
@@ -164,7 +164,7 @@ export default function Settings() {
             ))}
             <button onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 transition-all"
-              style={{ color: '#ff4444', borderLeft: '2px solid transparent' }}
+              style={{ color: '#EF4444', borderLeft: '2px solid transparent' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,68,68,0.06)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
               <LogOut className="w-3.5 h-3.5 shrink-0" />
@@ -266,9 +266,9 @@ export default function Settings() {
                     {/* Stats row */}
                     <div className="grid grid-cols-4 gap-3 mb-6 pb-6" style={{ borderBottom: '1px solid var(--border-dim)' }}>
                       {[
-                        { icon: Flame,      label: 'STREAK',     value: `${user?.streak}d`,                color: '#f5c842' },
-                        { icon: TrendingUp, label: 'BEST STREAK',value: `${user?.longestStreak}d`,          color: '#ff6b35' },
-                        { icon: Trophy,     label: 'TASKS DONE', value: `${user?.totalTasksCompleted}`,     color: '#00d4b4' },
+                        { icon: Flame,      label: 'STREAK',     value: `${user?.streak}d`,                color: '#FACC15' },
+                        { icon: TrendingUp, label: 'BEST STREAK',value: `${user?.longestStreak}d`,          color: '#F97316' },
+                        { icon: Trophy,     label: 'TASKS DONE', value: `${user?.totalTasksCompleted}`,     color: 'var(--success)' },
                         { icon: Star,       label: 'WEEK SCORE', value: `${user?.weeklyScore.toFixed(1)}`,  color: 'var(--acid)' },
                       ].map(({ icon: Icon, label, value, color }) => (
                         <div key={label} className="p-3 text-center" style={{ background: 'var(--bg-overlay)', border: `1px solid ${color}25`, borderTop: `2px solid ${color}` }}>
@@ -350,7 +350,7 @@ export default function Settings() {
                           {COACH_STYLES.map(cs => (
                             <div key={cs.id} onClick={() => setCoachStyle(cs.id)}
                               className="flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all"
-                              style={{ background: coachStyle === cs.id ? 'rgba(212,245,60,0.05)' : 'var(--bg-overlay)', border: `1px solid ${coachStyle === cs.id ? 'var(--acid)' : 'var(--border-dim)'}` }}>
+                              style={{ background: coachStyle === cs.id ? 'rgba(139,92,246,0.05)' : 'var(--bg-overlay)', border: `1px solid ${coachStyle === cs.id ? 'var(--acid)' : 'var(--border-dim)'}` }}>
                               <span className="mono text-lg" style={{ color: coachStyle === cs.id ? 'var(--acid)' : 'var(--tx-muted)' }}>{cs.symbol}</span>
                               <div className="flex-1">
                                 <p className="text-sm font-semibold" style={{ color: 'var(--tx-primary)' }}>{cs.label}</p>
@@ -368,10 +368,10 @@ export default function Settings() {
                       <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--border-dim)' }}>
                         <button onClick={handleSave} disabled={saving}
                           className="px-5 py-2.5 mono text-[10px] tracking-widest font-bold transition-all disabled:opacity-60"
-                          style={{ background: saved ? 'rgba(0,212,180,0.1)' : 'var(--acid)', color: saved ? '#00d4b4' : 'var(--bg-void)', border: saved ? '1px solid rgba(0,212,180,0.3)' : 'none' }}>
+                          style={{ background: saved ? 'rgba(16,185,129,0.12)' : 'var(--acid)', color: saved ? 'var(--success)' : '#fff', border: saved ? '1px solid rgba(16,185,129,0.4)' : 'none' }}>
                           {saved ? '✓ SAVED' : saving ? 'SAVING…' : 'SAVE CHANGES'}
                         </button>
-                        <button onClick={() => setConfirmDelete(true)} className="mono text-[9px]" style={{ color: '#ff4444' }}>DELETE ACCOUNT</button>
+                        <button onClick={() => setConfirmDelete(true)} className="mono text-[9px]" style={{ color: '#EF4444' }}>DELETE ACCOUNT</button>
                       </div>
                     </div>
                   </div>
@@ -380,8 +380,8 @@ export default function Settings() {
 
               {/* ── NOTIFICATIONS ── */}
               {tab === 'notifications' && (
-                <div className="p-6 space-y-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #f5c842' }}>
-                  <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#f5c842' }}>// NOTIFICATIONS</p>
+                <div className="p-6 space-y-4" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #FACC15' }}>
+                  <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#FACC15' }}>// NOTIFICATIONS</p>
                   <div className="p-4" style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-dim)' }}>
                     <div className="flex items-center justify-between">
                       <div>
@@ -398,10 +398,10 @@ export default function Settings() {
                       />
                     </div>
                     {pushBusy && <p className="mono text-[9px] mt-2" style={{ color: 'var(--tx-muted)' }}>WORKING…</p>}
-                    {pushError && <p className="text-xs mt-2" style={{ color: '#ff4444' }}>{pushError}</p>}
+                    {pushError && <p className="text-xs mt-2" style={{ color: '#EF4444' }}>{pushError}</p>}
                     {notificationPrefs.pushEnabled && !pushBusy && (
                       <button onClick={handleTestPush} disabled={testingPush}
-                        className="mono text-[9px] mt-2 tracking-widest disabled:opacity-50" style={{ color: '#f5c842' }}>
+                        className="mono text-[9px] mt-2 tracking-widest disabled:opacity-50" style={{ color: '#FACC15' }}>
                         {testingPush ? 'SENDING…' : testPushResult || 'SEND TEST NOTIFICATION →'}
                       </button>
                     )}
@@ -441,14 +441,14 @@ export default function Settings() {
 
               {/* ── APPEARANCE ── */}
               {tab === 'appearance' && (
-                <div className="p-6 space-y-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #7b8fa8' }}>
-                  <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#7b8fa8' }}>// APPEARANCE</p>
+                <div className="p-6 space-y-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #64748B' }}>
+                  <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#64748B' }}>// APPEARANCE</p>
                   <div>
                     <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>ACCENT COLOURS</p>
                     <div className="flex gap-2">
-                      {['#d4f53c','#ff6b35','#00d4b4','#f5c842','#a78bfa','#f472b6'].map(c => (
+                      {['#8B5CF6','#F97316','#14B8A6','#FACC15','#a78bfa','#f472b6'].map(c => (
                         <div key={c} className="w-8 h-8 cursor-pointer transition-transform hover:scale-110"
-                          style={{ background: c, border: c === '#d4f53c' ? '2px solid white' : '2px solid transparent' }} />
+                          style={{ background: c, border: c === '#8B5CF6' ? '2px solid white' : '2px solid transparent' }} />
                       ))}
                     </div>
                   </div>
@@ -461,27 +461,27 @@ export default function Settings() {
 
               {/* ── SECURITY ── */}
               {tab === 'security' && (
-                <div className="p-6 space-y-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #ff6b35' }}>
-                  <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#ff6b35' }}>// SECURITY</p>
+                <div className="p-6 space-y-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #F97316' }}>
+                  <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#F97316' }}>// SECURITY</p>
                   <div className="space-y-3">
                     <p className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>CHANGE PASSWORD</p>
                     <input type="password" placeholder="Current password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
                       className={inp} style={inpStyle}
-                      onFocus={e => (e.target.style.borderColor = '#ff6b35')}
+                      onFocus={e => (e.target.style.borderColor = '#F97316')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
                     <input type="password" placeholder="New password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
                       className={inp} style={inpStyle}
-                      onFocus={e => (e.target.style.borderColor = '#ff6b35')}
+                      onFocus={e => (e.target.style.borderColor = '#F97316')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
                     <input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                       className={inp} style={inpStyle}
-                      onFocus={e => (e.target.style.borderColor = '#ff6b35')}
+                      onFocus={e => (e.target.style.borderColor = '#F97316')}
                       onBlur={e => (e.target.style.borderColor = 'var(--border-dim)')} />
-                    {passwordError && <p className="text-xs" style={{ color: '#ff4444' }}>{passwordError}</p>}
-                    {passwordSaved && <p className="text-xs" style={{ color: '#00d4b4' }}>Password updated.</p>}
+                    {passwordError && <p className="text-xs" style={{ color: '#EF4444' }}>{passwordError}</p>}
+                    {passwordSaved && <p className="text-xs" style={{ color: 'var(--success)' }}>Password updated.</p>}
                     <button onClick={handleChangePassword} disabled={changingPassword}
                       className="px-5 py-2.5 mono text-[10px] tracking-widest font-bold disabled:opacity-50"
-                      style={{ background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.25)', color: '#ff6b35' }}>
+                      style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', color: '#F97316' }}>
                       {changingPassword ? 'UPDATING…' : 'UPDATE PASSWORD'}
                     </button>
                   </div>
@@ -492,14 +492,14 @@ export default function Settings() {
                         <p className="text-sm" style={{ color: 'var(--tx-primary)' }}>Current session</p>
                         <p className="mono text-[9px] mt-0.5" style={{ color: 'var(--tx-muted)' }}>WEB · {user?.timezone?.toUpperCase()}</p>
                       </div>
-                      <span className="mono text-[9px] px-2 py-1" style={{ color: '#00d4b4', background: 'rgba(0,212,180,0.08)', border: '1px solid rgba(0,212,180,0.2)' }}>ACTIVE</span>
+                      <span className="mono text-[9px] px-2 py-1 rounded-full" style={{ color: 'var(--success)', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>ACTIVE</span>
                     </div>
                   </div>
                   <div className="pt-4" style={{ borderTop: '1px solid var(--border-dim)' }}>
-                    <p className="mono text-[9px] tracking-widest mb-3" style={{ color: '#ff4444' }}>DANGER ZONE</p>
+                    <p className="mono text-[9px] tracking-widest mb-3" style={{ color: '#EF4444' }}>DANGER ZONE</p>
                     <button onClick={handleLogout}
                       className="flex items-center gap-2 px-4 py-2.5 mono text-[10px] tracking-widest transition-all"
-                      style={{ color: '#ff4444', border: '1px solid rgba(255,68,68,0.25)', background: 'rgba(255,68,68,0.05)' }}>
+                      style={{ color: '#EF4444', border: '1px solid rgba(255,68,68,0.25)', background: 'rgba(255,68,68,0.05)' }}>
                       <LogOut className="w-3.5 h-3.5" /> SIGN OUT ALL SESSIONS
                     </button>
                   </div>
@@ -524,15 +524,15 @@ export default function Settings() {
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}
               onClick={e => e.stopPropagation()}
               className="w-full max-w-md p-6"
-              style={{ background: 'var(--bg-raised)', border: '1px solid rgba(255,68,68,0.4)', borderTop: '3px solid #ff4444' }}>
-              <p className="mono text-[9px] tracking-widest mb-2" style={{ color: '#ff4444' }}>IRREVERSIBLE</p>
+              style={{ background: 'var(--bg-raised)', border: '1px solid rgba(255,68,68,0.4)', borderTop: '3px solid #EF4444' }}>
+              <p className="mono text-[9px] tracking-widest mb-2" style={{ color: '#EF4444' }}>IRREVERSIBLE</p>
               <h2 className="text-lg font-black mb-3" style={{ color: 'var(--tx-primary)' }}>Delete your account?</h2>
               <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--tx-secondary)' }}>
                 This permanently deletes your profile, goals, tasks, planner blocks, daily logs,
                 streak, stats and Ryna conversation history. It cannot be undone.
               </p>
               <label className="mono text-[9px] tracking-widest block mb-1.5" style={{ color: 'var(--tx-muted)' }}>
-                TYPE <span style={{ color: '#ff4444' }}>DELETE</span> TO CONFIRM
+                TYPE <span style={{ color: '#EF4444' }}>DELETE</span> TO CONFIRM
               </label>
               <input
                 value={deleteText}
@@ -543,7 +543,7 @@ export default function Settings() {
                 placeholder="DELETE"
               />
               {deleteError && (
-                <p className="text-xs mb-2" style={{ color: '#ff4444' }}>{deleteError}</p>
+                <p className="text-xs mb-2" style={{ color: '#EF4444' }}>{deleteError}</p>
               )}
               <div className="flex items-center justify-end gap-2 mt-4">
                 <button
@@ -567,7 +567,7 @@ export default function Settings() {
                     }
                   }}
                   className="mono text-[10px] tracking-widest px-4 py-2.5 font-bold disabled:opacity-40"
-                  style={{ background: '#ff4444', color: '#fff' }}>
+                  style={{ background: '#EF4444', color: '#fff' }}>
                   {deleting ? 'DELETING…' : 'DELETE FOREVER'}
                 </button>
               </div>

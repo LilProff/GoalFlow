@@ -9,7 +9,7 @@ type Mode = 'home' | 'login' | 'signup';
 const TICKER_ITEMS = [
   'BUILD · SHOW · EARN · SYSTEMIZE',
   'AI EXECUTION OS',
-  '90-DAY SPRINTS',
+  'ADAPTIVE TIMELINES',
   'DAILY ACCOUNTABILITY',
   'RYNA AI COACH',
   'PILLAR-BASED PLANNING',
@@ -18,10 +18,10 @@ const TICKER_ITEMS = [
 ];
 
 const PILLARS = [
-  { sym: '◈', label: 'Build',     sub: 'Deep work & craft',     color: '#ff6b35' },
-  { sym: '◎', label: 'Show',      sub: 'Distribute & publish',  color: '#00d4b4' },
-  { sym: '◆', label: 'Earn',      sub: 'Revenue & monetize',    color: '#f5c842' },
-  { sym: '◉', label: 'Systemize', sub: 'Automate & leverage',   color: '#7b8fa8' },
+  { sym: '◈', label: 'Build',     sub: 'Deep work & craft',     color: '#F97316' },
+  { sym: '◎', label: 'Show',      sub: 'Distribute & publish',  color: '#14B8A6' },
+  { sym: '◆', label: 'Earn',      sub: 'Revenue & monetize',    color: '#FACC15' },
+  { sym: '◉', label: 'Systemize', sub: 'Automate & leverage',   color: '#64748B' },
 ];
 
 // Facts about what the product does — not usage metrics. Invented traction
@@ -30,7 +30,7 @@ const PILLARS = [
 // behind them. Swap these for real figures only when they can be measured.
 const STATS = [
   { value: '4',       label: 'Execution pillars'  },
-  { value: '90 days', label: 'Sprint framework'   },
+  { value: 'Adaptive', label: 'Goal timelines'   },
   { value: '24h',     label: 'Day planning'       },
   { value: 'AI',      label: 'Daily coaching'     },
 ];
@@ -153,7 +153,7 @@ function AuthForm({
       </div>
 
       {error && (
-        <p className="text-xs" style={{ color: '#ff4444' }}>{error}</p>
+        <p className="text-xs" style={{ color: '#EF4444' }}>{error}</p>
       )}
 
       <button type="submit" disabled={submitting}
@@ -341,7 +341,7 @@ export default function Landing() {
             <section className="max-w-6xl mx-auto px-8 py-8 space-y-px" style={{ borderTop: '1px solid var(--border-dim)' }}>
               {[
                 { num: '01', title: '24-Hour Day Planner',      desc: 'Every hour of your day accounted for. Sleep, prayer, exercise, transit, deep work, meals, family — all blocked and tracked. Ryna reshuffles your day in real time when things go off track.' },
-                { num: '02', title: 'AI Task Generation',        desc: 'Daily tasks auto-generated from your 90-day goals. Every morning, a new execution plan aligned to your pillars and current progress.' },
+                { num: '02', title: 'AI Task Generation',        desc: 'Daily tasks auto-generated from your active goals. Every morning, a new execution plan aligned to your pillars and current progress.' },
                 { num: '03', title: 'Ryna — Your AI Coach',      desc: 'Context-aware coaching that knows your goals, streak, blockers, and history. Not generic advice — your data, your patterns, your next move.' },
                 { num: '04', title: 'Smart Notifications',        desc: 'Get notified 5 minutes before each block starts, warned when you\'re overrunning, and offered an AI reshuffle when 2+ blocks fall behind.' },
                 { num: '05', title: 'Execution Analytics',        desc: 'Score, streak, build hours, and pillar distribution tracked daily. Patterns surface before problems do. Weekly AI-generated reports.' },
@@ -372,8 +372,8 @@ export default function Landing() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
                   { platform: 'Web',     icon: '⬛', sub: 'Desktop-first · Full dashboard · Chrome, Safari, Firefox', color: 'var(--acid)',  status: 'LIVE NOW' },
-                  { platform: 'iOS',     icon: '◈',  sub: 'iPhone & iPad · Push notifications · Face ID · Widgets',  color: '#00d4b4', status: 'COMING SOON' },
-                  { platform: 'Android', icon: '◉',  sub: 'Phone & tablet · Push notifications · Fingerprint · Widgets', color: '#ff6b35', status: 'COMING SOON' },
+                  { platform: 'iOS',     icon: '◈',  sub: 'iPhone & iPad · Push notifications · Face ID · Widgets',  color: '#14B8A6', status: 'COMING SOON' },
+                  { platform: 'Android', icon: '◉',  sub: 'Phone & tablet · Push notifications · Fingerprint · Widgets', color: '#F97316', status: 'COMING SOON' },
                 ].map(({ platform, icon, sub, color, status }) => (
                   <div key={platform} className="p-6"
                     style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: `2px solid ${color}` }}>
@@ -419,9 +419,9 @@ export default function Landing() {
                   { icon: Server, title: 'Encrypted in transit & at rest',desc: 'All traffic runs over HTTPS. Data is stored in Postgres on Supabase, encrypted at rest, in the region you provision.' },
                 ].map(({ icon: Icon, title, desc }) => (
                   <div key={title} className="flex items-start gap-4 p-5"
-                    style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderLeft: '2px solid rgba(212,245,60,0.3)' }}>
+                    style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderLeft: '2px solid rgba(139,92,246,0.3)' }}>
                     <div className="w-8 h-8 shrink-0 flex items-center justify-center"
-                      style={{ background: 'rgba(212,245,60,0.08)', border: '1px solid rgba(212,245,60,0.2)' }}>
+                      style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
                       <Icon className="w-4 h-4" style={{ color: 'var(--acid)' }} />
                     </div>
                     <div>
@@ -460,9 +460,9 @@ export default function Landing() {
               <div className="p-12 text-center"
                 style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', borderTop: '2px solid var(--acid)' }}>
                 <p className="mono text-[10px] tracking-widest mb-4" style={{ color: 'var(--acid)' }}>READY TO EXECUTE?</p>
-                <h2 className="text-4xl font-black mb-3">Your 90-day sprint starts now.</h2>
+                <h2 className="text-4xl font-black mb-3">Your execution system starts now.</h2>
                 <p className="text-sm mb-8" style={{ color: 'var(--tx-secondary)' }}>
-                  Set four pillars, commit to 90 days, and let Ryna hold the schedule.<br />
+                  Set four pillars, define long and short-term goals, and let Ryna hold the schedule.<br />
                   Start on web. Take it with you on mobile.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-3">

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoalFlow - Tasks</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#301400",
+                        "on-primary": "#3f008e",
+                        "on-tertiary": "#4f2500",
+                        "surface-container-lowest": "#0e0e11",
+                        "outline-variant": "#4a4455",
+                        "glass-stroke": "rgba(255, 255, 255, 0.12)",
+                        "coral-red": "#EF4444",
+                        "on-secondary-fixed-variant": "#005236",
+                        "tertiary": "#ffb784",
+                        "primary": "#d2bbff",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1f1f22",
+                        "glass-fill": "rgba(15, 15, 20, 0.7)",
+                        "on-secondary": "#003824",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#ccc3d8",
+                        "vivid-emerald": "#10B981",
+                        "warm-amber": "#F59E0B",
+                        "surface-container-high": "#2a2a2d",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "pillar-show": "#14B8A6",
+                        "surface-tint": "#d2bbff",
+                        "secondary-fixed": "#6ffbbe",
+                        "background": "#131316",
+                        "inverse-primary": "#732ee4",
+                        "pillar-earn": "#FACC15",
+                        "on-surface": "#e5e1e6",
+                        "secondary-container": "#00a572",
+                        "surface": "#131316",
+                        "surface-bright": "#39393c",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "pillar-build": "#F97316",
+                        "inverse-on-surface": "#303033",
+                        "primary-container": "#7c3aed",
+                        "on-primary-container": "#ede0ff",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "surface-container-highest": "#353438",
+                        "surface-variant": "#353438",
+                        "on-primary-fixed": "#25005a",
+                        "on-background": "#e5e1e6",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#131316",
+                        "primary-fixed": "#eaddff",
+                        "on-error": "#690005",
+                        "pillar-systemize": "#64748B",
+                        "electric-violet": "#8B5CF6",
+                        "inverse-surface": "#e5e1e6",
+                        "outline": "#958da1",
+                        "on-secondary-fixed": "#002113",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-container-low": "#1b1b1e",
+                        "secondary": "#4edea3",
+                        "on-secondary-container": "#00311f",
+                        "error-container": "#93000a",
+                        "tertiary-container": "#a15100"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-sm": "12px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "gutter-md": "20px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "numeric-stat": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "eyebrow": ["Inter"],
+                        "display-hero": ["Inter"],
+                        "body-md": ["Inter"],
+                        "code-info": ["Inter"]
+                    },
+                    "fontSize": {
+                        "numeric-stat": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "eyebrow": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+                        "display-hero": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "code-info": ["11px", { "lineHeight": "14px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0B0B0E;
+            color: theme('colors.on-background');
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Ambient Background Glows */
+        .ambient-glow-1 {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(11,11,14,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .ambient-glow-2 {
+            position: absolute;
+            bottom: 20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(11,11,14,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: theme('colors.glass-fill');
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 0.5px solid theme('colors.glass-stroke');
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-pill {
+            background: theme('colors.glass-fill');
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-input:focus {
+            border-color: theme('colors.electric-violet');
+            box-shadow: 0 0 10px rgba(139,92,246,0.3);
+            outline: none;
+        }
+
+        /* Top Edge Highlight for depth */
+        .top-edge-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.2), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+        
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.surface-variant');
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: theme('colors.outline');
+        }
+    </style>
+</head>
+<body class="relative min-h-screen pb-24 md:pb-0 pt-16">
+<div class="ambient-glow-1"></div>
+<div class="ambient-glow-2"></div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-glass-fill dark:bg-glass-fill backdrop-blur-xl border-b border-glass-stroke text-electric-violet dark:text-electric-violet font-headline-md text-headline-md flat no shadows transition-all duration-300 ease-in-out md:hidden">
+<button class="text-on-surface-variant hover:bg-white/10 p-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="font-headline-lg text-headline-lg text-primary tracking-tighter">GoalFlow</div>
+<button class="text-on-surface-variant hover:bg-white/10 p-2 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+</button>
+</header>
+<!-- Desktop Sidebar (Hidden on Mobile) -->
+<aside class="hidden md:flex fixed top-0 left-0 w-[240px] h-full glass-panel border-r border-glass-stroke flex-col z-40">
+<div class="p-6">
+<div class="font-headline-lg text-headline-lg text-primary tracking-tighter mb-10">GoalFlow</div>
+<nav class="space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-container/20 text-primary shadow-[inset_0_0_15px_rgba(139,92,246,0.15)] transition-all border border-electric-violet/20" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span>
+<span class="font-body-md text-body-md font-medium">Tasks</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span class="font-body-md text-body-md">Goals</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-white/5 transition-all" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="font-body-md text-body-md">Insights</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6">
+<div class="glass-panel p-4 rounded-xl border-electric-violet/30 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center relative">
+<span class="material-symbols-outlined text-vivid-emerald">smart_toy</span>
+<div class="absolute -top-1 -right-1 w-3 h-3 bg-vivid-emerald rounded-full border-2 border-background animate-pulse"></div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-primary">Ryna AI</div>
+<div class="font-code-info text-code-info text-on-surface-variant">System Online</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-[240px] p-margin-mobile md:p-margin-desktop max-w-[1200px] mx-auto w-full">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pt-4 md:pt-0">
+<div>
+<h1 class="font-display-hero text-display-hero text-on-surface">Tasks</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Execute your daily actions.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="glass-panel px-4 py-2 rounded-lg flex items-center gap-2 text-primary hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+<span class="font-label-sm text-label-sm">AI Generate</span>
+</button>
+<button class="bg-gradient-to-r from-primary-container to-electric-violet text-white px-5 py-2 rounded-lg flex items-center gap-2 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span class="font-label-sm text-label-sm font-semibold">Add Task</span>
+</button>
+</div>
+</div>
+<!-- Goal-to-Task Banner (Expandable) -->
+<div class="glass-panel rounded-xl mb-gutter-md overflow-hidden" x-data="{ expanded: false }">
+<div @click="expanded = !expanded" class="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-electric-violet/20 flex items-center justify-center text-electric-violet">
+<span class="material-symbols-outlined text-[18px]">route</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md text-on-surface font-medium">90-Day Alignment</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">4 active goals driving today's tasks</p>
+</div>
+</div>
+<button :class="{'rotate-180': expanded}" class="text-on-surface-variant transition-transform duration-300">
+<span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+<div class="border-t border-glass-stroke p-4 bg-black/20" style="display: none;" x-show="expanded">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+<!-- Goal 1 -->
+<div class="glass-panel p-3 rounded-lg border-l-2 border-l-pillar-build relative overflow-hidden">
+<div class="top-edge-highlight"></div>
+<div class="font-eyebrow text-eyebrow text-pillar-build mb-1">BUILD</div>
+<div class="font-body-md text-body-md text-on-surface truncate">Launch MVP v1.0</div>
+<div class="mt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">3 Tasks Today</span>
+<span class="font-code-info text-code-info text-pillar-build bg-pillar-build/10 px-2 py-0.5 rounded">65%</span>
+</div>
+</div>
+<!-- Goal 2 -->
+<div class="glass-panel p-3 rounded-lg border-l-2 border-l-pillar-earn relative overflow-hidden">
+<div class="top-edge-highlight"></div>
+<div class="font-eyebrow text-eyebrow text-pillar-earn mb-1">EARN</div>
+<div class="font-body-md text-body-md text-on-surface truncate">Secure 5 Client Retainers</div>
+<div class="mt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">1 Task Today</span>
+<span class="font-code-info text-code-info text-pillar-earn bg-pillar-earn/10 px-2 py-0.5 rounded">20%</span>
+</div>
+</div>
+<!-- Goal 3 -->
+<div class="glass-panel p-3 rounded-lg border-l-2 border-l-pillar-show relative overflow-hidden">
+<div class="top-edge-highlight"></div>
+<div class="font-eyebrow text-eyebrow text-pillar-show mb-1">SHOW</div>
+<div class="font-body-md text-body-md text-on-surface truncate">Publish 10 Case Studies</div>
+<div class="mt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">0 Tasks Today</span>
+<span class="font-code-info text-code-info text-pillar-show bg-pillar-show/10 px-2 py-0.5 rounded">40%</span>
+</div>
+</div>
+<!-- Goal 4 -->
+<div class="glass-panel p-3 rounded-lg border-l-2 border-l-pillar-systemize relative overflow-hidden">
+<div class="top-edge-highlight"></div>
+<div class="font-eyebrow text-eyebrow text-pillar-systemize mb-1">SYSTEMIZE</div>
+<div class="font-body-md text-body-md text-on-surface truncate">Automate Onboarding</div>
+<div class="mt-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">2 Tasks Today</span>
+<span class="font-code-info text-code-info text-pillar-systemize bg-pillar-systemize/10 px-2 py-0.5 rounded">85%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters Row (Pillars & Status) -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+<!-- Pillar Filters -->
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center border-pillar-build/50 text-pillar-build hover:bg-pillar-build/10 transition-colors" title="Filter by Build">
+<span class="material-symbols-outlined text-[20px]">construction</span>
+</button>
+<button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center border-pillar-earn/50 text-pillar-earn hover:bg-pillar-earn/10 transition-colors" title="Filter by Earn">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+</button>
+<button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center border-pillar-show/50 text-pillar-show hover:bg-pillar-show/10 transition-colors" title="Filter by Show">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center border-pillar-systemize/50 text-pillar-systemize hover:bg-pillar-systemize/10 transition-colors" title="Filter by Systemize">
+<span class="material-symbols-outlined text-[20px]">settings_suggest</span>
+</button>
+</div>
+<!-- Status Chips -->
+<div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+<button class="px-4 py-1.5 rounded-full bg-white/10 text-on-surface border border-white/20 font-label-sm text-label-sm whitespace-nowrap">All</button>
+<button class="px-4 py-1.5 rounded-full glass-panel text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm whitespace-nowrap">Pending</button>
+<button class="px-4 py-1.5 rounded-full glass-panel text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm whitespace-nowrap">Done</button>
+<button class="px-4 py-1.5 rounded-full glass-panel text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm whitespace-nowrap">Skipped</button>
+</div>
+</div>
+<!-- Task List (Glassmorphism Cards) -->
+<div class="space-y-3">
+<!-- Task 1 (Build - Pending) -->
+<div class="glass-panel rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 border-l-4 border-l-pillar-build relative group cursor-pointer hover:bg-white/5 transition-all">
+<div class="top-edge-highlight"></div>
+<div class="flex items-center gap-4 flex-1">
+<button class="w-6 h-6 rounded border border-on-surface-variant flex items-center justify-center text-transparent hover:border-pillar-build transition-colors">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</button>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-eyebrow text-eyebrow text-pillar-build bg-pillar-build/10 px-2 py-0.5 rounded">BUILD</span>
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium">Finalize API Endpoints for Dashboard</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Review rate limits and response times before pushing to staging.</p>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto mt-2 md:mt-0">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm bg-surface-container/50 px-3 py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>10:00 AM - 12:00 PM</span>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:text-coral-red hover:bg-coral-red/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Task 2 (Earn - Done) -->
+<div class="glass-panel rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 border-l-4 border-l-pillar-earn relative group cursor-pointer hover:bg-white/5 transition-all opacity-70">
+<div class="top-edge-highlight"></div>
+<div class="flex items-center gap-4 flex-1">
+<button class="w-6 h-6 rounded bg-pillar-earn flex items-center justify-center text-background">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</button>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-eyebrow text-eyebrow text-pillar-earn bg-pillar-earn/10 px-2 py-0.5 rounded">EARN</span>
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium line-through decoration-on-surface-variant/50">Send proposal to Client X</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Includes updated pricing tiers.</p>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto mt-2 md:mt-0">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm bg-surface-container/50 px-3 py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>09:00 AM</span>
+</div>
+<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Task 3 (Systemize - Active/Urgent) -->
+<div class="glass-panel rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 border-l-4 border-l-pillar-systemize border border-pillar-systemize/30 relative group cursor-pointer hover:bg-white/5 transition-all shadow-[0_0_15px_rgba(100,116,139,0.15)]">
+<div class="top-edge-highlight"></div>
+<div class="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 bg-pillar-systemize rounded-full shadow-[0_0_10px_#64748B] animate-pulse"></div>
+<div class="flex items-center gap-4 flex-1 pl-2">
+<button class="w-6 h-6 rounded border border-on-surface-variant flex items-center justify-center text-transparent hover:border-pillar-systemize transition-colors">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</button>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-eyebrow text-eyebrow text-pillar-systemize bg-pillar-systemize/10 px-2 py-0.5 rounded">SYSTEMIZE</span>
+<h3 class="font-body-lg text-body-lg text-on-surface font-medium">Update Notion Workspace Templates</h3>
+<span class="bg-coral-red/20 text-coral-red font-label-sm text-label-sm px-2 py-0.5 rounded border border-coral-red/30">Overdue</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Clean up the weekly review database properties.</p>
+</div>
+</div>
+<div class="flex items-center justify-between md:justify-end gap-6 w-full md:w-auto mt-2 md:mt-0 pl-2 md:pl-0">
+<div class="flex items-center gap-2 text-coral-red font-label-sm text-label-sm bg-coral-red/10 px-3 py-1.5 rounded-lg border border-coral-red/20">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span>Yesterday</span>
+</div>
+<div class="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center px-4 py-2 glass-pill rounded-full mx-auto mb-6 w-[calc(100%-32px)] max-w-md shadow-xl md:hidden">
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</a>
+<a class="flex items-center justify-center bg-primary-container/30 text-primary rounded-full p-3 shadow-[0_0_15px_rgba(139,92,246,0.5)] scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="assignment" style="font-variation-settings: 'FILL' 1;">assignment</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+</a>
+<a class="flex items-center justify-center text-on-surface-variant/60 p-3 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</a>
+</nav>
+<!-- Simple Alpine.js inclusion for the expandable behavior -->
+<script defer="" src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body></html>

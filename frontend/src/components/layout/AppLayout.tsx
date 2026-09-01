@@ -14,7 +14,9 @@ export default function AppLayout() {
       <div className="hidden md:flex">
         <Sidebar />
       </div>
-      <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
+      {/* The nav is now a floating pill (not a docked bar), so content needs
+          enough clearance below it rather than exactly its height. */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-0">
         <Outlet />
       </main>
       <MobileNav />

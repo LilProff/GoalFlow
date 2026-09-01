@@ -17,7 +17,7 @@ export default function OfflineBanner() {
         <motion.div
           initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
           className="shrink-0 flex items-center justify-center gap-2 py-1.5 overflow-hidden"
-          style={{ background: '#3a2a10', color: '#f5c842', paddingTop: 'env(safe-area-inset-top)' }}>
+          style={{ background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', paddingTop: 'env(safe-area-inset-top)' }}>
           <WifiOff className="w-3 h-3 shrink-0" />
           <span className="mono text-[9px] tracking-widest font-bold">
             OFFLINE — CHANGES WON'T SAVE UNTIL YOU'RE BACK ONLINE

@@ -11,21 +11,21 @@ import type { TimeBlock, BlockCategory } from '../types';
 
 // ─── Category config ──────────────────────────────────────────────────────────
 const CAT: Record<BlockCategory, { color: string; bg: string; border: string; icon: React.ElementType; label: string }> = {
-  sleep:    { color:'#7b8fa8', bg:'rgba(123,143,168,0.08)', border:'rgba(123,143,168,0.25)', icon:Moon,      label:'Sleep'      },
-  spiritual:{ color:'#d4f53c', bg:'rgba(212,245,60,0.07)',  border:'rgba(212,245,60,0.22)',  icon:BookOpen,  label:'Spiritual'  },
-  exercise: { color:'#ff6b35', bg:'rgba(255,107,53,0.08)',  border:'rgba(255,107,53,0.25)', icon:Dumbbell,  label:'Exercise'   },
+  sleep:    { color:'#64748B', bg:'rgba(100,116,139,0.08)', border:'rgba(100,116,139,0.25)', icon:Moon,      label:'Sleep'      },
+  spiritual:{ color:'#8B5CF6', bg:'rgba(139,92,246,0.07)',  border:'rgba(139,92,246,0.22)',  icon:BookOpen,  label:'Spiritual'  },
+  exercise: { color:'#F97316', bg:'rgba(249,115,22,0.08)',  border:'rgba(249,115,22,0.25)', icon:Dumbbell,  label:'Exercise'   },
   transit:  { color:'#a78bfa', bg:'rgba(167,139,250,0.08)', border:'rgba(167,139,250,0.25)',icon:Car,       label:'Transit'    },
-  deepwork: { color:'#ff6b35', bg:'rgba(255,107,53,0.1)',   border:'rgba(255,107,53,0.3)',  icon:Briefcase, label:'Deep Work'  },
-  meals:    { color:'#f5c842', bg:'rgba(245,200,66,0.07)',  border:'rgba(245,200,66,0.22)', icon:Coffee,    label:'Meals'      },
+  deepwork: { color:'#F97316', bg:'rgba(249,115,22,0.1)',   border:'rgba(249,115,22,0.3)',  icon:Briefcase, label:'Deep Work'  },
+  meals:    { color:'#FACC15', bg:'rgba(250,204,21,0.07)',  border:'rgba(250,204,21,0.22)', icon:Coffee,    label:'Meals'      },
   admin:    { color:'#94a3b8', bg:'rgba(148,163,184,0.07)', border:'rgba(148,163,184,0.2)', icon:Clock,     label:'Admin'      },
-  show:     { color:'#00d4b4', bg:'rgba(0,212,180,0.08)',   border:'rgba(0,212,180,0.25)',  icon:Zap,       label:'Show'       },
-  earn:     { color:'#f5c842', bg:'rgba(245,200,66,0.08)',  border:'rgba(245,200,66,0.25)', icon:Zap,       label:'Earn'       },
+  show:     { color:'#14B8A6', bg:'rgba(20,184,166,0.08)',   border:'rgba(20,184,166,0.25)',  icon:Zap,       label:'Show'       },
+  earn:     { color:'#FACC15', bg:'rgba(250,204,21,0.08)',  border:'rgba(250,204,21,0.25)', icon:Zap,       label:'Earn'       },
   buffer:   { color:'#475569', bg:'rgba(71,85,105,0.06)',   border:'rgba(71,85,105,0.18)',  icon:Coffee,    label:'Buffer'     },
   personal: { color:'#c084fc', bg:'rgba(192,132,252,0.07)', border:'rgba(192,132,252,0.22)',icon:BookOpen,  label:'Personal'   },
   learning: { color:'#60a5fa', bg:'rgba(96,165,250,0.08)',  border:'rgba(96,165,250,0.25)', icon:BookOpen,  label:'Learning'   },
-  social:   { color:'#00d4b4', bg:'rgba(0,212,180,0.07)',   border:'rgba(0,212,180,0.2)',   icon:Zap,       label:'Social'     },
+  social:   { color:'#14B8A6', bg:'rgba(20,184,166,0.07)',   border:'rgba(20,184,166,0.2)',   icon:Zap,       label:'Social'     },
   health:   { color:'#34d399', bg:'rgba(52,211,153,0.07)',  border:'rgba(52,211,153,0.2)',  icon:Dumbbell,  label:'Health'     },
-  work:     { color:'#7b8fa8', bg:'rgba(123,143,168,0.08)', border:'rgba(123,143,168,0.25)',icon:Briefcase, label:'Work'       },
+  work:     { color:'#64748B', bg:'rgba(100,116,139,0.08)', border:'rgba(100,116,139,0.25)',icon:Briefcase, label:'Work'       },
 };
 
 const MINS_PER_PX = 2; // 1px = 2 minutes → 720px for 24h
@@ -122,7 +122,7 @@ function BlockEditor({
           {[25, 45, 60, 90].map(d => (
             <button key={d} onClick={() => setDuration(d)}
               className="flex items-center gap-1 mono text-[8px] px-2 py-1 transition-all"
-              style={{ background: duration === d ? 'rgba(212,245,60,0.1)' : 'var(--bg-raised)', border: `1px solid ${duration === d ? 'var(--acid)' : 'var(--border-dim)'}`, color: duration === d ? 'var(--acid)' : 'var(--tx-ghost)' }}>
+              style={{ background: duration === d ? 'rgba(139,92,246,0.1)' : 'var(--bg-raised)', border: `1px solid ${duration === d ? 'var(--acid)' : 'var(--border-dim)'}`, color: duration === d ? 'var(--acid)' : 'var(--tx-ghost)' }}>
               <Timer className="w-2.5 h-2.5" />{d}m
             </button>
           ))}
@@ -171,7 +171,7 @@ function BlockEditor({
       {block.userEditable && (
         <button onClick={onDelete}
           className="w-full flex items-center justify-center gap-1.5 py-2 mono text-[9px] tracking-widest transition-all"
-          style={{ border: '1px solid rgba(255,68,68,0.25)', color: '#ff4444' }}
+          style={{ border: '1px solid rgba(255,68,68,0.25)', color: '#EF4444' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,68,68,0.06)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
           <Trash2 className="w-3 h-3" /> DELETE BLOCK
@@ -202,18 +202,18 @@ function BlockPill({
       style={{
         top: block.startMinute / MINS_PER_PX,
         height: heightPx,
-        background: isEditing ? `${meta.color}18` : block.completed ? 'rgba(0,212,180,0.06)' : meta.bg,
-        border: `1px solid ${isEditing ? meta.color : isNow ? meta.color : block.completed ? 'rgba(0,212,180,0.35)' : meta.border}`,
-        borderLeft: `3px solid ${block.completed ? '#00d4b4' : meta.color}`,
+        background: isEditing ? `${meta.color}18` : block.completed ? 'rgba(16,185,129,0.08)' : meta.bg,
+        border: `1px solid ${isEditing ? meta.color : isNow ? meta.color : block.completed ? 'rgba(16,185,129,0.4)' : meta.border}`,
+        borderLeft: `3px solid ${block.completed ? 'var(--success)' : meta.color}`,
         zIndex: isEditing ? 20 : isNow ? 10 : 1,
         boxShadow: isNow ? `0 0 14px ${meta.color}35` : isEditing ? `0 0 0 2px ${meta.color}40` : 'none',
       }}>
       <div className="flex items-center gap-1.5 px-2 h-full">
-        <Icon className="w-3 h-3 shrink-0" style={{ color: block.completed ? '#00d4b4' : meta.color, opacity: 0.9 }} />
+        <Icon className="w-3 h-3 shrink-0" style={{ color: block.completed ? 'var(--success)' : meta.color, opacity: 0.9 }} />
         {heightPx >= 28 && (
           <div className="flex-1 min-w-0">
             <p className="mono text-[9px] font-bold truncate leading-none"
-              style={{ color: block.completed ? '#00d4b4' : meta.color }}>
+              style={{ color: block.completed ? 'var(--success)' : meta.color }}>
               {block.label}
             </p>
             {heightPx >= 40 && (
@@ -224,7 +224,7 @@ function BlockPill({
             )}
           </div>
         )}
-        {block.completed && <CheckCircle2 className="w-3 h-3 shrink-0" style={{ color: '#00d4b4' }} />}
+        {block.completed && <CheckCircle2 className="w-3 h-3 shrink-0" style={{ color: 'var(--success)' }} />}
         {isTask && <Link2 className="w-2.5 h-2.5 shrink-0 opacity-50" style={{ color: meta.color }} />}
         {isNow && <span className="w-1.5 h-1.5 rounded-full shrink-0 pulse-dot" style={{ background: meta.color }} />}
         {block.userEditable && !isNow && (
@@ -276,7 +276,7 @@ function AddBlockForm({ onAdd, onClose }: { onAdd: (b: Omit<TimeBlock, 'id'>) =>
             {[15, 25, 30, 45, 60, 90].map(d => (
               <button key={d} onClick={() => setDuration(d)}
                 className="flex-1 py-1.5 mono text-[8px] transition-all"
-                style={{ background: duration === d ? 'rgba(212,245,60,0.1)' : 'var(--bg-raised)', border: `1px solid ${duration === d ? 'var(--acid)' : 'var(--border-dim)'}`, color: duration === d ? 'var(--acid)' : 'var(--tx-ghost)' }}>
+                style={{ background: duration === d ? 'rgba(139,92,246,0.1)' : 'var(--bg-raised)', border: `1px solid ${duration === d ? 'var(--acid)' : 'var(--border-dim)'}`, color: duration === d ? 'var(--acid)' : 'var(--tx-ghost)' }}>
                 {d}
               </button>
             ))}
@@ -391,11 +391,11 @@ export default function Planner() {
           {/* Notifications */}
           <button onClick={() => setShowNotifs(!showNotifs)}
             className="relative flex items-center gap-1.5 px-3 py-2 mono text-[9px] tracking-widest transition-all"
-            style={{ border: '1px solid var(--border-mid)', color: undismissed.length ? '#f5c842' : 'var(--tx-muted)', background: undismissed.length ? 'rgba(245,200,66,0.06)' : 'transparent' }}>
+            style={{ border: '1px solid var(--border-mid)', color: undismissed.length ? '#FACC15' : 'var(--tx-muted)', background: undismissed.length ? 'rgba(250,204,21,0.06)' : 'transparent' }}>
             <Bell className="w-3.5 h-3.5" />
             {undismissed.length > 0 && (
               <span className="w-4 h-4 rounded-full flex items-center justify-center mono text-[8px] font-black"
-                style={{ background: '#f5c842', color: 'var(--bg-void)' }}>{undismissed.length}</span>
+                style={{ background: '#FACC15', color: 'var(--bg-void)' }}>{undismissed.length}</span>
             )}
           </button>
 
@@ -409,7 +409,7 @@ export default function Planner() {
           {/* AI Reshuffle */}
           <button onClick={handleReshuffle} disabled={plannerLoading}
             className="flex items-center gap-2 px-3 py-2 mono text-[9px] tracking-widest font-bold transition-all disabled:opacity-50"
-            style={{ background: 'rgba(212,245,60,0.08)', border: '1px solid rgba(212,245,60,0.25)', color: 'var(--acid)' }}>
+            style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.25)', color: 'var(--acid)' }}>
             <RefreshCw className={`w-3.5 h-3.5 ${plannerLoading ? 'animate-spin' : ''}`} />
             {plannerLoading ? 'RESHUFFLING...' : 'AI RESHUFFLE'}
           </button>
@@ -417,7 +417,7 @@ export default function Planner() {
           {/* Ask Ryna */}
           <button onClick={() => setChatOpen(true)}
             className="flex items-center gap-2 px-3 py-2 mono text-[9px] tracking-widest font-bold"
-            style={{ background: 'rgba(0,212,180,0.08)', border: '1px solid rgba(0,212,180,0.25)', color: '#00d4b4' }}>
+            style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--acid)' }}>
             <Zap className="w-3.5 h-3.5" /> ASK RYNA
           </button>
         </div>
@@ -434,7 +434,7 @@ export default function Planner() {
                 <p className="mono text-[9px]" style={{ color: 'var(--tx-ghost)' }}>ALL CLEAR · NO PENDING ALERTS</p>
               )}
               {undismissed.map(n => {
-                const colors: Record<string, string> = { start:'#00d4b4', end:'#f5c842', warning:'#ff6b35', reshuffle:'var(--acid)', info:'#7b8fa8', achievement:'#f5c842', coach:'#00d4b4' };
+                const colors: Record<string, string> = { start:'var(--success)', end:'var(--warning)', warning:'var(--warning)', reshuffle:'var(--acid)', info:'var(--slate)', achievement:'var(--gold)', coach:'var(--acid)' };
                 const icons: Record<string, React.ElementType> = { start:Play, end:SkipForward, warning:AlertTriangle, reshuffle:RefreshCw, info:Bell, achievement:CheckCircle2, coach:Zap };
                 const Icon = icons[n.type] ?? Bell;
                 return (
@@ -571,9 +571,9 @@ export default function Planner() {
                       className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-all"
                       onClick={() => setEditingId(isEditing ? null : b.id)}
                       style={{
-                        background: isEditing ? `${meta.color}10` : b.completed ? 'rgba(0,212,180,0.04)' : isNow ? meta.bg : 'var(--bg-raised)',
-                        border: `1px solid ${isEditing ? meta.color : isNow ? meta.color : b.completed ? 'rgba(0,212,180,0.2)' : 'var(--border-dim)'}`,
-                        borderLeft: `3px solid ${b.completed ? '#00d4b4' : meta.color}`,
+                        background: isEditing ? `${meta.color}10` : b.completed ? 'rgba(16,185,129,0.05)' : isNow ? meta.bg : 'var(--bg-raised)',
+                        border: `1px solid ${isEditing ? meta.color : isNow ? meta.color : b.completed ? 'rgba(16,185,129,0.3)' : 'var(--border-dim)'}`,
+                        borderLeft: `3px solid ${b.completed ? 'var(--success)' : meta.color}`,
                         opacity: b.skipped ? 0.4 : 1,
                       }}>
                       <div className="w-16 shrink-0">
@@ -584,16 +584,16 @@ export default function Planner() {
                           {minsToTime(b.startMinute + b.durationMinutes)}
                         </p>
                       </div>
-                      <Icon className="w-4 h-4 shrink-0" style={{ color: b.completed ? '#00d4b4' : meta.color }} />
+                      <Icon className="w-4 h-4 shrink-0" style={{ color: b.completed ? 'var(--success)' : meta.color }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate" style={{ color: b.completed ? '#00d4b4' : 'var(--tx-primary)' }}>
+                        <p className="text-sm font-semibold truncate" style={{ color: b.completed ? 'var(--success)' : 'var(--tx-primary)' }}>
                           {b.skipped ? <s>{b.label}</s> : b.label}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className="mono text-[8px]" style={{ color: 'var(--tx-ghost)' }}>
                             {b.durationMinutes >= 60 ? `${Math.floor(b.durationMinutes/60)}h${b.durationMinutes%60>0?b.durationMinutes%60+'m':''}` : `${b.durationMinutes}m`}
                           </span>
-                          {b.flexible && <span className="mono text-[8px] px-1" style={{ color: 'var(--acid)', border: '1px solid rgba(212,245,60,0.2)' }}>FLEX</span>}
+                          {b.flexible && <span className="mono text-[8px] px-1" style={{ color: 'var(--acid)', border: '1px solid rgba(139,92,246,0.2)' }}>FLEX</span>}
                           {isTask && <span className="mono text-[8px] px-1 flex items-center gap-0.5" style={{ color: meta.color, border: `1px solid ${meta.border}` }}><Link2 className="w-2 h-2" />TASK</span>}
                           {b.pillarId && <span className="mono text-[8px] px-1" style={{ color: meta.color, border: `1px solid ${meta.border}` }}>{b.pillarId}</span>}
                           {isNow && <span className="mono text-[8px] pulse-dot" style={{ color: meta.color }}>● NOW</span>}
@@ -602,12 +602,12 @@ export default function Planner() {
                       <div className="flex items-center gap-2 shrink-0">
                         <button onClick={e => { e.stopPropagation(); toggleBlock(b.id, 'completed'); }}
                           className="w-5 h-5 flex items-center justify-center transition-all"
-                          style={{ background: b.completed ? '#00d4b4' : 'transparent', border: `1px solid ${b.completed ? '#00d4b4' : 'var(--border-mid)'}` }}>
+                          style={{ background: b.completed ? 'var(--success)' : 'transparent', border: `1px solid ${b.completed ? 'var(--success)' : 'var(--border-mid)'}` }}>
                           {b.completed && <span style={{ color: 'var(--bg-void)', fontSize: 9, fontWeight: 'bold' }}>✓</span>}
                         </button>
                         <button onClick={e => { e.stopPropagation(); toggleBlock(b.id, 'skipped'); }}
                           className="mono text-[8px] px-1.5 py-0.5 transition-all"
-                          style={{ color: b.skipped ? '#ff4444' : 'var(--tx-ghost)', border: `1px solid ${b.skipped ? '#ff444430' : 'var(--border-dim)'}` }}>
+                          style={{ color: b.skipped ? '#EF4444' : 'var(--tx-ghost)', border: `1px solid ${b.skipped ? '#EF444430' : 'var(--border-dim)'}` }}>
                           SKIP
                         </button>
                         {b.userEditable && <Edit3 className="w-3.5 h-3.5" style={{ color: 'var(--tx-muted)' }} />}
@@ -642,14 +642,14 @@ export default function Planner() {
           <div className="p-5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
             <p className="mono text-[9px] tracking-widest font-bold mb-3" style={{ color: 'var(--tx-muted)' }}>DAY SCORE</p>
             <div className="flex items-end gap-2 mb-2">
-              <span className="mono text-4xl font-black" style={{ color: accountabilityPct >= 70 ? '#00d4b4' : accountabilityPct >= 40 ? 'var(--acid)' : '#ff6b35' }}>
+              <span className="mono text-4xl font-black" style={{ color: accountabilityPct >= 70 ? 'var(--success)' : accountabilityPct >= 40 ? 'var(--acid)' : 'var(--warning)' }}>
                 {accountabilityPct}%
               </span>
               <span className="mono text-[9px] mb-1.5" style={{ color: 'var(--tx-muted)' }}>COMPLETE</span>
             </div>
             <div className="flex gap-0.5 h-2 mb-2">
-              <div style={{ flex: done, background: '#00d4b4', minWidth: done > 0 ? 4 : 0 }} />
-              <div style={{ flex: timeBlocks.filter(b=>b.skipped).length, background: '#ff444460', minWidth: 0 }} />
+              <div style={{ flex: done, background: 'var(--success)', minWidth: done > 0 ? 4 : 0 }} />
+              <div style={{ flex: timeBlocks.filter(b=>b.skipped).length, background: '#EF444460', minWidth: 0 }} />
               <div style={{ flex: total - done - timeBlocks.filter(b=>b.skipped).length, background: 'var(--border-mid)' }} />
             </div>
             <div className="flex justify-between mono text-[8px]" style={{ color: 'var(--tx-ghost)' }}>
@@ -664,15 +664,15 @@ export default function Planner() {
             <p className="mono text-[9px] tracking-widest font-bold mb-3" style={{ color: 'var(--tx-muted)' }}>LIFE METRICS</p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label:'SLEEP',      value:`${Math.floor(sleepMins/60)}h`,  color:'#7b8fa8', icon:Moon,      ok:sleepMins>=360 && sleepMins<=480, warn:sleepMins<360, note:sleepMins<360?'Too little':'OK' },
-                { label:'SPIRITUAL',  value:`${spiritualMins}m`,             color:'#d4f53c', icon:BookOpen,  ok:spiritualMins>=30, warn:spiritualMins===0, note:spiritualMins===0?'Missed':'OK' },
-                { label:'EXERCISE',   value:`${exerciseMins}m`,              color:'#ff6b35', icon:Dumbbell,  ok:exerciseMins>=30, warn:exerciseMins===0, note:exerciseMins===0?'None':'OK' },
+                { label:'SLEEP',      value:`${Math.floor(sleepMins/60)}h`,  color:'#64748B', icon:Moon,      ok:sleepMins>=360 && sleepMins<=480, warn:sleepMins<360, note:sleepMins<360?'Too little':'OK' },
+                { label:'SPIRITUAL',  value:`${spiritualMins}m`,             color:'#8B5CF6', icon:BookOpen,  ok:spiritualMins>=30, warn:spiritualMins===0, note:spiritualMins===0?'Missed':'OK' },
+                { label:'EXERCISE',   value:`${exerciseMins}m`,              color:'#F97316', icon:Dumbbell,  ok:exerciseMins>=30, warn:exerciseMins===0, note:exerciseMins===0?'None':'OK' },
                 { label:'FOCUS',      value:`${Math.floor(focusMins/60)}h${focusMins%60>0?focusMins%60+'m':''}`, color:'var(--acid)', icon:Briefcase, ok:focusMins>=120, warn:focusMins<60, note:focusMins<60?'Low':'OK' },
               ].map(({ label, value, color, icon: Icon, ok, warn }) => (
-                <div key={label} className="p-2.5" style={{ background: 'var(--bg-raised)', border: `1px solid ${ok ? color+'30' : warn ? '#ff444430' : 'var(--border-dim)'}` }}>
+                <div key={label} className="p-2.5" style={{ background: 'var(--bg-raised)', border: `1px solid ${ok ? color+'30' : warn ? '#EF444430' : 'var(--border-dim)'}` }}>
                   <div className="flex items-center justify-between mb-1">
                     <Icon className="w-3 h-3" style={{ color }} />
-                    {ok ? <CheckCircle2 className="w-3 h-3" style={{ color: '#00d4b4' }} /> : <AlertTriangle className="w-3 h-3" style={{ color: warn ? '#ff4444' : '#f5c842' }} />}
+                    {ok ? <CheckCircle2 className="w-3 h-3" style={{ color: 'var(--success)' }} /> : <AlertTriangle className="w-3 h-3" style={{ color: warn ? 'var(--danger)' : 'var(--warning)' }} />}
                   </div>
                   <p className="mono text-sm font-black" style={{ color }}>{value}</p>
                   <p className="mono text-[8px] tracking-widest" style={{ color: 'var(--tx-ghost)' }}>{label}</p>
@@ -680,12 +680,12 @@ export default function Planner() {
               ))}
             </div>
             {sleepMins > 480 && (
-              <p className="mono text-[8px] mt-2 px-2 py-1.5" style={{ color: '#f5c842', background: 'rgba(245,200,66,0.06)', border: '1px solid rgba(245,200,66,0.2)' }}>
+              <p className="mono text-[8px] mt-2 px-2 py-1.5" style={{ color: '#FACC15', background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.2)' }}>
                 ⚠ Sleep &gt;8h may reduce productive hours. Ryna can optimise.
               </p>
             )}
             {sleepMins < 360 && (
-              <p className="mono text-[8px] mt-2 px-2 py-1.5" style={{ color: '#ff4444', background: 'rgba(255,68,68,0.06)', border: '1px solid rgba(255,68,68,0.2)' }}>
+              <p className="mono text-[8px] mt-2 px-2 py-1.5" style={{ color: '#EF4444', background: 'rgba(255,68,68,0.06)', border: '1px solid rgba(255,68,68,0.2)' }}>
                 ⚠ Sleep &lt;6h detected. Performance will degrade. Ryna recommends 7h minimum.
               </p>
             )}
@@ -718,10 +718,10 @@ export default function Planner() {
           {/* Ryna advice */}
           <div className="p-5">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 flex items-center justify-center" style={{ background: 'rgba(0,212,180,0.12)', border: '1px solid rgba(0,212,180,0.3)' }}>
-                <Zap className="w-3 h-3" style={{ color: '#00d4b4' }} />
+              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(139,92,246,0.18)', border: '1px solid rgba(139,92,246,0.4)' }}>
+                <Zap className="w-3 h-3" style={{ color: 'var(--acid)' }} />
               </div>
-              <span className="mono text-[9px] tracking-widest font-bold" style={{ color: '#00d4b4' }}>RYNA SAYS</span>
+              <span className="mono text-[9px] tracking-widest font-bold" style={{ color: 'var(--acid)' }}>RYNA SAYS</span>
             </div>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--tx-secondary)' }}>
               {plannerLoading
@@ -734,7 +734,7 @@ export default function Planner() {
                       : currentBlock.category === 'spiritual'
                         ? 'Spiritual time. Be fully present. This anchors everything else.'
                         : currentBlock.category === 'exercise'
-                          ? 'Exercise block. Push through — this compounds over 90 days.'
+                          ? 'Exercise block. Push through — this compounds over time.'
                           : `You're in ${currentBlock.label}. Complete it and move on.`
                     : nextBlock
                       ? `Next: ${nextBlock.label} at ${minsToTime(nextBlock.startMinute)}. Prepare now — transition with intention.`
@@ -743,7 +743,7 @@ export default function Planner() {
             </p>
             <button onClick={() => setChatOpen(true)}
               className="mt-3 w-full py-2 mono text-[9px] tracking-widest font-bold transition-all"
-              style={{ border: '1px solid rgba(0,212,180,0.2)', color: '#00d4b4', background: 'rgba(0,212,180,0.05)' }}>
+              style={{ border: '1px solid rgba(139,92,246,0.3)', color: 'var(--acid)', background: 'rgba(139,92,246,0.08)' }}>
               SOMETHING CAME UP? TELL RYNA →
             </button>
           </div>

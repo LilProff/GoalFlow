@@ -23,21 +23,27 @@ const MORE_ITEMS = [
   { to: '/settings',    icon: Settings,  label: 'Settings' },
 ];
 
-function TabButton({ to, icon: Icon, label, active, onClick }: {
+function TabButton({ to, icon: Icon, active, onClick }: {
   to?: string; icon: typeof LayoutDashboard; label: string; active: boolean; onClick: () => void;
 }) {
   const content = (
-    <>
+    <span
+      className="flex items-center justify-center w-11 h-11 rounded-full transition-all duration-150"
+      style={active ? {
+        background: 'rgba(139,92,246,0.3)',
+        color: 'var(--acid)',
+        boxShadow: '0 0 15px rgba(139,92,246,0.5)',
+        transform: 'scale(0.92)',
+      } : { color: 'rgba(204,195,216,0.6)' }}
+    >
       <Icon className="w-5 h-5" strokeWidth={active ? 2.4 : 1.8} />
-      <span className="mono text-[8px] tracking-widest font-bold">{label.toUpperCase()}</span>
-    </>
+    </span>
   );
-  const cls = "flex-1 flex flex-col items-center justify-center gap-1 py-2 min-w-0 transition-colors";
-  const style = { color: active ? 'var(--acid)' : 'var(--tx-muted)' };
+  const cls = "flex items-center justify-center min-w-0 transition-colors";
   if (to) {
-    return <NavLink to={to} onClick={onClick} className={cls} style={style}>{content}</NavLink>;
+    return <NavLink to={to} onClick={onClick} className={cls}>{content}</NavLink>;
   }
-  return <button onClick={onClick} className={cls} style={style}>{content}</button>;
+  return <button onClick={onClick} className={cls}>{content}</button>;
 }
 
 export default function MobileNav() {
@@ -50,16 +56,12 @@ export default function MobileNav() {
 
   return (
     <>
-      {/* Bottom tab bar. env(safe-area-inset-bottom) clears the iPhone home
-          indicator — without it the last row of every page sits right under
-          the gesture bar. */}
+      {/* Floating pill nav — centered, inset from the edges, glass-blurred.
+          env(safe-area-inset-bottom) via the wrapper's margin clears the
+          iPhone home indicator instead of sitting flush against it. */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-stretch"
-        style={{
-          background: 'var(--bg-void)',
-          borderTop: '1px solid var(--border-mid)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-        }}
+        className="glass-panel-float md:hidden fixed left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 px-3 py-2 rounded-full"
+        style={{ bottom: 'calc(16px + env(safe-area-inset-bottom))' }}
       >
         {TAB_ITEMS.map(({ to, icon, label }) => (
           <TabButton key={to} to={to} icon={icon} label={label}
@@ -81,16 +83,13 @@ export default function MobileNav() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 300 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3"
-              style={{
-                background: 'var(--bg-raised)', borderTop: '1px solid var(--border-mid)',
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)',
-              }}
+              className="glass-panel md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 rounded-t-3xl"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}
             >
               <div className="flex items-center justify-between px-2 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 flex items-center justify-center mono text-[10px] font-bold"
-                    style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-mid)', color: 'var(--acid)' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center mono text-[10px] font-bold"
+                    style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.4)', color: 'var(--acid)' }}>
                     {user?.name?.charAt(0) ?? 'U'}
                   </div>
                   <p className="text-xs font-semibold" style={{ color: 'var(--tx-primary)' }}>{user?.name}</p>
@@ -103,10 +102,10 @@ export default function MobileNav() {
               <div className="grid grid-cols-3 gap-2 mb-2">
                 {MORE_ITEMS.map(({ to, icon: Icon, label }) => (
                   <NavLink key={to} to={to} onClick={() => setMoreOpen(false)}
-                    className="flex flex-col items-center gap-1.5 py-3"
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl"
                     style={({ isActive }) => ({
-                      background: isActive ? 'rgba(212,245,60,0.06)' : 'var(--bg-overlay)',
-                      border: `1px solid ${isActive ? 'rgba(212,245,60,0.2)' : 'var(--border-dim)'}`,
+                      background: isActive ? 'rgba(139,92,246,0.1)' : 'var(--bg-overlay)',
+                      border: `1px solid ${isActive ? 'rgba(139,92,246,0.3)' : 'var(--border-dim)'}`,
                       color: isActive ? 'var(--acid)' : 'var(--tx-secondary)',
                     })}>
                     <Icon className="w-4 h-4" />
@@ -117,15 +116,15 @@ export default function MobileNav() {
 
               <button
                 onClick={() => { setMoreOpen(false); setChatOpen(true); }}
-                className="w-full flex items-center gap-3 px-3 py-3 mb-1"
-                style={{ background: 'rgba(0,212,180,0.06)', border: '1px solid rgba(0,212,180,0.2)', color: '#00d4b4' }}>
+                className="w-full flex items-center gap-3 px-3 py-3 mb-1 rounded-xl"
+                style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--acid)' }}>
                 <MessageCircle className="w-4 h-4" />
                 <span className="mono text-[10px] tracking-widest font-bold">ASK RYNA</span>
               </button>
 
               <button
                 onClick={() => { setMoreOpen(false); logout(); navigate('/'); }}
-                className="w-full flex items-center gap-3 px-3 py-3"
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl"
                 style={{ color: 'var(--tx-muted)' }}>
                 <LogOut className="w-4 h-4" />
                 <span className="mono text-[10px] tracking-widest font-bold">SIGN OUT</span>
