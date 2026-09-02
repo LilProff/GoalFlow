@@ -1,9 +1,10 @@
 ﻿import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Minimize2, Maximize2, Zap, ChevronRight } from 'lucide-react';
+import { X, Send, Minimize2, Maximize2, Zap, ChevronRight, MessageCircle, Sparkles } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { RYNA_QUICK_ACTIONS, COACH_STYLES } from '../../lib/constants';
 import type { MCPAction } from '../../types';
+import ImportGoals from '../ImportGoals';
 
 function MCPActionCard({ action, onExecute, executed }: { action: MCPAction; onExecute: () => void; executed: boolean }) {
   return (
@@ -23,11 +24,22 @@ export default function RynaChat() {
   const { chatMessages, chatLoading, sendChatMessage, setChatOpen, executeMCPAction, user, switchCoachStyle } = useStore();
   const [input, setInput] = useState('');
   const [minimized, setMinimized] = useState(false);
+  const [tab, setTab] = useState<'chat' | 'import'>('chat');
   const [executedActions, setExecutedActions] = useState<Set<string>>(new Set());
   const [executingId, setExecutingId] = useState<string | null>(null);
   const [resultMsg, setResultMsg] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reuses the same success-banner mechanism as an executed MCP action —
+  // no need for a second "here's what happened" pattern.
+  const handleImportDone = (goalsCreated: number) => {
+    setTab('chat');
+    setResultMsg(goalsCreated > 0
+      ? `Added ${goalsCreated} goal${goalsCreated === 1 ? '' : 's'} from your document.`
+      : 'Saved — no goals were left to add.');
+    setTimeout(() => setResultMsg(null), 5000);
+  };
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages, chatLoading]);
   useEffect(() => { if (!minimized) inputRef.current?.focus(); }, [minimized]);
@@ -91,7 +103,21 @@ export default function RynaChat() {
 
       {!minimized && (
         <>
-          {/* MCP Result banner */}
+          {/* Tabs */}
+          <div className="flex gap-1 px-3 pt-2 shrink-0">
+            <button onClick={() => setTab('chat')}
+              className="flex-1 flex items-center justify-center gap-1.5 mono text-[9px] tracking-widest font-bold px-2 py-2 transition-all"
+              style={{ background: tab === 'chat' ? 'rgba(139,92,246,0.12)' : 'transparent', border: `1px solid ${tab === 'chat' ? 'var(--acid)' : 'var(--border-dim)'}`, color: tab === 'chat' ? 'var(--acid)' : 'var(--tx-muted)' }}>
+              <MessageCircle className="w-3 h-3" /> CHAT
+            </button>
+            <button onClick={() => setTab('import')}
+              className="flex-1 flex items-center justify-center gap-1.5 mono text-[9px] tracking-widest font-bold px-2 py-2 transition-all"
+              style={{ background: tab === 'import' ? 'rgba(139,92,246,0.12)' : 'transparent', border: `1px solid ${tab === 'import' ? 'var(--acid)' : 'var(--border-dim)'}`, color: tab === 'import' ? 'var(--acid)' : 'var(--tx-muted)' }}>
+              <Sparkles className="w-3 h-3" /> TRAIN RYNA
+            </button>
+          </div>
+
+          {/* Result banner — shared between MCP action results and a completed goal import (handleImportDone switches back to this tab and sets it) */}
           <AnimatePresence>
             {resultMsg && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
@@ -101,6 +127,15 @@ export default function RynaChat() {
             )}
           </AnimatePresence>
 
+          {tab === 'import' ? (
+            <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
+              <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--tx-secondary)' }}>
+                Give Ryna a fuller picture of your goals and ambitions — useful if you skipped this during onboarding, or just have more to add now.
+              </p>
+              <ImportGoals onDone={handleImportDone} />
+            </div>
+          ) : (
+          <>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
             {chatMessages.map(msg => (
@@ -208,6 +243,8 @@ export default function RynaChat() {
               Ryna can add tasks, reshuffle your day, draft emails, and more — just ask.
             </p>
           </div>
+          </>
+          )}
         </>
       )}
     </motion.div>

@@ -558,11 +558,20 @@ export const useStore = create<AppState>()(persist((set, get) => ({
     s.goalImportDraft ? { goalImportDraft: { ...s.goalImportDraft, goals } } : {}
   )),
 
+  // Used from two places: the Onboarding "Import" mode (fresh account, not
+  // yet onboarded) and the "Train Ryna" tab in the global chat panel
+  // (an already-active user adding more goals later). Must behave safely
+  // for both — in particular, never wipe chatMessages/notifications, which
+  // would silently blow away an existing user's live conversation and
+  // notification list if triggered mid-session.
   confirmGoalImport: async () => {
     const draft = get().goalImportDraft;
     if (!draft) return;
+    const alreadyOnboarded = get().user?.onboardingComplete ?? false;
     await api.confirmGoalsImport(draft.goals);
-    await api.completeOnboarding('import').catch(console.error);
+    if (!alreadyOnboarded) {
+      await api.completeOnboarding('import').catch(console.error);
+    }
 
     const [dailyData, pillars, history, kpi, weeklyReport, goals, leaderboard, timeBlocks] = await Promise.all([
       api.getToday().catch(() => null),
@@ -577,7 +586,6 @@ export const useStore = create<AppState>()(persist((set, get) => ({
     set(s => ({
       user: { ...s.user!, onboardingComplete: true, pillars },
       dailyData, goals, kpi, history, weeklyReport, leaderboard, timeBlocks,
-      chatMessages: [], notifications: [],
       goalImportDraft: null,
       onboarding: defaultOnboarding,
     }));
