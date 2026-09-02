@@ -5,6 +5,7 @@ import { ChevronRight, ChevronLeft, Check, Plus, X, Zap, Send, Upload, Copy, Fil
 import { useStore } from '../lib/store';
 import { DEFAULT_PILLARS, LIFE_CATEGORIES, COACH_STYLES, TIMEZONES, OCCUPATION_PRESETS, GOAL_TYPES, TIMELINE_TYPES, IMPORT_HANDOFF_PROMPT } from '../lib/constants';
 import type { PillarId, CategoryId, CoachStyle, ChatMessage, ImportDraftGoal } from '../types';
+import Logo from '../components/ui/Logo';
 
 // ─── Shared input style ───────────────────────────────────────────────────────
 const inp = "w-full px-3 py-2.5 text-sm outline-none transition-all";
@@ -474,7 +475,7 @@ export default function Onboarding() {
         <div className="w-full max-w-2xl">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><polygon points="12,2 22,20 2,20" fill="var(--acid)" opacity="0.9" /><polygon points="12,8 18,18 6,18" fill="var(--bg-void)" /></svg>
+              <Logo className="w-5 h-5" />
               <span className="mono text-xs font-bold tracking-widest">GOALFLOW</span>
             </div>
             <ModeSwitcher current="import" />
@@ -497,7 +498,7 @@ export default function Onboarding() {
       <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-void)', color: 'var(--tx-primary)' }}>
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border-dim)' }}>
           <div className="flex items-center gap-3">
-            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><polygon points="12,2 22,20 2,20" fill="var(--acid)" opacity="0.9" /><polygon points="12,8 18,18 6,18" fill="var(--bg-void)" /></svg>
+            <Logo className="w-5 h-5" />
             <span className="mono text-xs font-bold tracking-widest">GOALFLOW</span>
           </div>
           <ModeSwitcher current="chat" />
@@ -528,7 +529,7 @@ export default function Onboarding() {
         {/* Logo + mode toggle */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3">
-            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5"><polygon points="12,2 22,20 2,20" fill="var(--acid)" opacity="0.9" /><polygon points="12,8 18,18 6,18" fill="var(--bg-void)" /></svg>
+            <Logo className="w-5 h-5" />
             <span className="mono text-xs font-bold tracking-widest">GOALFLOW</span>
           </div>
           <ModeSwitcher current="form" />

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { LEVEL_THRESHOLDS } from '../../lib/constants';
+import Logo from '../ui/Logo';
 
 const NAV = [
   { to: '/dashboard',   icon: LayoutDashboard, label: 'TODAY'       },
@@ -37,10 +38,7 @@ export default function Sidebar() {
       {/* Wordmark */}
       <div className="flex items-center h-14 px-3.5" style={{ borderBottom: '1px solid var(--border-dim)' }}>
         <div className="w-6 h-6 shrink-0 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-            <polygon points="12,2 22,20 2,20" fill="var(--acid)" opacity="0.9" />
-            <polygon points="12,8 18,18 6,18" fill="var(--bg-void)" />
-          </svg>
+          <Logo className="w-5 h-5" />
         </div>
         <AnimatePresence>
           {!sidebarCollapsed && (

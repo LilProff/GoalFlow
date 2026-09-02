@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Eye, EyeOff, Shield, Zap, Lock, Server, Loader2 } from 'lucide-react';
 import { useStore } from '../lib/store';
+import Logo from '../components/ui/Logo';
 
 type Mode = 'home' | 'login' | 'signup';
 
@@ -226,10 +227,7 @@ export default function Landing() {
       {/* Nav */}
       <nav className="flex items-center justify-between px-8 py-4" style={{ borderBottom: '1px solid var(--border-dim)' }}>
         <div className="flex items-center gap-3">
-          <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-            <polygon points="12,2 22,20 2,20" fill="var(--acid)" opacity="0.9" />
-            <polygon points="12,8 18,18 6,18" fill="var(--bg-void)" />
-          </svg>
+          <Logo className="w-5 h-5" />
           <span className="mono text-xs font-bold tracking-widest" style={{ color: 'var(--tx-primary)' }}>GOALFLOW</span>
         </div>
         <div className="flex items-center gap-2">
@@ -483,10 +481,7 @@ export default function Landing() {
             <footer className="px-8 py-6" style={{ borderTop: '1px solid var(--border-dim)' }}>
               <div className="max-w-6xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
-                    <polygon points="12,2 22,20 2,20" fill="var(--acid)" opacity="0.7" />
-                    <polygon points="12,8 18,18 6,18" fill="var(--bg-void)" />
-                  </svg>
+                  <Logo className="w-4 h-4 opacity-80" />
                   <span className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-ghost)' }}>GOALFLOW</span>
                 </div>
                 <div className="flex items-center gap-6">
