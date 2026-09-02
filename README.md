@@ -97,12 +97,9 @@ goalflow/
 vercel deploy --prod
 ```
 
-### Backend (Railway)
+### Backend (Render)
 
-```bash
-# Deploy backend folder to Railway
-railway deploy
-```
+Connect the repo at [render.com](https://render.com), or apply `render.yaml` at the repo root as a Blueprint — root directory `backend`, both configured already.
 
 ## License
 

@@ -67,5 +67,5 @@ this file tracks what's actually shipped vs. deliberately deferred, and why.
   no backend support.
 
 ## Not a feature, but blocking "fully live"
-- Deployment — code and configs (`railway.json`, `vercel.json`) are ready;
-  blocked on creating the actual Railway/Vercel accounts.
+- Deployment — code and configs (`render.yaml`, `vercel.json`) are ready;
+  blocked on creating the actual Render/Vercel accounts.
