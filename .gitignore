@@ -33,3 +33,18 @@ __pycache__/
 
 # Claude worktrees (embedded repo - don't track)
 .claude/
+# Python virtual environments
+.venv/
+venv/
+ENV/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Graphify tooling (embedded git repo + generated output, not project source)
+graphify/
+graphify-out/
+
+# Local agent tooling
+.agents/
+.opencode/

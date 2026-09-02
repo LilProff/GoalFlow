@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GoalFlow Onboarding Wizard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-fixed": "#301400",
+                        "on-primary": "#3f008e",
+                        "on-tertiary": "#4f2500",
+                        "surface-container-lowest": "#0e0e11",
+                        "outline-variant": "#4a4455",
+                        "glass-stroke": "rgba(255, 255, 255, 0.12)",
+                        "coral-red": "#EF4444",
+                        "on-secondary-fixed-variant": "#005236",
+                        "tertiary": "#ffb784",
+                        "primary": "#d2bbff",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#1f1f22",
+                        "glass-fill": "rgba(15, 15, 20, 0.7)",
+                        "on-secondary": "#003824",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#ccc3d8",
+                        "vivid-emerald": "#10B981",
+                        "warm-amber": "#F59E0B",
+                        "surface-container-high": "#2a2a2d",
+                        "on-tertiary-fixed-variant": "#713700",
+                        "pillar-show": "#14B8A6",
+                        "surface-tint": "#d2bbff",
+                        "secondary-fixed": "#6ffbbe",
+                        "background": "#131316",
+                        "inverse-primary": "#732ee4",
+                        "pillar-earn": "#FACC15",
+                        "on-surface": "#e5e1e6",
+                        "secondary-container": "#00a572",
+                        "surface": "#131316",
+                        "surface-bright": "#39393c",
+                        "on-primary-fixed-variant": "#5a00c6",
+                        "pillar-build": "#F97316",
+                        "inverse-on-surface": "#303033",
+                        "primary-container": "#7c3aed",
+                        "on-primary-container": "#ede0ff",
+                        "tertiary-fixed-dim": "#ffb784",
+                        "surface-container-highest": "#353438",
+                        "surface-variant": "#353438",
+                        "on-primary-fixed": "#25005a",
+                        "on-background": "#e5e1e6",
+                        "on-tertiary-container": "#ffe0cd",
+                        "primary-fixed-dim": "#d2bbff",
+                        "surface-dim": "#131316",
+                        "primary-fixed": "#eaddff",
+                        "on-error": "#690005",
+                        "pillar-systemize": "#64748B",
+                        "electric-violet": "#8B5CF6",
+                        "inverse-surface": "#e5e1e6",
+                        "outline": "#958da1",
+                        "on-secondary-fixed": "#002113",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-container-low": "#1b1b1e",
+                        "secondary": "#4edea3",
+                        "on-secondary-container": "#00311f",
+                        "error-container": "#93000a",
+                        "tertiary-container": "#a15100"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-sm": "12px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "32px",
+                        "gutter-md": "20px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "numeric-stat": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "eyebrow": ["Inter"],
+                        "display-hero": ["Inter"],
+                        "body-md": ["Inter"],
+                        "code-info": ["Inter"]
+                    },
+                    "fontSize": {
+                        "numeric-stat": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "eyebrow": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "600" }],
+                        "display-hero": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "code-info": ["11px", { "lineHeight": "14px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #0B0B0E;
+            color: #e5e1e6;
+        }
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            border-top: 0.5px solid rgba(255, 255, 255, 0.2);
+        }
+        .ambient-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(40px);
+        }
+        .glass-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            color: #e5e1e6;
+            transition: all 0.2s ease;
+        }
+        .glass-input:focus {
+            outline: none;
+            border-color: #8B5CF6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #8B5CF6);
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.2s;
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Custom Checkbox */
+        .glass-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 0.5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            position: relative;
+        }
+        .glass-checkbox:checked {
+            background: #8B5CF6;
+            border-color: #8B5CF6;
+        }
+        .glass-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex items-center justify-center overflow-x-hidden p-margin-mobile md:p-margin-desktop">
+<!-- Background Ambience -->
+<div class="ambient-glow top-0 left-0"></div>
+<div class="ambient-glow bottom-0 right-0"></div>
+<!-- Main Container -->
+<main class="w-full max-w-2xl z-10">
+<!-- Header -->
+<header class="text-center mb-8">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tighter mb-2">GoalFlow</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">System Initializing.</p>
+</header>
+<!-- Progress Indicator -->
+<div class="mb-10 flex justify-between items-center px-4 relative">
+<div class="absolute top-1/2 left-0 right-0 h-[1px] bg-glass-stroke -z-10"></div>
+<div class="absolute top-1/2 left-0 w-1/6 h-[1px] bg-primary -z-10 transition-all duration-300"></div>
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center border border-primary shadow-[0_0_15px_rgba(139,92,246,0.5)]">
+<span class="font-label-sm text-label-sm text-white">1</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container border border-glass-stroke flex items-center justify-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm">2</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container border border-glass-stroke flex items-center justify-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm">3</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container border border-glass-stroke flex items-center justify-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm">4</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container border border-glass-stroke flex items-center justify-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm">5</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container border border-glass-stroke flex items-center justify-center text-on-surface-variant">
+<span class="font-label-sm text-label-sm">6</span>
+</div>
+</div>
+<!-- Wizard Card (Identity Step) -->
+<div class="glass-panel rounded-xl p-6 md:p-8 relative overflow-hidden">
+<!-- Ryna AI Toggle -->
+<div class="absolute top-6 right-6 flex items-center space-x-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Onboard with Ryna</span>
+<button class="w-10 h-6 bg-surface-container-high rounded-full relative border border-glass-stroke transition-colors hover:border-primary/50 focus:outline-none">
+<div class="absolute left-1 top-1 w-4 h-4 rounded-full bg-on-surface-variant transition-transform"></div>
+</button>
+</div>
+<div class="mb-8 mt-2">
+<span class="font-eyebrow text-eyebrow text-primary uppercase mb-2 block">Step 1 of 6</span>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Initialize Identity</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Define your operational parameters.</p>
+</div>
+<form class="space-y-6">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface block mb-2" for="name">Designation (Name)</label>
+<input class="glass-input w-full rounded-lg px-4 py-3 font-body-md text-body-md placeholder:text-outline" id="name" placeholder="Enter your name" type="text"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface block mb-2" for="role">Primary Protocol (Role/Job)</label>
+<input class="glass-input w-full rounded-lg px-4 py-3 font-body-md text-body-md placeholder:text-outline" id="role" placeholder="e.g., Software Engineer, Founder" type="text"/>
+</div>
+<div class="pt-4 flex justify-end">
+<button class="btn-primary rounded-lg px-6 py-3 font-label-sm text-label-sm flex items-center space-x-2" type="button">
+<span>Continue</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</form>
+</div>
+<!-- Optional: Small decorative element below -->
+<div class="mt-8 text-center flex justify-center items-center space-x-2 opacity-50">
+<span class="w-1.5 h-1.5 rounded-full bg-vivid-emerald animate-pulse"></span>
+<span class="font-code-info text-code-info text-on-surface-variant">System Online</span>
+</div>
+</main>
+</body></html>
