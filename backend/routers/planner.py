@@ -56,6 +56,7 @@ async def create_block(
             "flexible":         data.flexible,
             "user_editable":    data.user_editable,
             "notes":            data.notes,
+            "assigned_by":      data.assigned_by,
         }
         resp = sb.table("time_blocks").insert(payload).execute()
         if not resp.data:
@@ -179,7 +180,9 @@ async def reshuffle_day(
         tasks = [t for t in (tasks_resp.data or []) if t.get("status") != "completed"]
 
         # Load profile
-        profile_resp = safe_single(sb.table("user_profiles").select("has_9_to_5,work_start_time,work_end_time,coach_style").eq("id", user_id))
+        profile_resp = safe_single(sb.table("user_profiles").select(
+            "has_9_to_5,work_start_time,work_end_time,coach_style,wake_time,sleep_time,deep_work_windows"
+        ).eq("id", user_id))
         profile = profile_resp.data or {}
 
         # Separate fixed vs flexible
@@ -187,7 +190,9 @@ async def reshuffle_day(
         flexible_blocks = [b for b in blocks if b.get("flexible", True) and not b.get("completed", False)]
 
         fixed_desc = "\n".join(
-            f"  {b['label']} at minute {b['start_minute']} ({b['duration_minutes']}min) [FIXED]"
+            f"  {b['label']} at minute {b['start_minute']} ({b['duration_minutes']}min) [FIXED"
+            + (f", assigned by {b['assigned_by']}" if b.get("assigned_by") else "")
+            + "]"
             for b in fixed_blocks
         ) or "  None"
 
@@ -204,10 +209,24 @@ async def reshuffle_day(
         reason = req.reason or "User requested a reshuffle"
         now_minute = __import__("datetime").datetime.now().hour * 60 + __import__("datetime").datetime.now().minute
 
+        def _to_minute(hhmm: str | None, default: str) -> int:
+            h, m = (hhmm or default).split(":")[:2]
+            return int(h) * 60 + int(m)
+
+        wake_minute  = _to_minute(profile.get("wake_time"), "06:00")
+        sleep_minute = _to_minute(profile.get("sleep_time"), "23:00")
+        deep_windows = profile.get("deep_work_windows") or []
+        deep_work_desc = "\n".join(
+            f"  {w.get('start')}–{w.get('end')}" for w in deep_windows if w.get("start") and w.get("end")
+        ) or "  None declared"
+
         prompt = f"""Reshuffle this person's remaining day. Start from minute {now_minute} (current time).
 
 Reason: {reason}
 Has 9-5 job: {profile.get('has_9_to_5', False)} ({profile.get('work_start_time', '09:00')}–{profile.get('work_end_time', '17:00')})
+Awake hours: {profile.get('wake_time') or '06:00'}–{profile.get('sleep_time') or '23:00'} (minute {wake_minute}–{sleep_minute})
+Declared deep-work windows (prefer these for deepwork/high-priority blocks):
+{deep_work_desc}
 
 Fixed blocks (do NOT move these):
 {fixed_desc}
@@ -220,6 +239,8 @@ Pending tasks to fit in (if space):
 
 Rules:
 - Never overlap with fixed blocks
+- Never schedule outside the awake-hours window above ({wake_minute}–{sleep_minute}) except blocks already categorised "sleep"
+- Prefer the declared deep-work windows for "deepwork" category or "high" priority blocks when there's room
 - 10-min gaps between blocks
 - Group same-pillar work together when possible
 - No blocks after 23:00 (minute 1380)
@@ -228,12 +249,26 @@ Rules:
 Return ONLY a JSON array:
 [{{"label":"...","category":"work","start_minute":540,"duration_minutes":90,"pillar_id":"BUILD","priority":"high","flexible":false,"user_editable":true,"notes":"..."}}]"""
 
-        raw    = await call_ai_json(prompt, max_tokens=900, temperature=0.3, smart=True)
-        clean  = re.sub(r"```(?:json)?|```", "", raw).strip()
-        parsed = json.loads(clean)
+        # Free-tier models occasionally return truncated/malformed JSON here
+        # (same class of issue as onboarding's AI-import) — one retry clears
+        # the large majority of these without the user having to re-click.
+        parsed = None
+        last_error: Exception | None = None
+        for attempt in range(2):
+            try:
+                raw    = await call_ai_json(prompt, max_tokens=1400, temperature=0.3, smart=True)
+                clean  = re.sub(r"```(?:json)?|```", "", raw).strip()
+                parsed = json.loads(clean)
+                if not isinstance(parsed, list):
+                    raise ValueError("AI did not return a list")
+                break
+            except Exception as e:
+                last_error = e
+                parsed = None
+                continue
 
-        if not isinstance(parsed, list):
-            raise ValueError("AI did not return a list")
+        if parsed is None:
+            raise HTTPException(status_code=502, detail=f"Reshuffle failed: {last_error}")
 
         # Delete existing flexible blocks and insert reshuffled ones
         flex_ids = [b["id"] for b in flexible_blocks if "id" in b]
@@ -277,5 +312,7 @@ Return ONLY a JSON array:
         )
         return final.data or []
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Reshuffle failed: {str(e)}")

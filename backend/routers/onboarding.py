@@ -25,6 +25,8 @@ async def save_step(data: dict, user_id: str = Depends(get_current_user), sb: Cl
             ("name", "name"), ("timezone", "timezone"), ("occupation", "occupation"),
             ("has9to5", "has_9_to_5"), ("workStartTime", "work_start_time"),
             ("workEndTime", "work_end_time"), ("coachStyle", "coach_style"),
+            ("wakeTime", "wake_time"), ("sleepTime", "sleep_time"),
+            ("deepWorkWindows", "deep_work_windows"),
         ]:
             if field in payload:
                 update[col] = payload[field]

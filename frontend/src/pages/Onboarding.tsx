@@ -7,6 +7,7 @@ import { DEFAULT_PILLARS, LIFE_CATEGORIES, COACH_STYLES, TIMEZONES, OCCUPATION_P
 import type { PillarId, CategoryId, CoachStyle, ChatMessage } from '../types';
 import Logo from '../components/ui/Logo';
 import ImportGoals from '../components/ImportGoals';
+import ScheduleEditor from '../components/ScheduleEditor';
 
 // ─── Shared input style ───────────────────────────────────────────────────────
 const inp = "w-full px-3 py-2.5 text-sm outline-none transition-all";
@@ -564,29 +565,11 @@ export default function Onboarding() {
 
             {/* Step 4: Schedule */}
             {step === 4 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><label className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>WAKE TIME</label><input type="time" value={schedule.wakeTime} onChange={e => setSchedule(s => ({ ...s, wakeTime: e.target.value }))} className={inp} style={inpStyle} /></div>
-                  <div className="space-y-1.5"><label className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>SLEEP TIME</label><input type="time" value={schedule.sleepTime} onChange={e => setSchedule(s => ({ ...s, sleepTime: e.target.value }))} className={inp} style={inpStyle} /></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="mono text-[9px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>DEEP WORK WINDOWS</label>
-                    <button onClick={() => setDeepWork(w => [...w, { start: '14:00', end: '16:00' }])} className="mono text-[9px] flex items-center gap-1" style={{ color: 'var(--acid)' }}><Plus className="w-3 h-3" /> ADD</button>
-                  </div>
-                  {deepWork.map((w, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <input type="time" value={w.start} onChange={e => setDeepWork(dw => dw.map((x, j) => j === i ? { ...x, start: e.target.value } : x))} className="flex-1 px-3 py-2 text-sm outline-none" style={inpStyle} />
-                      <span className="mono text-[10px]" style={{ color: 'var(--tx-muted)' }}>→</span>
-                      <input type="time" value={w.end} onChange={e => setDeepWork(dw => dw.map((x, j) => j === i ? { ...x, end: e.target.value } : x))} className="flex-1 px-3 py-2 text-sm outline-none" style={inpStyle} />
-                      {deepWork.length > 1 && <button onClick={() => setDeepWork(dw => dw.filter((_, j) => j !== i))} style={{ color: 'var(--tx-muted)' }}><X className="w-3.5 h-3.5" /></button>}
-                    </div>
-                  ))}
-                </div>
-                <div className="p-3" style={{ background: 'var(--bg-overlay)', border: '1px solid var(--border-dim)', borderLeft: '2px solid var(--acid)' }}>
-                  <p className="mono text-[9px]" style={{ color: 'var(--tx-muted)' }}>Ryna will use your schedule to build a personalised 24-hour day plan — including spiritual time, exercise, transit, meals, and deep work blocks. You can edit any block after onboarding.</p>
-                </div>
-              </div>
+              <ScheduleEditor
+                value={{ ...schedule, deepWorkWindows: deepWork }}
+                onChange={next => { setSchedule({ wakeTime: next.wakeTime, sleepTime: next.sleepTime, deepWorkWindows: next.deepWorkWindows }); setDeepWork(next.deepWorkWindows); }}
+                hint="Ryna will use your schedule to build a personalised 24-hour day plan — including spiritual time, exercise, transit, meals, and deep work blocks. You can edit any block (or this schedule, in Settings) after onboarding."
+              />
             )}
 
             {/* Step 5: Coach */}

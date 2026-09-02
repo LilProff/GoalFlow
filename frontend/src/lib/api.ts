@@ -155,6 +155,10 @@ function mapHistoryEntry(raw: RawHistoryEntry): HistoryEntry {
 
 // ─── Auth ─────────────────────────────────────────────────────────────
 interface AuthResponse {
+  // Mirrors backend's UserProfileResponse (models.py) — signup/login/verify
+  // all return this full shape. Only the fields mapUser actually reads are
+  // declared here; each is optional so a narrower response (or a future
+  // backend change) degrades to mapUser's defaults instead of breaking.
   user: {
     id: string;
     name: string;
@@ -163,6 +167,17 @@ interface AuthResponse {
     onboarding_complete: boolean;
     coach_style: string;
     created_at: string;
+    occupation?: string | null;
+    weekly_hours?: number;
+    avatar_url?: string | null;
+    has_9_to_5?: boolean;
+    work_start_time?: string | null;
+    work_end_time?: string | null;
+    wake_time?: string | null;
+    sleep_time?: string | null;
+    deep_work_windows?: { start: string; end: string }[];
+    total_tasks_completed?: number;
+    weekly_score?: number;
   };
   access_token: string;
   refresh_token: string;
@@ -174,8 +189,9 @@ function mapUser(apiUser: AuthResponse['user']): User {
     name: apiUser.name,
     email: apiUser.email,
     timezone: apiUser.timezone,
-    occupation: '',
-    weeklyHours: 40,
+    occupation: apiUser.occupation ?? '',
+    weeklyHours: apiUser.weekly_hours ?? 40,
+    avatarUrl: apiUser.avatar_url ?? undefined,
     level: 1,
     xp: 0,
     streak: 0,
@@ -185,11 +201,16 @@ function mapUser(apiUser: AuthResponse['user']): User {
     coachStyle: apiUser.coach_style as User['coachStyle'],
     pillars: [],
     categories: [],
-    has9to5: false,
+    has9to5: apiUser.has_9_to_5 ?? false,
+    workStartTime: apiUser.work_start_time ?? undefined,
+    workEndTime: apiUser.work_end_time ?? undefined,
+    wakeTime: apiUser.wake_time ?? undefined,
+    sleepTime: apiUser.sleep_time ?? undefined,
+    deepWorkWindows: apiUser.deep_work_windows ?? undefined,
     createdAt: apiUser.created_at,
     badges: [],
-    totalTasksCompleted: 0,
-    weeklyScore: 0,
+    totalTasksCompleted: apiUser.total_tasks_completed ?? 0,
+    weeklyScore: apiUser.weekly_score ?? 0,
   };
 }
 
@@ -318,6 +339,7 @@ interface RawTimeBlock {
   priority?: string;
   user_editable?: boolean;
   notes?: string;
+  assigned_by?: string;
 }
 
 function mapTimeBlock(b: RawTimeBlock): TimeBlock {
@@ -334,6 +356,7 @@ function mapTimeBlock(b: RawTimeBlock): TimeBlock {
     flexible: b.flexible ?? true,
     priority: (b.priority || 'medium') as TimeBlock['priority'],
     userEditable: b.user_editable ?? true,
+    assignedBy: b.assigned_by || undefined,
   };
 }
 
@@ -351,6 +374,7 @@ function unmapTimeBlock(b: Partial<TimeBlock>, dateKey?: string): Record<string,
     ...(b.priority !== undefined && { priority: b.priority }),
     ...(b.userEditable !== undefined && { user_editable: b.userEditable }),
     ...(b.notes !== undefined && { notes: b.notes }),
+    ...(b.assignedBy !== undefined && { assigned_by: b.assignedBy }),
   };
 }
 
@@ -461,7 +485,7 @@ export const api = {
   },
 
   // Profile
-  async updateProfile(updates: Partial<Pick<User, 'name' | 'timezone' | 'occupation' | 'weeklyHours' | 'coachStyle' | 'has9to5' | 'workStartTime' | 'workEndTime'>>): Promise<void> {
+  async updateProfile(updates: Partial<Pick<User, 'name' | 'timezone' | 'occupation' | 'weeklyHours' | 'coachStyle' | 'has9to5' | 'workStartTime' | 'workEndTime' | 'wakeTime' | 'sleepTime' | 'deepWorkWindows'>>): Promise<void> {
     await fetchApi('/user/profile', {
       method: 'PATCH',
       body: JSON.stringify({
@@ -473,6 +497,9 @@ export const api = {
         ...(updates.has9to5      !== undefined && { has_9_to_5: updates.has9to5 }),
         ...(updates.workStartTime !== undefined && { work_start_time: updates.workStartTime }),
         ...(updates.workEndTime   !== undefined && { work_end_time: updates.workEndTime }),
+        ...(updates.wakeTime         !== undefined && { wake_time: updates.wakeTime }),
+        ...(updates.sleepTime        !== undefined && { sleep_time: updates.sleepTime }),
+        ...(updates.deepWorkWindows  !== undefined && { deep_work_windows: updates.deepWorkWindows }),
       }),
     });
   },

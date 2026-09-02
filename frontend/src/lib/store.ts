@@ -34,6 +34,7 @@ interface AppState {
   timeBlocks: TimeBlock[]; plannerLoading: boolean;
   notificationPrefs: NotificationPreferences;
   sidebarCollapsed: boolean;
+  theme: 'dark' | 'light';
   goalImportDraft: GoalImportDraft | null; goalImportLoading: boolean; goalImportError: string | null;
 
   // Auth
@@ -47,7 +48,7 @@ interface AppState {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   logDay: () => Promise<void>;
-  updateProfile: (updates: Partial<Pick<User, 'name' | 'timezone' | 'occupation' | 'weeklyHours' | 'coachStyle' | 'has9to5' | 'workStartTime' | 'workEndTime'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Pick<User, 'name' | 'timezone' | 'occupation' | 'weeklyHours' | 'coachStyle' | 'has9to5' | 'workStartTime' | 'workEndTime' | 'wakeTime' | 'sleepTime' | 'deepWorkWindows'>>) => Promise<void>;
 
   // Onboarding
   completeOnboarding: () => void;
@@ -101,6 +102,7 @@ interface AppState {
 
   // UI
   setSidebarCollapsed: (v: boolean) => void;
+  setTheme: (t: 'dark' | 'light') => void;
   updateNotificationPrefs: (prefs: Partial<NotificationPreferences>) => Promise<void>;
   deleteAccount: () => Promise<{ identity_deleted: boolean; message: string }>;
 }
@@ -153,6 +155,7 @@ export const useStore = create<AppState>()(persist((set, get) => ({
   timeBlocks: [], plannerLoading: false,
   notificationPrefs: defaultNotifPrefs,
   sidebarCollapsed: false,
+  theme: 'dark',
   goalImportDraft: null, goalImportLoading: false, goalImportError: null,
 
   // ── Auth (self-issued JWT) ────────────────────────────────────────────────
@@ -282,6 +285,9 @@ export const useStore = create<AppState>()(persist((set, get) => ({
       has9to5: ob.identity.has9to5,
       workStartTime: ob.identity.workStartTime,
       workEndTime: ob.identity.workEndTime,
+      wakeTime: ob.schedule.wakeTime,
+      sleepTime: ob.schedule.sleepTime,
+      deepWorkWindows: ob.schedule.deepWorkWindows,
       coachStyle: ob.coachStyle.style,
       pillars: chosenPillars.map(p => ({
         id: p.id, label: p.label, color: p.color, icon: p.icon,
@@ -314,7 +320,17 @@ export const useStore = create<AppState>()(persist((set, get) => ({
     // stranger's goals, a fabricated leaderboard and a pre-written chat
     // history, which then silently diverged from the database on first edit.
     set(s => ({
-      user: { ...s.user!, onboardingComplete: true, pillars },
+      // Merge in everything the wizard just persisted server-side — without
+      // this, the in-memory user kept its stale signup-time defaults (no
+      // occupation/schedule/work hours) for the rest of the session, even
+      // though the DB row was correct, until the next full page reload.
+      user: {
+        ...s.user!, onboardingComplete: true, pillars,
+        occupation: ob.identity.occupation, has9to5: ob.identity.has9to5,
+        workStartTime: ob.identity.workStartTime, workEndTime: ob.identity.workEndTime,
+        wakeTime: ob.schedule.wakeTime, sleepTime: ob.schedule.sleepTime,
+        deepWorkWindows: ob.schedule.deepWorkWindows, coachStyle: ob.coachStyle.style,
+      },
       dailyData,
       goals,
       kpi,
@@ -935,6 +951,7 @@ export const useStore = create<AppState>()(persist((set, get) => ({
 
   // ── UI ────────────────────────────────────────────────────────────────────
   setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
+  setTheme: (t) => { document.documentElement.dataset.theme = t; set({ theme: t }); },
   // Optimistic: flip the toggle immediately, persist in the background, and
   // roll back if the write fails so the UI never claims a saved setting that
   // isn't. Previously this only ever touched local state, so every
@@ -971,5 +988,6 @@ export const useStore = create<AppState>()(persist((set, get) => ({
   partialize: (state) => ({
     onboarding: state.onboarding,
     sidebarCollapsed: state.sidebarCollapsed,
+    theme: state.theme,
   }),
 }));

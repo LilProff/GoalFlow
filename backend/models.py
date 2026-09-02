@@ -38,6 +38,9 @@ class UserProfileBase(BaseModel):
     has_9_to_5: bool = False
     work_start_time: Optional[str] = None
     work_end_time: Optional[str] = None
+    wake_time: Optional[str] = None
+    sleep_time: Optional[str] = None
+    deep_work_windows: list[dict] = Field(default_factory=list)
     total_tasks_completed: int = 0
     weekly_score: Optional[float] = 0.0
 
@@ -337,6 +340,7 @@ class TimeBlockBase(BaseModel):
     flexible: bool = True
     user_editable: bool = True
     notes: Optional[str] = None
+    assigned_by: Optional[str] = None
 
 
 class TimeBlockCreate(TimeBlockBase):
@@ -355,6 +359,7 @@ class TimeBlockUpdate(BaseModel):
     notes: Optional[str] = None
     completed: Optional[bool] = None
     skipped: Optional[bool] = None
+    assigned_by: Optional[str] = None
 
 
 class TimeBlockResponse(TimeBlockBase):

@@ -55,6 +55,9 @@ export interface User {
   has9to5: boolean;
   workStartTime?: string;
   workEndTime?: string;
+  wakeTime?: string;
+  sleepTime?: string;
+  deepWorkWindows?: { start: string; end: string }[];
   createdAt: string;
   badges: Badge[];
   totalTasksCompleted: number;
@@ -225,6 +228,9 @@ export interface TimeBlock {
   flexible: boolean;
   priority: 'fixed' | 'high' | 'medium' | 'low';
   userEditable: boolean;
+  /** Who/what assigned this block — set marks it a commitment. Blank/undefined
+   *  means self-scheduled. Reshuffle always treats it as an anchor. */
+  assignedBy?: string;
 }
 
 // ─── Analytics ────────────────────────────────────────────────────────────────

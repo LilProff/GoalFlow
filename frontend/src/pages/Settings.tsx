@@ -3,17 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Bell, Shield, Palette, LogOut, ChevronRight,
-  Clock, Star, Trophy, Flame, TrendingUp
+  Clock, Star, Trophy, Flame, TrendingUp, Sun, Moon, CalendarClock
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { api } from '../lib/api';
 import { pushPermission, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '../lib/push';
 import { COACH_STYLES, TIMEZONES, LEVEL_THRESHOLDS, getLevelInfo, BADGE_DEFINITIONS } from '../lib/constants';
+import ScheduleEditor from '../components/ScheduleEditor';
+import type { ScheduleStep } from '../types';
 
 const TABS = [
   { id: 'profile',       label: 'PROFILE',       icon: User   },
   { id: 'notifications', label: 'NOTIFICATIONS', icon: Bell   },
   { id: 'appearance',    label: 'APPEARANCE',    icon: Palette },
+  { id: 'schedule',      label: 'SCHEDULE',      icon: CalendarClock },
   { id: 'security',      label: 'SECURITY',      icon: Shield  },
 ];
 
@@ -33,7 +36,7 @@ const inp = "w-full px-3 py-2.5 text-sm outline-none transition-all";
 const inpStyle = { background: 'var(--bg-overlay)', border: '1px solid var(--border-dim)', color: 'var(--tx-primary)' };
 
 export default function Settings() {
-  const { user, logout, notificationPrefs, updateNotificationPrefs, updateProfile, deleteAccount } = useStore();
+  const { user, logout, notificationPrefs, updateNotificationPrefs, updateProfile, deleteAccount, theme, setTheme } = useStore();
   const navigate = useNavigate();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteText, setDeleteText] = useState('');
@@ -119,6 +122,28 @@ export default function Settings() {
   const [coachStyle, setCoachStyle] = useState(user?.coachStyle ?? 'strategist');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  const [schedule, setSchedule] = useState<ScheduleStep>({
+    wakeTime: user?.wakeTime || '06:00',
+    sleepTime: user?.sleepTime || '23:00',
+    deepWorkWindows: user?.deepWorkWindows?.length ? user.deepWorkWindows : [{ start: '09:00', end: '12:00' }],
+  });
+  const [savingSchedule, setSavingSchedule] = useState(false);
+  const [scheduleSaved, setScheduleSaved] = useState(false);
+  const [scheduleError, setScheduleError] = useState('');
+
+  const handleSaveSchedule = async () => {
+    setSavingSchedule(true); setScheduleError('');
+    try {
+      await updateProfile({ wakeTime: schedule.wakeTime, sleepTime: schedule.sleepTime, deepWorkWindows: schedule.deepWorkWindows });
+      setScheduleSaved(true);
+      setTimeout(() => setScheduleSaved(false), 2000);
+    } catch (e) {
+      setScheduleError(e instanceof Error ? e.message : 'Could not save your schedule.');
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
 
   const levelInfo = getLevelInfo(user?.level ?? 1);
   const nextLevel = LEVEL_THRESHOLDS.find(l => l.level === (user?.level ?? 1) + 1);
@@ -444,6 +469,29 @@ export default function Settings() {
                 <div className="p-6 space-y-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid #64748B' }}>
                   <p className="mono text-[9px] tracking-widest font-bold" style={{ color: '#64748B' }}>// APPEARANCE</p>
                   <div>
+                    <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>THEME</p>
+                    <div className="flex gap-2">
+                      {([
+                        { id: 'dark' as const,  label: 'Dark',  icon: Moon },
+                        { id: 'light' as const, label: 'Light', icon: Sun  },
+                      ]).map(({ id, label, icon: Icon }) => (
+                        <button key={id} onClick={() => setTheme(id)}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 transition-all"
+                          style={{
+                            background: theme === id ? 'rgba(139,92,246,0.1)' : 'var(--bg-overlay)',
+                            border: `1px solid ${theme === id ? 'var(--acid)' : 'var(--border-dim)'}`,
+                            color: theme === id ? 'var(--acid)' : 'var(--tx-muted)',
+                          }}>
+                          <Icon className="w-4 h-4" />
+                          <span className="mono text-[10px] tracking-widest font-bold">{label.toUpperCase()}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mono text-[8px] mt-2" style={{ color: 'var(--tx-ghost)' }}>
+                      APPLIES INSTANTLY · REMEMBERED ON THIS DEVICE
+                    </p>
+                  </div>
+                  <div>
                     <p className="mono text-[9px] tracking-widest mb-3" style={{ color: 'var(--tx-muted)' }}>ACCENT COLOURS</p>
                     <div className="flex gap-2">
                       {['#8B5CF6','#F97316','#14B8A6','#FACC15','#a78bfa','#f472b6'].map(c => (
@@ -456,6 +504,25 @@ export default function Settings() {
                     <p className="mono text-[9px] tracking-widest mb-1" style={{ color: 'var(--tx-muted)' }}>APP VERSION</p>
                     <p className="mono text-xs" style={{ color: 'var(--tx-ghost)' }}>GOALFLOW V0.1.0 · BETA · BUILT WITH INTENT</p>
                   </div>
+                </div>
+              )}
+
+              {/* ── SCHEDULE ── */}
+              {tab === 'schedule' && (
+                <div className="p-6 space-y-5" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-dim)', borderTop: '2px solid var(--acid)' }}>
+                  <div>
+                    <p className="mono text-[9px] tracking-widest font-bold" style={{ color: 'var(--acid)' }}>// SCHEDULE & AVAILABILITY</p>
+                    <p className="mono text-[9px] mt-1" style={{ color: 'var(--tx-muted)' }}>
+                      Ryna respects this when reshuffling your day, suggesting task times, and answering scheduling questions.
+                    </p>
+                  </div>
+                  <ScheduleEditor value={schedule} onChange={setSchedule} />
+                  {scheduleError && <p className="text-xs" style={{ color: '#EF4444' }}>{scheduleError}</p>}
+                  <button onClick={handleSaveSchedule} disabled={savingSchedule}
+                    className="px-5 py-2.5 mono text-[10px] tracking-widest font-bold transition-all disabled:opacity-60"
+                    style={{ background: scheduleSaved ? 'rgba(16,185,129,0.12)' : 'var(--acid)', color: scheduleSaved ? 'var(--success)' : '#fff', border: scheduleSaved ? '1px solid rgba(16,185,129,0.4)' : 'none' }}>
+                    {scheduleSaved ? '✓ SAVED' : savingSchedule ? 'SAVING…' : 'SAVE SCHEDULE'}
+                  </button>
                 </div>
               )}
 

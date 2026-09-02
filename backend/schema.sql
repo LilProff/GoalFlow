@@ -27,6 +27,9 @@ create table if not exists public.user_profiles (
   work_end_time time,
   total_tasks_completed integer default 0,
   weekly_score decimal(3,1) default 0,
+  wake_time time,
+  sleep_time time,
+  deep_work_windows jsonb not null default '[]',
   created_at timestamp with time zone default now()
 );
 
@@ -205,6 +208,7 @@ create table if not exists public.time_blocks (
   priority text default 'medium',
   user_editable boolean default true,
   notes text,
+  assigned_by text,
   created_at timestamp with time zone default now()
 );
 

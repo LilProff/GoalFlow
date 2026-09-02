@@ -1,8 +1,13 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Check, Copy, FileText, Loader2, Trash2, ArrowLeft, Upload, Zap } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { TIMELINE_TYPES, IMPORT_HANDOFF_PROMPT } from '../lib/constants';
 import type { ImportDraftGoal } from '../types';
+
+// Mirrors backend's MAX_IMPORT_BYTES (doc_parser.py) — reject an oversized
+// file at selection instead of letting the user wait on a full upload just
+// to have it bounce.
+const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
 
 /**
  * AI-import goal training: the user takes IMPORT_HANDOFF_PROMPT to their own
@@ -22,10 +27,32 @@ export default function ImportGoals({ onDone }: { onDone: (goalsCreated: number)
     submitGoalImport, updateGoalImportDraft, confirmGoalImport, clearGoalImportDraft,
   } = useStore();
   const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState('');
   const [copied, setCopied] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmError, setConfirmError] = useState('');
+  const [slowHint, setSlowHint] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Render's free-tier backend can take up to ~60s to wake from a cold
+  // start — without this, the extraction spinner reads as hung well before
+  // it actually is. Only surface the reassurance once it's been a genuine
+  // wait, not on every normal (fast) extraction.
+  useEffect(() => {
+    if (!goalImportLoading) { setSlowHint(false); return; }
+    const t = setTimeout(() => setSlowHint(true), 8000);
+    return () => clearTimeout(t);
+  }, [goalImportLoading]);
+
+  const handleFileSelect = (f: File | null) => {
+    setFileError('');
+    if (f && f.size > MAX_IMPORT_BYTES) {
+      setFile(null);
+      setFileError(`That file is ${(f.size / (1024 * 1024)).toFixed(1)}MB — 2MB max. Try trimming it down.`);
+      return;
+    }
+    setFile(f);
+  };
 
   const handleCopy = async () => {
     try {
@@ -164,7 +191,7 @@ export default function ImportGoals({ onDone }: { onDone: (goalsCreated: number)
       <div>
         <p className="mono text-[9px] tracking-widest mb-2" style={{ color: 'var(--acid)' }}>STEP 2 — UPLOAD WHAT IT WROTE BACK</p>
         <input ref={fileInputRef} type="file" accept=".md,.txt,.docx" className="hidden"
-          onChange={e => setFile(e.target.files?.[0] || null)} />
+          onChange={e => handleFileSelect(e.target.files?.[0] || null)} />
         <button onClick={() => fileInputRef.current?.click()}
           className="w-full flex flex-col items-center gap-2 py-8 transition-all"
           style={{ border: '1px dashed var(--border-mid)', background: 'var(--bg-overlay)' }}>
@@ -173,6 +200,7 @@ export default function ImportGoals({ onDone }: { onDone: (goalsCreated: number)
             {file ? file.name : 'Click to choose a .md, .txt, or .docx file'}
           </span>
         </button>
+        {fileError && <p className="text-xs mt-2" style={{ color: '#EF4444' }}>{fileError}</p>}
         {goalImportError && <p className="text-xs mt-2" style={{ color: '#EF4444' }}>{goalImportError}</p>}
       </div>
 
@@ -181,6 +209,11 @@ export default function ImportGoals({ onDone }: { onDone: (goalsCreated: number)
         style={{ background: 'var(--acid)', color: 'var(--bg-void)' }}>
         {goalImportLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Reading your goals...</> : <><Upload className="w-4 h-4" /> Extract my goals</>}
       </button>
+      {slowHint && (
+        <p className="text-xs text-center -mt-2" style={{ color: 'var(--tx-muted)' }}>
+          Still working — the server naps when idle, so its first request after a while can take up to a minute.
+        </p>
+      )}
     </div>
   );
 }

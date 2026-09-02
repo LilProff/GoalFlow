@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import {
   Bell, RefreshCw, Zap, Moon, Dumbbell, BookOpen,
   Car, Coffee, Briefcase, Clock, AlertTriangle, CheckCircle2,
-  Play, SkipForward, Plus, X, Edit3, Save, Trash2, Timer, Link2
+  Play, SkipForward, Plus, X, Edit3, Save, Trash2, Timer, Link2, BarChart3
 } from 'lucide-react';
 import { useStore, minsToTime, timeToMins } from '../lib/store';
 import type { TimeBlock, BlockCategory } from '../types';
@@ -48,6 +48,7 @@ function BlockEditor({
   const [category, setCategory] = useState<BlockCategory>(block.category);
   const [flexible, setFlexible] = useState(block.flexible);
   const [notes, setNotes] = useState(block.notes ?? '');
+  const [assignedBy, setAssignedBy] = useState(block.assignedBy ?? '');
 
   const endTime = minsToTime(timeToMins(startTime) + duration);
   const isTaskBlock = block.id.startsWith('task-');
@@ -60,6 +61,7 @@ function BlockEditor({
       category,
       flexible,
       notes,
+      assignedBy: flexible ? undefined : (assignedBy.trim() || undefined),
     });
     onClose();
   };
@@ -158,6 +160,16 @@ function BlockEditor({
         </button>
       </div>
 
+      {/* Commitment: who assigned this fixed block (blank = self-scheduled) */}
+      {!flexible && (
+        <div className="space-y-1">
+          <label className="mono text-[8px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>ASSIGNED BY (OPTIONAL)</label>
+          <input value={assignedBy} onChange={e => setAssignedBy(e.target.value)} placeholder="e.g. Manager, Client, Self"
+            className="w-full px-2.5 py-2 text-sm outline-none"
+            style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', color: 'var(--tx-primary)' }} />
+        </div>
+      )}
+
       {/* Notes */}
       <div className="space-y-1">
         <label className="mono text-[8px] tracking-widest" style={{ color: 'var(--tx-muted)' }}>NOTES</label>
@@ -241,6 +253,8 @@ function AddBlockForm({ onAdd, onClose }: { onAdd: (b: Omit<TimeBlock, 'id'>) =>
   const [startTime, setStartTime] = useState('14:00');
   const [duration, setDuration] = useState(30);
   const [category, setCategory] = useState<BlockCategory>('buffer');
+  const [isCommitment, setIsCommitment] = useState(false);
+  const [assignedBy, setAssignedBy] = useState('');
 
   const handleAdd = () => {
     if (!label.trim()) return;
@@ -249,7 +263,8 @@ function AddBlockForm({ onAdd, onClose }: { onAdd: (b: Omit<TimeBlock, 'id'>) =>
       startMinute: timeToMins(startTime),
       durationMinutes: duration,
       completed: false, skipped: false,
-      flexible: true, priority: 'medium', userEditable: true,
+      flexible: !isCommitment, priority: isCommitment ? 'fixed' : 'medium', userEditable: true,
+      assignedBy: isCommitment ? (assignedBy.trim() || undefined) : undefined,
     });
     onClose();
   };
@@ -292,6 +307,22 @@ function AddBlockForm({ onAdd, onClose }: { onAdd: (b: Omit<TimeBlock, 'id'>) =>
           </button>
         ))}
       </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-medium" style={{ color: 'var(--tx-secondary)' }}>This is a commitment</p>
+          <p className="mono text-[8px]" style={{ color: 'var(--tx-ghost)' }}>Fixed in place — Ryna never reshuffles it</p>
+        </div>
+        <button onClick={() => setIsCommitment(!isCommitment)}
+          className="transition-colors"
+          style={{ width: 36, height: 20, background: isCommitment ? 'var(--acid)' : 'var(--border-mid)', borderRadius: 10, position: 'relative' }}>
+          <span style={{ position: 'absolute', top: 2, left: 2, width: 16, height: 16, background: isCommitment ? 'var(--bg-void)' : 'var(--tx-muted)', borderRadius: '50%', transition: 'transform 0.2s', transform: isCommitment ? 'translateX(16px)' : 'none' }} />
+        </button>
+      </div>
+      {isCommitment && (
+        <input value={assignedBy} onChange={e => setAssignedBy(e.target.value)} placeholder="Assigned by (optional) — e.g. Manager, Client"
+          className="w-full px-2.5 py-2 text-sm outline-none"
+          style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)', color: 'var(--tx-primary)' }} />
+      )}
       <button onClick={handleAdd} className="w-full py-2.5 mono text-[10px] tracking-widest font-bold" style={{ background: 'var(--acid)', color: 'var(--bg-void)' }}>
         ADD TO PLANNER
       </button>
@@ -312,6 +343,10 @@ export default function Planner() {
   const [showAddBlock, setShowAddBlock] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const [viewMode, setViewMode] = useState<'timeline' | 'list'>('timeline');
+  // Right panel (Day Score / Life Metrics / Ryna Says) is always visible
+  // side-by-side on desktop; on mobile it'd crush the timeline to nothing,
+  // so it's collapsed behind this toggle there instead.
+  const [showStatsMobile, setShowStatsMobile] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -360,13 +395,13 @@ export default function Planner() {
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--bg-base)' }}>
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-6 py-3.5 shrink-0"
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2.5 px-4 md:px-6 py-3 md:py-3.5 shrink-0"
         style={{ borderBottom: '1px solid var(--border-dim)', background: 'var(--bg-void)' }}>
         <div>
           <p className="mono text-[9px] tracking-widest mb-0.5" style={{ color: 'var(--tx-muted)' }}>
             {format(new Date(), 'EEEE, MMM d').toUpperCase()} · 24-HOUR EXECUTION PLAN
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl font-black">Day Planner</h1>
             {currentBlock && (
               <div className="flex items-center gap-2 px-2.5 py-1"
@@ -380,17 +415,18 @@ export default function Planner() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Icon-only under md (labels reappear at md:+) so 5 actions fit one row on mobile */}
+        <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto no-scrollbar">
           {/* Sync from goals */}
           <button onClick={spreadGoalTasks}
-            className="flex items-center gap-1.5 px-3 py-2 mono text-[9px] tracking-widest transition-all"
+            className="shrink-0 flex items-center gap-1.5 px-2.5 md:px-3 py-2 mono text-[9px] tracking-widest transition-all"
             style={{ border: '1px solid rgba(96,165,250,0.3)', color: '#60a5fa', background: 'rgba(96,165,250,0.06)' }}>
-            <Link2 className="w-3 h-3" /> SYNC GOALS
+            <Link2 className="w-3.5 h-3.5 md:w-3 md:h-3" /> <span className="hidden md:inline">SYNC GOALS</span>
           </button>
 
           {/* Notifications */}
           <button onClick={() => setShowNotifs(!showNotifs)}
-            className="relative flex items-center gap-1.5 px-3 py-2 mono text-[9px] tracking-widest transition-all"
+            className="shrink-0 relative flex items-center gap-1.5 px-2.5 md:px-3 py-2 mono text-[9px] tracking-widest transition-all"
             style={{ border: '1px solid var(--border-mid)', color: undismissed.length ? '#FACC15' : 'var(--tx-muted)', background: undismissed.length ? 'rgba(250,204,21,0.06)' : 'transparent' }}>
             <Bell className="w-3.5 h-3.5" />
             {undismissed.length > 0 && (
@@ -401,24 +437,24 @@ export default function Planner() {
 
           {/* Add block */}
           <button onClick={() => setShowAddBlock(true)}
-            className="flex items-center gap-1.5 px-3 py-2 mono text-[9px] tracking-widest font-bold"
+            className="shrink-0 flex items-center gap-1.5 px-2.5 md:px-3 py-2 mono text-[9px] tracking-widest font-bold"
             style={{ border: '1px solid var(--border-mid)', color: 'var(--tx-secondary)', background: 'var(--bg-raised)' }}>
-            <Plus className="w-3.5 h-3.5" /> ADD BLOCK
+            <Plus className="w-3.5 h-3.5" /> <span className="hidden md:inline">ADD BLOCK</span>
           </button>
 
           {/* AI Reshuffle */}
           <button onClick={handleReshuffle} disabled={plannerLoading}
-            className="flex items-center gap-2 px-3 py-2 mono text-[9px] tracking-widest font-bold transition-all disabled:opacity-50"
+            className="shrink-0 flex items-center gap-2 px-2.5 md:px-3 py-2 mono text-[9px] tracking-widest font-bold transition-all disabled:opacity-50"
             style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.25)', color: 'var(--acid)' }}>
             <RefreshCw className={`w-3.5 h-3.5 ${plannerLoading ? 'animate-spin' : ''}`} />
-            {plannerLoading ? 'RESHUFFLING...' : 'AI RESHUFFLE'}
+            <span className="hidden md:inline">{plannerLoading ? 'RESHUFFLING...' : 'AI RESHUFFLE'}</span>
           </button>
 
           {/* Ask Ryna */}
           <button onClick={() => setChatOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 mono text-[9px] tracking-widest font-bold"
+            className="shrink-0 flex items-center gap-2 px-2.5 md:px-3 py-2 mono text-[9px] tracking-widest font-bold"
             style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', color: 'var(--acid)' }}>
-            <Zap className="w-3.5 h-3.5" /> ASK RYNA
+            <Zap className="w-3.5 h-3.5" /> <span className="hidden md:inline">ASK RYNA</span>
           </button>
         </div>
       </div>
@@ -456,13 +492,13 @@ export default function Planner() {
       </AnimatePresence>
 
       {/* ── Body ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
 
         {/* ── Timeline / List ── */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {/* View toggle + next block */}
-          <div className="flex items-center gap-2 px-5 py-2.5 shrink-0" style={{ borderBottom: '1px solid var(--border-dim)' }}>
-            <div className="flex gap-px" style={{ border: '1px solid var(--border-dim)' }}>
+          <div className="flex items-center gap-2 px-4 md:px-5 py-2.5 shrink-0 overflow-x-auto no-scrollbar" style={{ borderBottom: '1px solid var(--border-dim)' }}>
+            <div className="flex gap-px shrink-0" style={{ border: '1px solid var(--border-dim)' }}>
               {(['timeline', 'list'] as const).map(v => (
                 <button key={v} onClick={() => setViewMode(v)}
                   className="mono text-[9px] px-3 py-1.5 tracking-widest capitalize transition-all"
@@ -472,8 +508,16 @@ export default function Planner() {
               ))}
             </div>
 
+            {/* Stats panel is docked beside the timeline on desktop — on
+                mobile it's collapsed, this reveals it below instead. */}
+            <button onClick={() => setShowStatsMobile(!showStatsMobile)}
+              className="md:hidden shrink-0 flex items-center gap-1.5 px-3 py-1.5 mono text-[9px] tracking-widest transition-all"
+              style={{ border: `1px solid ${showStatsMobile ? 'var(--acid)' : 'var(--border-dim)'}`, background: showStatsMobile ? 'rgba(139,92,246,0.1)' : 'var(--bg-raised)', color: showStatsMobile ? 'var(--acid)' : 'var(--tx-muted)' }}>
+              <BarChart3 className="w-3 h-3" /> STATS
+            </button>
+
             {nextBlock && (
-              <div className="flex items-center gap-2 px-3 py-1.5 ml-2"
+              <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 ml-2"
                 style={{ border: '1px solid var(--border-dim)', background: 'var(--bg-raised)' }}>
                 <span className="mono text-[8px]" style={{ color: 'var(--tx-muted)' }}>NEXT:</span>
                 <span className="mono text-[9px] font-bold" style={{ color: CAT[nextBlock.category]?.color }}>
@@ -483,7 +527,7 @@ export default function Planner() {
               </div>
             )}
 
-            <span className="ml-auto mono text-[8px]" style={{ color: 'var(--tx-ghost)' }}>
+            <span className="hidden lg:inline ml-auto shrink-0 mono text-[8px]" style={{ color: 'var(--tx-ghost)' }}>
               CLICK ANY BLOCK TO EDIT · AI LEARNS FROM YOUR EDITS
             </span>
           </div>
@@ -542,7 +586,7 @@ export default function Planner() {
                   if (!block) return null;
                   const topPx = block.startMinute / MINS_PER_PX;
                   return (
-                    <div className="absolute right-0 z-30 w-72"
+                    <div className="absolute left-1 right-1 sm:left-auto sm:right-0 z-30 sm:w-72"
                       style={{ top: Math.min(topPx, TOTAL_H - 480), marginLeft: 4 }}>
                       <BlockEditor
                         block={block}
@@ -594,6 +638,7 @@ export default function Planner() {
                             {b.durationMinutes >= 60 ? `${Math.floor(b.durationMinutes/60)}h${b.durationMinutes%60>0?b.durationMinutes%60+'m':''}` : `${b.durationMinutes}m`}
                           </span>
                           {b.flexible && <span className="mono text-[8px] px-1" style={{ color: 'var(--acid)', border: '1px solid rgba(139,92,246,0.2)' }}>FLEX</span>}
+                          {!b.flexible && b.assignedBy && <span className="mono text-[8px] px-1" style={{ color: '#FACC15', border: '1px solid rgba(250,204,21,0.25)' }}>@ {b.assignedBy}</span>}
                           {isTask && <span className="mono text-[8px] px-1 flex items-center gap-0.5" style={{ color: meta.color, border: `1px solid ${meta.border}` }}><Link2 className="w-2 h-2" />TASK</span>}
                           {b.pillarId && <span className="mono text-[8px] px-1" style={{ color: meta.color, border: `1px solid ${meta.border}` }}>{b.pillarId}</span>}
                           {isNow && <span className="mono text-[8px] pulse-dot" style={{ color: meta.color }}>● NOW</span>}
@@ -634,9 +679,10 @@ export default function Planner() {
           )}
         </div>
 
-        {/* ── Right Panel ── */}
-        <div className="w-72 shrink-0 overflow-y-auto no-scrollbar flex flex-col"
-          style={{ borderLeft: '1px solid var(--border-dim)', background: 'var(--bg-void)' }}>
+        {/* ── Right Panel ── collapsed behind the STATS toggle on mobile (see
+            showStatsMobile above); always visible side-by-side at md:+ */}
+        <div className={`${showStatsMobile ? 'flex' : 'hidden'} md:flex w-full md:w-72 shrink-0 max-h-[50vh] md:max-h-none overflow-y-auto no-scrollbar flex-col border-t md:border-t-0 md:border-l border-[color:var(--border-dim)]`}
+          style={{ background: 'var(--bg-void)' }}>
 
           {/* Accountability score */}
           <div className="p-5" style={{ borderBottom: '1px solid var(--border-dim)' }}>

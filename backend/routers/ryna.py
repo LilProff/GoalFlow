@@ -68,7 +68,7 @@ async def chat(
 
     # ── Gather context from Supabase ──
     stats_resp   = safe_single(sb.table("user_stats").select("*").eq("user_id", user_id))
-    profile_resp = safe_single(sb.table("user_profiles").select("name,coach_style").eq("id", user_id))
+    profile_resp = safe_single(sb.table("user_profiles").select("name,coach_style,wake_time,sleep_time,deep_work_windows").eq("id", user_id))
     tasks_resp   = sb.table("tasks").select("pillar_id,title,status").eq("user_id", user_id).eq("date_key", today).execute()
     goals_resp   = sb.table("goals").select("pillar_id,title,progress").eq("user_id", user_id).eq("status", "active").execute()
 
@@ -81,6 +81,17 @@ async def chat(
     completed_cnt  = len([t for t in tasks if t.get("status") == "completed"])
     goals_summary  = "\n".join(f"  • {g['pillar_id']}: {g['title']} ({g.get('progress', 0)}%)" for g in goals) or "  No active goals yet."
 
+    # Availability — only surfaced when the user has actually set it (Settings
+    # → Schedule / onboarding), so Ryna doesn't act on an assumed default.
+    availability_line = ""
+    if profile.get("wake_time") or profile.get("sleep_time"):
+        windows = profile.get("deep_work_windows") or []
+        windows_desc = ", ".join(f"{w.get('start')}–{w.get('end')}" for w in windows if w.get("start") and w.get("end"))
+        availability_line = (
+            f"Awake hours: {profile.get('wake_time') or '?'}–{profile.get('sleep_time') or '?'}"
+            + (f" | Deep-work windows: {windows_desc}" if windows_desc else "")
+        )
+
     # ── Load conversation history for continuity ──
     history = await _load_conversation(sb, user_id)
 
@@ -88,6 +99,7 @@ async def chat(
     context_block = f"""
 User stats: Level {stats.get('level', 1)} | {stats.get('xp', 0)} XP | 🔥 {stats.get('streak_current', 0)} day streak
 Today: {completed_cnt}/{len(tasks)} tasks completed
+{availability_line}
 Active goals:
 {goals_summary}
 """.strip()

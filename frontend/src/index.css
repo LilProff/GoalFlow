@@ -54,6 +54,45 @@
     radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%);
 }
 
+/* ── Light theme ──────────────────────────────────────────────────────────
+   Toggled via [data-theme="light"] on <html> (see lib/theme.ts + Settings'
+   Appearance section). Only the structural surface/text/border tokens are
+   redefined — every component already renders through these by name, so
+   this one block reskins the whole app. Accent/pillar/semantic colors
+   (--acid, --ember/--aqua/--gold/--slate, --success/--warning/--danger)
+   deliberately stay the same in both themes: they're brand/semantic
+   identity, not surface color, and already read fine on light or dark.
+   Values are soft off-white/near-black on purpose ("avoid contrast") —
+   no pure #fff/#000, mirroring how the dark theme avoids pure black. */
+:root[data-theme='light'] {
+  --bg-void:    #f3f3f6;
+  --bg-base:    #f6f6f9;
+  --bg-raised:  #ffffff;
+  --bg-overlay: #ffffff;
+  --bg-float:   #ffffff;
+
+  --glass-fill:       rgba(255, 255, 255, 0.72);
+  --glass-fill-float: rgba(255, 255, 255, 0.85);
+  --glass-stroke:     rgba(0, 0, 0, 0.08);
+  --glass-stroke-top: rgba(255, 255, 255, 0.9);
+
+  --border-dim:    rgba(0, 0, 0, 0.06);
+  --border-mid:    rgba(0, 0, 0, 0.1);
+  --border-bright: rgba(0, 0, 0, 0.16);
+
+  --tx-primary:   #1c1c1f;
+  --tx-secondary: #46464c;
+  --tx-muted:     #7a7a82;
+  --tx-ghost:     #b0b0b8;
+
+  --gradient-ambient:
+    radial-gradient(circle at top right, rgba(139, 92, 246, 0.08), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.06), transparent 40%);
+}
+/* Shadows read as "dirt" at dark-theme strength on a light base — soften. */
+:root[data-theme='light'] .glass-panel { box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08); }
+:root[data-theme='light'] .glass-panel-float { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); }
+
 * { box-sizing: border-box; }
 
 html {

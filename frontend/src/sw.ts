@@ -26,7 +26,15 @@ registerRoute(
   ({ url }) => url.pathname.startsWith('/api/'),
   new NetworkFirst({
     cacheName: 'goalflow-api',
-    networkTimeoutSeconds: 8,
+    // Render's free tier sleeps the backend after ~15min idle — the first
+    // request after that takes 30-60s to wake it (observed directly this
+    // session). 8s was tuned for an always-warm backend and would fall
+    // back to an empty cache (first visit = nothing cached yet) well
+    // before a cold Render instance ever responds, silently failing a
+    // request the network was actually about to succeed on a few seconds
+    // later. 45s covers the realistic cold-start window without leaving a
+    // genuinely dead connection hanging forever.
+    networkTimeoutSeconds: 45,
     plugins: [
       new CacheableResponsePlugin({ statuses: [200] }),
       new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 }),
