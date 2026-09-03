@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, CheckSquare, Target, Clock, Menu,
-  BarChart3, Trophy, Settings, MessageCircle, LogOut, X,
+  BarChart3, Trophy, Settings, MessageCircle, LogOut, X, Repeat,
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
 
@@ -18,6 +18,7 @@ const TAB_ITEMS = [
 ];
 
 const MORE_ITEMS = [
+  { to: '/projects',    icon: Repeat,    label: 'Projects' },
   { to: '/analytics',   icon: BarChart3, label: 'Analytics' },
   { to: '/leaderboard', icon: Trophy,    label: 'Leaderboard' },
   { to: '/settings',    icon: Settings,  label: 'Settings' },
@@ -99,7 +100,7 @@ export default function MobileNav() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="grid grid-cols-2 gap-2 mb-2">
                 {MORE_ITEMS.map(({ to, icon: Icon, label }) => (
                   <NavLink key={to} to={to} onClick={() => setMoreOpen(false)}
                     className="flex flex-col items-center gap-1.5 py-3 rounded-xl"

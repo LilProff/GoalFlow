@@ -341,6 +341,7 @@ class TimeBlockBase(BaseModel):
     user_editable: bool = True
     notes: Optional[str] = None
     assigned_by: Optional[str] = None
+    project_id: Optional[str] = None
 
 
 class TimeBlockCreate(TimeBlockBase):
@@ -360,6 +361,7 @@ class TimeBlockUpdate(BaseModel):
     completed: Optional[bool] = None
     skipped: Optional[bool] = None
     assigned_by: Optional[str] = None
+    project_id: Optional[str] = None
 
 
 class TimeBlockResponse(TimeBlockBase):
@@ -564,6 +566,189 @@ class UserStatsUpdate(BaseModel):
     streak_current: Optional[int] = None
     streak_longest: Optional[int] = None
     weekly_score: Optional[float] = None
+
+
+# ── Projects (ongoing, cadenced work — distinct from Goals' target-dated
+#    outcomes) and the weekly Routine container they get scheduled into ──
+CadenceType = Literal["daily", "weekly", "fixed_day", "flexible"]
+ProjectKind = Literal["work", "startup", "personal_build", "learning", "content", "outreach", "health", "relationships", "other"]
+ProjectStatus = Literal["active", "paused", "dormant", "done"]
+SlotType = Literal["sleep", "routine", "transit", "deep_work", "open", "evening_build", "night_study", "buffer"]
+
+
+class ProjectBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    pillar_id: Optional[str] = None
+    goal_id: Optional[str] = None
+    kind: ProjectKind = "work"
+    status: ProjectStatus = "active"
+    cadence_type: CadenceType = "weekly"
+    sessions_per_week: int = 1
+    cadence_days: list[int] = Field(default_factory=list)  # 0=Mon..6=Sun
+    slot_types: list[str] = Field(default_factory=list)
+    session_minutes: int = 60
+    is_main_quest: bool = False
+    priority: int = 2
+
+
+class ProjectCreate(ProjectBase):
+    pass
+
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    pillar_id: Optional[str] = None
+    goal_id: Optional[str] = None
+    kind: Optional[ProjectKind] = None
+    status: Optional[ProjectStatus] = None
+    cadence_type: Optional[CadenceType] = None
+    sessions_per_week: Optional[int] = None
+    cadence_days: Optional[list[int]] = None
+    slot_types: Optional[list[str]] = None
+    session_minutes: Optional[int] = None
+    is_main_quest: Optional[bool] = None
+    priority: Optional[int] = None
+
+
+class ProjectResponse(ProjectBase):
+    id: str
+    user_id: str
+    last_worked_on: Optional[date] = None
+    created_at: datetime
+    # Computed at read time (see services/planning.py) — sessions already
+    # logged this week vs. the cadence target, so the UI/planner can see
+    # who's behind without recomputing it themselves.
+    sessions_this_week: int = 0
+    sessions_target: int = 0
+
+
+class RoutineBlockBase(BaseModel):
+    label: str
+    start_minute: int
+    end_minute: int
+    days_of_week: list[int] = Field(default_factory=lambda: [0, 1, 2, 3, 4, 5, 6])
+    slot_type: SlotType = "open"
+    is_schedulable: bool = False
+    category: str = "admin"
+    notes: Optional[str] = None
+
+
+class RoutineBlockCreate(RoutineBlockBase):
+    pass
+
+
+class RoutineBlockUpdate(BaseModel):
+    label: Optional[str] = None
+    start_minute: Optional[int] = None
+    end_minute: Optional[int] = None
+    days_of_week: Optional[list[int]] = None
+    slot_type: Optional[SlotType] = None
+    is_schedulable: Optional[bool] = None
+    category: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class RoutineBlockResponse(RoutineBlockBase):
+    id: str
+    user_id: str
+    created_at: datetime
+
+
+class ProjectUpdateLogBase(BaseModel):
+    project_id: str
+    date_key: Optional[date] = None
+    note: Optional[str] = None
+    minutes_spent: int = 0
+    counts_as_session: bool = True
+    blocker: Optional[str] = None
+
+
+class ProjectUpdateLogCreate(ProjectUpdateLogBase):
+    pass
+
+
+class ProjectUpdateLogResponse(ProjectUpdateLogBase):
+    id: str
+    user_id: str
+    date_key: date
+    created_at: datetime
+
+
+# ── Planning engine (next-hour recommendation + week plan) ───────────
+class NextActionResponse(BaseModel):
+    """What to do right now, given the routine container, project cadence
+    debt, and what's already on today's plan. May recommend nothing (e.g.
+    a non-schedulable routine slot like sleep) rather than force a choice."""
+    slot_label: str
+    slot_type: str
+    minutes_left_in_slot: int
+    recommendation: Optional[str] = None  # human explanation from the AI
+    project_id: Optional[str] = None
+    project_name: Optional[str] = None
+    task_title: Optional[str] = None
+    reason: Optional[str] = None
+
+
+class WeekPlanRequest(BaseModel):
+    week_start: Optional[date] = None  # defaults to the coming/current Monday
+
+
+class WeekPlanDay(BaseModel):
+    date_key: date
+    day_of_week: int
+    blocks: list[TimeBlockResponse] = Field(default_factory=list)
+
+
+class WeekPlanResponse(BaseModel):
+    week_start: date
+    days: list[WeekPlanDay]
+    protected_main_quest: Optional[str] = None
+    at_risk_projects: list[str] = Field(default_factory=list)  # names falling behind cadence
+
+
+class LifeStructureImportRequest(BaseModel):
+    pass  # file comes via multipart, same pattern as onboarding's /import
+
+
+class LifeStructureDraftProject(BaseModel):
+    draft_id: str
+    name: str
+    description: Optional[str] = None
+    kind: ProjectKind = "work"
+    pillar_id: Optional[str] = None
+    cadence_type: CadenceType = "weekly"
+    sessions_per_week: int = 1
+    cadence_days: list[int] = Field(default_factory=list)
+    slot_types: list[str] = Field(default_factory=list)
+    session_minutes: int = 60
+    is_main_quest: bool = False
+    priority: int = 2
+    needs_clarification: Optional[str] = None  # e.g. "status unconfirmed — dormant or active?"
+
+
+class LifeStructureDraftRoutineBlock(BaseModel):
+    draft_id: str
+    label: str
+    start_minute: int
+    end_minute: int
+    days_of_week: list[int] = Field(default_factory=lambda: [0, 1, 2, 3, 4, 5, 6])
+    slot_type: SlotType = "open"
+    is_schedulable: bool = False
+    category: str = "admin"
+
+
+class LifeStructureDraft(BaseModel):
+    summary: Optional[str] = None
+    routine_blocks: list[LifeStructureDraftRoutineBlock] = Field(default_factory=list)
+    projects: list[LifeStructureDraftProject] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
+
+
+class LifeStructureConfirmRequest(BaseModel):
+    routine_blocks: list[LifeStructureDraftRoutineBlock] = Field(default_factory=list)
+    projects: list[LifeStructureDraftProject] = Field(default_factory=list)
 
 
 # ── Generic Responses ─────────────────────────────────────────

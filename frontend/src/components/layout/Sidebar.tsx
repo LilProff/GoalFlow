@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, CheckSquare, Target, BarChart3,
-  Settings, MessageCircle, LogOut, ChevronLeft, ChevronRight, Clock, Trophy
+  Settings, MessageCircle, LogOut, ChevronLeft, ChevronRight, Clock, Trophy, Repeat
 } from 'lucide-react';
 import { useStore } from '../../lib/store';
 import { LEVEL_THRESHOLDS } from '../../lib/constants';
@@ -11,6 +11,7 @@ import Logo from '../ui/Logo';
 const NAV = [
   { to: '/dashboard',   icon: LayoutDashboard, label: 'TODAY'       },
   { to: '/planner',     icon: Clock,           label: 'PLANNER'     },
+  { to: '/projects',    icon: Repeat,          label: 'PROJECTS'    },
   { to: '/tasks',       icon: CheckSquare,     label: 'TASKS'       },
   { to: '/goals',       icon: Target,          label: 'GOALS'       },
   { to: '/analytics',   icon: BarChart3,       label: 'ANALYTICS'   },

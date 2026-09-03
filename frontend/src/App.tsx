@@ -12,6 +12,7 @@ import OfflineBanner from './components/layout/OfflineBanner';
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Planner = lazy(() => import('./pages/Planner'));
+const Projects = lazy(() => import('./pages/Projects'));
 const Tasks = lazy(() => import('./pages/Tasks'));
 const Goals = lazy(() => import('./pages/Goals'));
 const Analytics = lazy(() => import('./pages/Analytics'));
@@ -79,6 +80,7 @@ export default function App() {
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/dashboard"    element={<Dashboard />} />
               <Route path="/planner"      element={<Planner />} />
+              <Route path="/projects"     element={<Projects />} />
               <Route path="/tasks"        element={<Tasks />} />
               <Route path="/goals"        element={<Goals />} />
               <Route path="/analytics"    element={<Analytics />} />

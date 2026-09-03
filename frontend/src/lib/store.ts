@@ -6,6 +6,7 @@ import type {
   NotificationPreferences, KPISummary, HistoryEntry, WeeklyReport,
   LeaderboardEntry, AppNotification, TimeBlock, MCPAction, CoachStyle, TaskStatus,
   GoalImportDraft, ImportDraftGoal,
+  Project, RoutineBlock, NextAction, WeekPlan, LifeStructureDraft,
 } from '../types';
 import { api } from './api';
 import { DEFAULT_PILLARS, LIFE_CATEGORIES } from './constants';
@@ -36,6 +37,13 @@ interface AppState {
   sidebarCollapsed: boolean;
   theme: 'dark' | 'light';
   goalImportDraft: GoalImportDraft | null; goalImportLoading: boolean; goalImportError: string | null;
+
+  // Projects / routine / planning engine
+  projects: Project[]; projectsLoading: boolean;
+  routineBlocks: RoutineBlock[]; routineLoading: boolean;
+  nextAction: NextAction | null; nextActionLoading: boolean;
+  weekPlan: WeekPlan | null; weekPlanLoading: boolean; weekPlanError: string | null;
+  lifeStructureDraft: LifeStructureDraft | null; lifeStructureLoading: boolean; lifeStructureError: string | null;
 
   // Auth
   logout: () => Promise<void>;
@@ -80,6 +88,23 @@ interface AppState {
   updateGoalImportDraft: (goals: ImportDraftGoal[]) => void;
   confirmGoalImport: () => Promise<void>;
   clearGoalImportDraft: () => void;
+
+  // Projects / routine / planning engine
+  loadProjects: () => Promise<void>;
+  createProject: (project: Omit<Project, 'id' | 'createdAt' | 'sessionsThisWeek' | 'sessionsTarget' | 'lastWorkedOn'>) => Promise<void>;
+  updateProject: (projectId: string, updates: Partial<Project>) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
+  logProjectUpdate: (projectId: string, entry: { note?: string; minutesSpent?: number; countsAsSession?: boolean; blocker?: string }) => Promise<void>;
+  loadRoutine: () => Promise<void>;
+  createRoutineBlock: (block: Omit<RoutineBlock, 'id' | 'createdAt'>) => Promise<void>;
+  updateRoutineBlock: (blockId: string, updates: Partial<RoutineBlock>) => Promise<void>;
+  deleteRoutineBlock: (blockId: string) => Promise<void>;
+  loadNextAction: () => Promise<void>;
+  planWeek: () => Promise<void>;
+  submitLifeStructureImport: (file: File) => Promise<void>;
+  updateLifeStructureDraft: (draft: LifeStructureDraft) => void;
+  confirmLifeStructureImport: () => Promise<void>;
+  clearLifeStructureDraft: () => void;
 
   // Planner
   toggleBlock: (blockId: string, field: 'completed' | 'skipped') => Promise<void>;
@@ -157,6 +182,12 @@ export const useStore = create<AppState>()(persist((set, get) => ({
   sidebarCollapsed: false,
   theme: 'dark',
   goalImportDraft: null, goalImportLoading: false, goalImportError: null,
+
+  projects: [], projectsLoading: false,
+  routineBlocks: [], routineLoading: false,
+  nextAction: null, nextActionLoading: false,
+  weekPlan: null, weekPlanLoading: false, weekPlanError: null,
+  lifeStructureDraft: null, lifeStructureLoading: false, lifeStructureError: null,
 
   // ── Auth (self-issued JWT) ────────────────────────────────────────────────
   logout: async () => {
@@ -609,6 +640,124 @@ export const useStore = create<AppState>()(persist((set, get) => ({
   },
 
   clearGoalImportDraft: () => set({ goalImportDraft: null, goalImportError: null }),
+
+  // ── Projects / routine / planning engine ────────────────────────────────────
+  loadProjects: async () => {
+    set({ projectsLoading: true });
+    try {
+      const projects = await api.getProjects();
+      set({ projects, projectsLoading: false });
+    } catch (e) {
+      set({ projectsLoading: false });
+      console.error('Failed to load projects:', e);
+    }
+  },
+
+  createProject: async (project) => {
+    const created = await api.createProject(project);
+    set(s => ({ projects: [...s.projects, created] }));
+  },
+
+  updateProject: async (projectId, updates) => {
+    const updated = await api.updateProject(projectId, updates);
+    set(s => ({ projects: s.projects.map(p => p.id === projectId ? updated : p) }));
+  },
+
+  deleteProject: async (projectId) => {
+    await api.deleteProject(projectId);
+    set(s => ({ projects: s.projects.filter(p => p.id !== projectId) }));
+  },
+
+  logProjectUpdate: async (projectId, entry) => {
+    await api.logProjectUpdate(projectId, entry);
+    // Cadence counters (sessionsThisWeek) are computed server-side — refresh
+    // this one project's numbers rather than trusting a local guess.
+    const [refreshed] = (await api.getProjects()).filter(p => p.id === projectId);
+    if (refreshed) set(s => ({ projects: s.projects.map(p => p.id === projectId ? refreshed : p) }));
+  },
+
+  loadRoutine: async () => {
+    set({ routineLoading: true });
+    try {
+      const routineBlocks = await api.getRoutine();
+      set({ routineBlocks, routineLoading: false });
+    } catch (e) {
+      set({ routineLoading: false });
+      console.error('Failed to load routine:', e);
+    }
+  },
+
+  createRoutineBlock: async (block) => {
+    const created = await api.createRoutineBlock(block);
+    set(s => ({ routineBlocks: [...s.routineBlocks, created].sort((a, b) => a.startMinute - b.startMinute) }));
+  },
+
+  updateRoutineBlock: async (blockId, updates) => {
+    const updated = await api.updateRoutineBlock(blockId, updates);
+    set(s => ({ routineBlocks: s.routineBlocks.map(r => r.id === blockId ? updated : r).sort((a, b) => a.startMinute - b.startMinute) }));
+  },
+
+  deleteRoutineBlock: async (blockId) => {
+    await api.deleteRoutineBlock(blockId);
+    set(s => ({ routineBlocks: s.routineBlocks.filter(r => r.id !== blockId) }));
+  },
+
+  loadNextAction: async () => {
+    set({ nextActionLoading: true });
+    try {
+      const nextAction = await api.getNextAction();
+      set({ nextAction, nextActionLoading: false });
+    } catch (e) {
+      set({ nextActionLoading: false });
+      console.error('Failed to load next action:', e);
+    }
+  },
+
+  planWeek: async () => {
+    set({ weekPlanLoading: true, weekPlanError: null });
+    try {
+      const weekPlan = await api.planWeek();
+      set({ weekPlan, weekPlanLoading: false });
+      // The week's blocks land on days other than "today" too — if today's
+      // among them, reflect the change immediately rather than making the
+      // user reload Planner to see it.
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const todayPlan = weekPlan.days.find(d => d.dateKey === today);
+      if (todayPlan) set({ timeBlocks: todayPlan.blocks });
+    } catch (e) {
+      set({
+        weekPlanLoading: false,
+        weekPlanError: e instanceof Error ? e.message : 'Could not plan the week.',
+      });
+      throw e;
+    }
+  },
+
+  submitLifeStructureImport: async (file) => {
+    set({ lifeStructureLoading: true, lifeStructureError: null });
+    try {
+      const draft = await api.importLifeStructure(file);
+      set({ lifeStructureDraft: draft, lifeStructureLoading: false });
+    } catch (e) {
+      set({
+        lifeStructureLoading: false,
+        lifeStructureError: e instanceof Error ? e.message : 'Could not read that file.',
+      });
+      throw e;
+    }
+  },
+
+  updateLifeStructureDraft: (draft) => set({ lifeStructureDraft: draft }),
+
+  confirmLifeStructureImport: async () => {
+    const draft = get().lifeStructureDraft;
+    if (!draft) return;
+    await api.confirmLifeStructureImport(draft);
+    set({ lifeStructureDraft: null });
+    await Promise.all([get().loadProjects(), get().loadRoutine()]);
+  },
+
+  clearLifeStructureDraft: () => set({ lifeStructureDraft: null, lifeStructureError: null }),
 
   // ── Planner ───────────────────────────────────────────────────────────────
   toggleBlock: async (blockId, field) => {

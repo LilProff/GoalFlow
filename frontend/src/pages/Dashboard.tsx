@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { RefreshCw, MessageCircle, Plus, Clock, Zap, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { RefreshCw, MessageCircle, Plus, Clock, Zap, ChevronDown, ChevronUp, X, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { getPillarTheme, DEFAULT_PILLARS } from '../lib/constants';
 import SegBar from '../components/ui/SegBar';
@@ -61,6 +62,38 @@ function TaskRow({ task, onToggle, onDelete }: { task: Task; onToggle: () => voi
   );
 }
 
+// Answers "what should I do right now" using the routine + project cadence
+// engine — projects.py's /planning/next-action. Silent when there's simply
+// no routine set up yet (a brand-new account) rather than nagging.
+function NextActionCard() {
+  const { nextAction, nextActionLoading, loadNextAction } = useStore();
+  useEffect(() => { loadNextAction(); }, [loadNextAction]);
+
+  // No routine configured yet (fresh account) — backend says so explicitly
+  // rather than the card silently showing a placeholder.
+  if (!nextActionLoading && (!nextAction || nextAction.slotType === 'open' && nextAction.slotLabel === 'Unstructured time')) return null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className="glass-panel rounded-xl p-4 mb-5 flex items-center gap-4" style={{ borderTop: '2px solid var(--acid)' }}>
+      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(139,92,246,0.15)' }}>
+        <Zap className="w-4 h-4" style={{ color: 'var(--acid)' }} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="mono text-[9px] tracking-widest font-bold mb-0.5" style={{ color: 'var(--acid)' }}>
+          RIGHT NOW{nextAction ? ` · ${nextAction.slotLabel.toUpperCase()}` : ''}
+        </p>
+        <p className="text-sm font-medium truncate" style={{ color: 'var(--tx-primary)' }}>
+          {nextActionLoading ? 'Working out what\'s next…' : nextAction?.recommendation}
+        </p>
+      </div>
+      <Link to="/projects" className="shrink-0 mono text-[9px] tracking-widest font-bold flex items-center gap-1" style={{ color: 'var(--tx-muted)' }}>
+        PROJECTS <ArrowRight className="w-3 h-3" />
+      </Link>
+    </motion.div>
+  );
+}
+
 export default function Dashboard() {
   const { user, dailyData, kpi, toggleTask, updateBuildHours, updateReflection, generateTasks, deleteTask, setChatOpen, dailyLoading, addTask, logDay } = useStore();
   const [pillarFilter, setPillarFilter] = useState('ALL');
@@ -114,6 +147,8 @@ export default function Dashboard() {
           </button>
         </div>
       </motion.div>
+
+      <NextActionCard />
 
       <div className="grid grid-cols-12 gap-5">
         {/* LEFT */}

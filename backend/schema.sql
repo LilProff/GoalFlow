@@ -209,6 +209,63 @@ create table if not exists public.time_blocks (
   user_editable boolean default true,
   notes text,
   assigned_by text,
+  project_id uuid,
+  created_at timestamp with time zone default now()
+);
+
+-- =============================================
+-- PROJECTS, ROUTINE & PROJECT UPDATES (recurring work + weekly container)
+-- See migration 009_projects_routine_planning.sql for the full definitions,
+-- FKs and RLS — this block mirrors it for fresh-install reference. NOTE:
+-- as elsewhere in this file, user_id is actually `text` on the live DB
+-- (self-issued JWT auth, not Supabase Auth — see 004_clerk_user_id_text.sql)
+-- even though this pre-004 schema.sql still shows `uuid` above; a fresh
+-- install should follow the migration files, not this file, for the exact
+-- column types.
+-- =============================================
+create table if not exists public.projects (
+  id uuid default gen_random_uuid() primary key,
+  user_id text references public.user_profiles(id) on delete cascade not null,
+  name text not null,
+  description text,
+  pillar_id text,
+  goal_id uuid references public.goals(id) on delete set null,
+  kind text not null default 'work',
+  status text not null default 'active',
+  cadence_type text not null default 'weekly',
+  sessions_per_week integer not null default 1,
+  cadence_days smallint[] not null default '{}',
+  slot_types text[] not null default '{}',
+  session_minutes integer not null default 60,
+  is_main_quest boolean not null default false,
+  priority integer not null default 2,
+  last_worked_on date,
+  created_at timestamp with time zone default now()
+);
+
+create table if not exists public.routine_blocks (
+  id uuid default gen_random_uuid() primary key,
+  user_id text references public.user_profiles(id) on delete cascade not null,
+  label text not null,
+  start_minute integer not null,
+  end_minute integer not null,
+  days_of_week smallint[] not null default '{0,1,2,3,4,5,6}',
+  slot_type text not null default 'open',
+  is_schedulable boolean not null default false,
+  category text not null default 'admin',
+  notes text,
+  created_at timestamp with time zone default now()
+);
+
+create table if not exists public.project_updates (
+  id uuid default gen_random_uuid() primary key,
+  user_id text references public.user_profiles(id) on delete cascade not null,
+  project_id uuid references public.projects(id) on delete cascade not null,
+  date_key date not null default current_date,
+  note text,
+  minutes_spent integer default 0,
+  counts_as_session boolean not null default true,
+  blocker text,
   created_at timestamp with time zone default now()
 );
 

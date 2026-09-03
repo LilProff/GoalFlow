@@ -231,6 +231,9 @@ export interface TimeBlock {
   /** Who/what assigned this block — set marks it a commitment. Blank/undefined
    *  means self-scheduled. Reshuffle always treats it as an anchor. */
   assignedBy?: string;
+  /** Set when this block was placed by a week-plan run — links back to the
+   *  project whose cadence it's fulfilling. */
+  projectId?: string;
 }
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
@@ -397,4 +400,115 @@ export interface UserStatsResponse {
   streak_longest: number;
   last_log_date?: string;
   weekly_score: number;
+}
+
+// ─── Projects & Routine (recurring/cadenced work, distinct from Goals'
+//     target-dated outcomes) ────────────────────────────────────────────────
+export type CadenceType = 'daily' | 'weekly' | 'fixed_day' | 'flexible';
+export type ProjectKind = 'work' | 'startup' | 'personal_build' | 'learning' | 'content' | 'outreach' | 'health' | 'relationships' | 'other';
+export type ProjectStatus = 'active' | 'paused' | 'dormant' | 'done';
+export type SlotType = 'sleep' | 'routine' | 'transit' | 'deep_work' | 'open' | 'evening_build' | 'night_study' | 'buffer';
+
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  pillarId?: string;
+  goalId?: string;
+  kind: ProjectKind;
+  status: ProjectStatus;
+  cadenceType: CadenceType;
+  sessionsPerWeek: number;
+  cadenceDays: number[]; // 0=Mon..6=Sun
+  slotTypes: string[];
+  sessionMinutes: number;
+  isMainQuest: boolean;
+  priority: number; // 1 (highest) .. 5
+  lastWorkedOn?: string;
+  createdAt: string;
+  sessionsThisWeek: number;
+  sessionsTarget: number;
+}
+
+export interface RoutineBlock {
+  id: string;
+  label: string;
+  startMinute: number;
+  endMinute: number;
+  daysOfWeek: number[];
+  slotType: SlotType;
+  isSchedulable: boolean;
+  category: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface ProjectUpdateLog {
+  id: string;
+  projectId: string;
+  dateKey: string;
+  note?: string;
+  minutesSpent: number;
+  countsAsSession: boolean;
+  blocker?: string;
+  createdAt: string;
+}
+
+export interface NextAction {
+  slotLabel: string;
+  slotType: string;
+  minutesLeftInSlot: number;
+  recommendation?: string;
+  projectId?: string;
+  projectName?: string;
+  taskTitle?: string;
+  reason?: string;
+}
+
+export interface WeekPlanDay {
+  dateKey: string;
+  dayOfWeek: number;
+  blocks: TimeBlock[];
+}
+
+export interface WeekPlan {
+  weekStart: string;
+  days: WeekPlanDay[];
+  protectedMainQuest?: string;
+  atRiskProjects: string[];
+}
+
+// ─── Life-structure import (routine + projects from a free-form doc) ───────
+export interface LifeStructureDraftProject {
+  draftId: string;
+  name: string;
+  description?: string;
+  kind: ProjectKind;
+  pillarId?: string;
+  cadenceType: CadenceType;
+  sessionsPerWeek: number;
+  cadenceDays: number[];
+  slotTypes: string[];
+  sessionMinutes: number;
+  isMainQuest: boolean;
+  priority: number;
+  needsClarification?: string;
+}
+
+export interface LifeStructureDraftRoutineBlock {
+  draftId: string;
+  label: string;
+  startMinute: number;
+  endMinute: number;
+  daysOfWeek: number[];
+  slotType: SlotType;
+  isSchedulable: boolean;
+  category: string;
+}
+
+export interface LifeStructureDraft {
+  summary?: string;
+  routineBlocks: LifeStructureDraftRoutineBlock[];
+  projects: LifeStructureDraftProject[];
+  openQuestions: string[];
 }

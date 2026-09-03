@@ -1,4 +1,4 @@
-import type { User, Task, DailyData, Pillar, KPISummary, HistoryEntry, WeeklyReport, UserStatsResponse, Goal, LeaderboardEntry, TimeBlock, NotificationPreferences, Milestone, PaceStatus, GoalImportDraft, ImportDraftGoal } from '../types';
+import type { User, Task, DailyData, Pillar, KPISummary, HistoryEntry, WeeklyReport, UserStatsResponse, Goal, LeaderboardEntry, TimeBlock, NotificationPreferences, Milestone, PaceStatus, GoalImportDraft, ImportDraftGoal, Project, RoutineBlock, ProjectUpdateLog, NextAction, WeekPlan, LifeStructureDraft } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8010/api/v1';
 
@@ -340,6 +340,7 @@ interface RawTimeBlock {
   user_editable?: boolean;
   notes?: string;
   assigned_by?: string;
+  project_id?: string;
 }
 
 function mapTimeBlock(b: RawTimeBlock): TimeBlock {
@@ -357,6 +358,84 @@ function mapTimeBlock(b: RawTimeBlock): TimeBlock {
     priority: (b.priority || 'medium') as TimeBlock['priority'],
     userEditable: b.user_editable ?? true,
     assignedBy: b.assigned_by || undefined,
+    projectId: b.project_id || undefined,
+  };
+}
+
+// ─── Projects / Routine mapping ─────────────────────────────────────────────
+interface RawProject {
+  id: string; name: string; description?: string; pillar_id?: string; goal_id?: string;
+  kind: string; status: string; cadence_type: string; sessions_per_week: number;
+  cadence_days: number[]; slot_types: string[]; session_minutes: number;
+  is_main_quest: boolean; priority: number; last_worked_on?: string; created_at: string;
+  sessions_this_week: number; sessions_target: number;
+}
+
+function mapProject(p: RawProject): Project {
+  return {
+    id: p.id, name: p.name, description: p.description, pillarId: p.pillar_id, goalId: p.goal_id,
+    kind: p.kind as Project['kind'], status: p.status as Project['status'],
+    cadenceType: p.cadence_type as Project['cadenceType'], sessionsPerWeek: p.sessions_per_week,
+    cadenceDays: p.cadence_days || [], slotTypes: p.slot_types || [], sessionMinutes: p.session_minutes,
+    isMainQuest: p.is_main_quest, priority: p.priority, lastWorkedOn: p.last_worked_on,
+    createdAt: p.created_at, sessionsThisWeek: p.sessions_this_week, sessionsTarget: p.sessions_target,
+  };
+}
+
+function unmapProject(p: Partial<Project>): Record<string, unknown> {
+  return {
+    ...(p.name !== undefined && { name: p.name }),
+    ...(p.description !== undefined && { description: p.description }),
+    ...(p.pillarId !== undefined && { pillar_id: p.pillarId }),
+    ...(p.goalId !== undefined && { goal_id: p.goalId }),
+    ...(p.kind !== undefined && { kind: p.kind }),
+    ...(p.status !== undefined && { status: p.status }),
+    ...(p.cadenceType !== undefined && { cadence_type: p.cadenceType }),
+    ...(p.sessionsPerWeek !== undefined && { sessions_per_week: p.sessionsPerWeek }),
+    ...(p.cadenceDays !== undefined && { cadence_days: p.cadenceDays }),
+    ...(p.slotTypes !== undefined && { slot_types: p.slotTypes }),
+    ...(p.sessionMinutes !== undefined && { session_minutes: p.sessionMinutes }),
+    ...(p.isMainQuest !== undefined && { is_main_quest: p.isMainQuest }),
+    ...(p.priority !== undefined && { priority: p.priority }),
+  };
+}
+
+interface RawRoutineBlock {
+  id: string; label: string; start_minute: number; end_minute: number; days_of_week: number[];
+  slot_type: string; is_schedulable: boolean; category: string; notes?: string; created_at: string;
+}
+
+function mapRoutineBlock(r: RawRoutineBlock): RoutineBlock {
+  return {
+    id: r.id, label: r.label, startMinute: r.start_minute, endMinute: r.end_minute,
+    daysOfWeek: r.days_of_week || [], slotType: r.slot_type as RoutineBlock['slotType'],
+    isSchedulable: r.is_schedulable, category: r.category, notes: r.notes, createdAt: r.created_at,
+  };
+}
+
+function unmapRoutineBlock(r: Partial<RoutineBlock>): Record<string, unknown> {
+  return {
+    ...(r.label !== undefined && { label: r.label }),
+    ...(r.startMinute !== undefined && { start_minute: r.startMinute }),
+    ...(r.endMinute !== undefined && { end_minute: r.endMinute }),
+    ...(r.daysOfWeek !== undefined && { days_of_week: r.daysOfWeek }),
+    ...(r.slotType !== undefined && { slot_type: r.slotType }),
+    ...(r.isSchedulable !== undefined && { is_schedulable: r.isSchedulable }),
+    ...(r.category !== undefined && { category: r.category }),
+    ...(r.notes !== undefined && { notes: r.notes }),
+  };
+}
+
+interface RawProjectUpdate {
+  id: string; project_id: string; date_key: string; note?: string; minutes_spent: number;
+  counts_as_session: boolean; blocker?: string; created_at: string;
+}
+
+function mapProjectUpdate(u: RawProjectUpdate): ProjectUpdateLog {
+  return {
+    id: u.id, projectId: u.project_id, dateKey: u.date_key, note: u.note,
+    minutesSpent: u.minutes_spent, countsAsSession: u.counts_as_session, blocker: u.blocker,
+    createdAt: u.created_at,
   };
 }
 
@@ -977,5 +1056,138 @@ export const api = {
         nextWeekFocus: [],
       };
     }
+  },
+
+  // ─── Projects (ongoing, cadenced work) ─────────────────────────────────────
+  async getProjects(status?: string): Promise<Project[]> {
+    const data = await fetchApi<RawProject[]>(`/projects/${status ? `?status=${status}` : ''}`);
+    return data.map(mapProject);
+  },
+
+  async createProject(project: Omit<Project, 'id' | 'createdAt' | 'sessionsThisWeek' | 'sessionsTarget' | 'lastWorkedOn'>): Promise<Project> {
+    const data = await fetchApi<RawProject>('/projects/', { method: 'POST', body: JSON.stringify(unmapProject(project)) });
+    return mapProject(data);
+  },
+
+  async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
+    const data = await fetchApi<RawProject>(`/projects/${projectId}`, { method: 'PATCH', body: JSON.stringify(unmapProject(updates)) });
+    return mapProject(data);
+  },
+
+  async deleteProject(projectId: string): Promise<void> {
+    await fetchApi(`/projects/${projectId}`, { method: 'DELETE' });
+  },
+
+  async getProjectUpdates(projectId: string): Promise<ProjectUpdateLog[]> {
+    const data = await fetchApi<RawProjectUpdate[]>(`/projects/${projectId}/updates`);
+    return data.map(mapProjectUpdate);
+  },
+
+  async logProjectUpdate(projectId: string, entry: { note?: string; minutesSpent?: number; countsAsSession?: boolean; blocker?: string; dateKey?: string }): Promise<ProjectUpdateLog> {
+    const data = await fetchApi<RawProjectUpdate>(`/projects/${projectId}/updates`, {
+      method: 'POST',
+      body: JSON.stringify({
+        note: entry.note, minutes_spent: entry.minutesSpent ?? 0,
+        counts_as_session: entry.countsAsSession ?? true, blocker: entry.blocker,
+        date_key: entry.dateKey,
+      }),
+    });
+    return mapProjectUpdate(data);
+  },
+
+  // ─── Routine (the weekly container) ────────────────────────────────────────
+  async getRoutine(): Promise<RoutineBlock[]> {
+    const data = await fetchApi<RawRoutineBlock[]>('/routine/');
+    return data.map(mapRoutineBlock);
+  },
+
+  async createRoutineBlock(block: Omit<RoutineBlock, 'id' | 'createdAt'>): Promise<RoutineBlock> {
+    const data = await fetchApi<RawRoutineBlock>('/routine/', { method: 'POST', body: JSON.stringify(unmapRoutineBlock(block)) });
+    return mapRoutineBlock(data);
+  },
+
+  async updateRoutineBlock(blockId: string, updates: Partial<RoutineBlock>): Promise<RoutineBlock> {
+    const data = await fetchApi<RawRoutineBlock>(`/routine/${blockId}`, { method: 'PATCH', body: JSON.stringify(unmapRoutineBlock(updates)) });
+    return mapRoutineBlock(data);
+  },
+
+  async deleteRoutineBlock(blockId: string): Promise<void> {
+    await fetchApi(`/routine/${blockId}`, { method: 'DELETE' });
+  },
+
+  // ─── Planning engine ────────────────────────────────────────────────────────
+  async getNextAction(): Promise<NextAction> {
+    const data = await fetchApi<Record<string, unknown>>('/planning/next-action');
+    return {
+      slotLabel: String(data.slot_label ?? ''),
+      slotType: String(data.slot_type ?? ''),
+      minutesLeftInSlot: Number(data.minutes_left_in_slot ?? 0),
+      recommendation: data.recommendation as string | undefined,
+      projectId: data.project_id as string | undefined,
+      projectName: data.project_name as string | undefined,
+      taskTitle: data.task_title as string | undefined,
+      reason: data.reason as string | undefined,
+    };
+  },
+
+  async planWeek(weekStart?: string): Promise<WeekPlan> {
+    const data = await fetchApi<{
+      week_start: string;
+      days: { date_key: string; day_of_week: number; blocks: RawTimeBlock[] }[];
+      protected_main_quest?: string;
+      at_risk_projects: string[];
+    }>('/planning/week-plan', { method: 'POST', body: JSON.stringify({ week_start: weekStart }) });
+    return {
+      weekStart: data.week_start,
+      days: data.days.map(d => ({ dateKey: d.date_key, dayOfWeek: d.day_of_week, blocks: d.blocks.map(mapTimeBlock) })),
+      protectedMainQuest: data.protected_main_quest,
+      atRiskProjects: data.at_risk_projects || [],
+    };
+  },
+
+  // ─── Life-structure import (routine + projects from a doc, e.g. a life plan) ──
+  async importLifeStructure(file: File): Promise<LifeStructureDraft> {
+    const form = new FormData();
+    form.append('file', file);
+    const data = await fetchApiUpload<{
+      summary?: string;
+      routine_blocks: { draft_id: string; label: string; start_minute: number; end_minute: number; days_of_week: number[]; slot_type: string; is_schedulable: boolean; category: string }[];
+      projects: { draft_id: string; name: string; description?: string; kind: string; pillar_id?: string; cadence_type: string; sessions_per_week: number; cadence_days: number[]; slot_types: string[]; session_minutes: number; is_main_quest: boolean; priority: number; needs_clarification?: string }[];
+      open_questions: string[];
+    }>('/life-structure/import', form);
+    return {
+      summary: data.summary,
+      routineBlocks: data.routine_blocks.map(r => ({
+        draftId: r.draft_id, label: r.label, startMinute: r.start_minute, endMinute: r.end_minute,
+        daysOfWeek: r.days_of_week, slotType: r.slot_type as RoutineBlock['slotType'],
+        isSchedulable: r.is_schedulable, category: r.category,
+      })),
+      projects: data.projects.map(p => ({
+        draftId: p.draft_id, name: p.name, description: p.description, kind: p.kind as Project['kind'],
+        pillarId: p.pillar_id, cadenceType: p.cadence_type as Project['cadenceType'],
+        sessionsPerWeek: p.sessions_per_week, cadenceDays: p.cadence_days, slotTypes: p.slot_types,
+        sessionMinutes: p.session_minutes, isMainQuest: p.is_main_quest, priority: p.priority,
+        needsClarification: p.needs_clarification,
+      })),
+      openQuestions: data.open_questions || [],
+    };
+  },
+
+  async confirmLifeStructureImport(draft: LifeStructureDraft): Promise<{ ok: boolean; routine_blocks_created: number; projects_created: number }> {
+    return fetchApi('/life-structure/import/confirm', {
+      method: 'POST',
+      body: JSON.stringify({
+        routine_blocks: draft.routineBlocks.map(r => ({
+          draft_id: r.draftId, label: r.label, start_minute: r.startMinute, end_minute: r.endMinute,
+          days_of_week: r.daysOfWeek, slot_type: r.slotType, is_schedulable: r.isSchedulable, category: r.category,
+        })),
+        projects: draft.projects.map(p => ({
+          draft_id: p.draftId, name: p.name, description: p.description, kind: p.kind,
+          pillar_id: p.pillarId, cadence_type: p.cadenceType, sessions_per_week: p.sessionsPerWeek,
+          cadence_days: p.cadenceDays, slot_types: p.slotTypes, session_minutes: p.sessionMinutes,
+          is_main_quest: p.isMainQuest, priority: p.priority, needs_clarification: p.needsClarification,
+        })),
+      }),
+    });
   },
 };

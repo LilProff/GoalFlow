@@ -5,6 +5,7 @@ from config import settings
 from routers import (
     auth, daily, tasks, pillars, user, ryna, onboarding,
     analytics, goals, planner, leaderboard, notifications,
+    projects, life_structure,
 )
 
 app = FastAPI(
@@ -48,5 +49,9 @@ api_v1.include_router(analytics.router)
 api_v1.include_router(ryna.router)
 api_v1.include_router(leaderboard.router)
 api_v1.include_router(notifications.router)
+api_v1.include_router(projects.router)
+api_v1.include_router(projects.routine_router)
+api_v1.include_router(projects.planning_router)
+api_v1.include_router(life_structure.router)
 
 app.include_router(api_v1)
