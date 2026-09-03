@@ -143,6 +143,7 @@ async def create_task(data: TaskCreate, user_id: str = Depends(get_current_user)
             "estimated_minutes": data.estimated_minutes or 30,
             "start_time": data.start_time, "end_time": data.end_time,
             "status": "pending", "is_ai_generated": data.is_ai_generated,
+            "ai_context": data.ai_context, "project_id": data.project_id,
         }
         resp = sb.table("tasks").insert(payload).execute()
         if not resp.data:

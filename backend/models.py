@@ -268,6 +268,10 @@ class TaskBase(BaseModel):
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     ai_context: Optional[str] = None
+    # Set when this task was materialised by the week-planner from a
+    # project's cadence — see services/planning.py — so the Today checklist
+    # traces back to the same ongoing work Planner shows for it.
+    project_id: Optional[str] = None
     # Lightweight checklist within a task — modeled the same low-overhead
     # way milestones are for goals (a JSONB list, no separate table).
     subtasks: list[dict] = Field(default_factory=list)

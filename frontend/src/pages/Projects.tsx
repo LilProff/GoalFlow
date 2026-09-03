@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, X, Trash2, Edit3, Star, Zap, RefreshCw, Upload, FileText,
-  Check, Loader2, ChevronRight, AlertTriangle, Clock, CalendarDays,
+  Check, Loader2, ChevronRight, AlertTriangle, Clock, CalendarDays, Target,
 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { DEFAULT_PILLARS } from '../lib/constants';
@@ -68,7 +68,8 @@ function NextActionBanner() {
 
 // ─── Project card ───────────────────────────────────────────────────────────
 function ProjectCard({ project, onEdit }: { project: Project; onEdit: () => void }) {
-  const { deleteProject, logProjectUpdate } = useStore();
+  const { deleteProject, logProjectUpdate, goals } = useStore();
+  const linkedGoal = project.goalId ? goals.find(g => g.id === project.goalId) : undefined;
   const [logging, setLogging] = useState(false);
   const [note, setNote] = useState('');
   const [minutes, setMinutes] = useState(project.sessionMinutes);
@@ -105,6 +106,11 @@ function ProjectCard({ project, onEdit }: { project: Project; onEdit: () => void
             <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {project.sessionMinutes}m/session</span>
             {project.slotTypes.length > 0 && <span>{project.slotTypes.map(s => SLOT_LABELS[s as SlotType] ?? s).join(', ')}</span>}
           </div>
+          {linkedGoal && (
+            <div className="mt-1.5 flex items-center gap-1 mono text-[9px]" style={{ color }}>
+              <Target className="w-2.5 h-2.5" /> {linkedGoal.title}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button onClick={onEdit} style={{ color: 'var(--tx-muted)' }}><Edit3 className="w-3.5 h-3.5" /></button>

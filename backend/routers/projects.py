@@ -23,6 +23,11 @@ routine_router = APIRouter(prefix="/routine", tags=["routine"])
 planning_router = APIRouter(prefix="/planning", tags=["planning"])
 
 
+def _minute_to_time(m: int) -> str:
+    m = m % 1440
+    return f"{m // 60:02d}:{m % 60:02d}:00"
+
+
 # ── Projects CRUD ────────────────────────────────────────────────────────────
 @router.get("/", response_model=list[ProjectResponse])
 async def list_projects(
@@ -278,6 +283,36 @@ async def plan_week(
             ]
             if new_rows:
                 sb.table("time_blocks").insert(new_rows).execute()
+
+            # Keep the Today/Dashboard checklist in sync with what Planner
+            # now shows — without this, "today's tasks" stayed whatever was
+            # there before (often stale/manually generated) while Planner
+            # moved on to the real, cadence-driven schedule.
+            existing_tasks = (
+                sb.table("tasks").select("id,ai_context")
+                .eq("user_id", user_id).eq("date_key", date_key).execute()
+            ).data or []
+            for t in existing_tasks:
+                if (t.get("ai_context") or "").startswith("Weekly plan"):
+                    sb.table("tasks").delete().eq("id", t["id"]).execute()
+
+            new_tasks = [
+                {
+                    "user_id": user_id, "date_key": date_key,
+                    "pillar_id": block.get("pillar_id") or "BUILD",
+                    "title": block["label"],
+                    "estimated_minutes": block["duration_minutes"],
+                    "start_time": _minute_to_time(block["start_minute"]),
+                    "end_time": _minute_to_time(block["start_minute"] + block["duration_minutes"]),
+                    "status": "pending", "is_ai_generated": True,
+                    "ai_context": f"Weekly plan — {block.get('notes', 'project session')}",
+                    "project_id": block.get("project_id"),
+                }
+                for block in day_blocks.get(offset, [])
+                if block.get("project_id")  # skip the fixed routine layer (sleep/transit/etc.)
+            ]
+            if new_tasks:
+                sb.table("tasks").insert(new_tasks).execute()
 
             # Return the day's full picture (untouched fixed blocks + what
             # was just placed), sorted for a sane Planner render.
